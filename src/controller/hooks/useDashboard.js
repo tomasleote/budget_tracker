@@ -45,18 +45,56 @@ const calculateBalance = (transactions = []) => {
   return { income, expenses, balance: income - expenses };
 };
 
+// Calculate balance for current month only
+const calculateCurrentMonthBalance = (transactions = []) => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  const currentMonthTransactions = transactions.filter(t => {
+    const transactionDate = new Date(t.date);
+    return transactionDate.getMonth() === currentMonth && 
+           transactionDate.getFullYear() === currentYear;
+  });
+  
+  return calculateBalance(currentMonthTransactions);
+};
+
 const calculateSpendingByCategory = (transactions = [], type = 'expense') => {
   const categoryMap = {};
   transactions
     .filter(t => t.type === type)
     .forEach(t => {
       const category = t.category || 'Other';
-      categoryMap[category] = (categoryMap[category] || 0) + (t.amount || 0);
+      if (!categoryMap[category]) {
+        categoryMap[category] = { amount: 0, count: 0 };
+      }
+      categoryMap[category].amount += (t.amount || 0);
+      categoryMap[category].count += 1;
     });
   
   return Object.entries(categoryMap)
-    .map(([category, amount]) => ({ category, amount }))
+    .map(([category, data]) => ({ 
+      category, 
+      amount: data.amount, 
+      transactionCount: data.count 
+    }))
     .sort((a, b) => b.amount - a.amount);
+};
+
+// Calculate spending by category for current month only
+const calculateCurrentMonthSpendingByCategory = (transactions = [], type = 'expense') => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  const currentMonthTransactions = transactions.filter(t => {
+    const transactionDate = new Date(t.date);
+    return transactionDate.getMonth() === currentMonth && 
+           transactionDate.getFullYear() === currentYear;
+  });
+  
+  return calculateSpendingByCategory(currentMonthTransactions, type);
 };
 
 const calculateFinancialHealthScore = (transactions = [], budgets = []) => {
@@ -139,7 +177,11 @@ export const useDashboard = () => {
       const transactions = transactionContext.transactions || [];
       const budgets = budgetContext.budgets || [];
       const categories = categoryContext.categories || [];
-      const balance = calculateBalance(transactions);
+      
+      // Use current month balance for Quick Stats
+      const currentMonthBalance = calculateCurrentMonthBalance(transactions);
+      // Use all-time balance for other calculations
+      const allTimeBalance = calculateBalance(transactions);
 
       return {
         totalTransactions: transactions.length,
@@ -148,23 +190,28 @@ export const useDashboard = () => {
         totalCategories: categories.length,
         activeCategories: categories.filter(c => c.isActive).length,
         
-        // Enhanced financial summary with formatting
-        totalIncome: balance.income,
-        totalExpenses: balance.expenses,
-        currentBalance: balance.balance,
-        formattedIncome: formatCurrency(balance.income),
-        formattedExpenses: formatCurrency(balance.expenses),
-        formattedBalance: formatCurrency(balance.balance),
+        // Enhanced financial summary with formatting - CURRENT MONTH DATA
+        totalIncome: currentMonthBalance.income,
+        totalExpenses: currentMonthBalance.expenses,
+        currentBalance: currentMonthBalance.balance,
+        formattedIncome: formatCurrency(currentMonthBalance.income),
+        formattedExpenses: formatCurrency(currentMonthBalance.expenses),
+        formattedBalance: formatCurrency(currentMonthBalance.balance),
+        
+        // All-time data for other components
+        allTimeIncome: allTimeBalance.income,
+        allTimeExpenses: allTimeBalance.expenses,
+        allTimeBalance: allTimeBalance.balance,
         
         // Budget summary with enhanced data
         budgetAlerts: budgetContext.alerts?.length || 0,
         exceededBudgets: budgetContext.alerts?.filter(a => a.type === 'exceeded').length || 0,
         nearLimitBudgets: budgetContext.alerts?.filter(a => a.type === 'near_limit').length || 0,
         
-        // Additional metrics
-        savingsRate: balance.income > 0 ? ((balance.income - balance.expenses) / balance.income * 100) : 0,
-        isPositiveBalance: balance.balance >= 0,
-        balanceIcon: balance.balance >= 0 ? COMMON_ICONS.SUCCESS : COMMON_ICONS.WARNING,
+        // Additional metrics - using current month data
+        savingsRate: currentMonthBalance.income > 0 ? ((currentMonthBalance.income - currentMonthBalance.expenses) / currentMonthBalance.income * 100) : 0,
+        isPositiveBalance: currentMonthBalance.balance >= 0,
+        balanceIcon: currentMonthBalance.balance >= 0 ? COMMON_ICONS.SUCCESS : COMMON_ICONS.WARNING,
         
         // Budget overview for dashboard components
         budgetOverview: budgetContext.overview || []
@@ -254,13 +301,13 @@ export const useDashboard = () => {
     }, []);
   }, [budgetContext.overview]);
 
-  // Enhanced category breakdown data using utilities
+  // Enhanced category breakdown data using utilities - CURRENT MONTH ONLY
   const categoryBreakdown = useMemo(() => {
     return safeExecute(() => {
       const transactions = transactionContext.transactions || [];
-      const breakdown = calculateSpendingByCategory(transactions, 'expense');
+      const breakdown = calculateCurrentMonthSpendingByCategory(transactions, 'expense');
 
-      return breakdown.slice(0, 5).map(category => {
+      return breakdown.map(category => {
         const categoryInfo = (typeof categoryContext.getCategoryById === 'function') 
           ? categoryContext.getCategoryById(category.category) 
           : null;
@@ -416,12 +463,26 @@ export const useDashboard = () => {
 
     refreshDashboard: async () => {
       return asyncSafeExecute(async () => {
+        console.log('🔄 Dashboard refresh triggered...');
+        
         const promises = [];
         if (transactionContext.actions?.loadTransactions) promises.push(transactionContext.actions.loadTransactions());
         if (budgetContext.actions?.loadBudgets) promises.push(budgetContext.actions.loadBudgets());
         if (categoryContext.actions?.loadCategories) promises.push(categoryContext.actions.loadCategories());
         
         await Promise.all(promises);
+        
+        // Wait a bit then refresh budget overview and alerts
+        setTimeout(async () => {
+          console.log('🔄 Refreshing budget overview and alerts...');
+          if (budgetContext.actions?.loadOverview) await budgetContext.actions.loadOverview();
+          if (budgetContext.actions?.loadAlerts) await budgetContext.actions.loadAlerts();
+        }, 200);
+        
+        // Also dispatch a force sync event
+        window.dispatchEvent(new CustomEvent('forceDataSync'));
+        
+        console.log('✅ Dashboard refresh complete');
       }, null);
     },
 

@@ -5,10 +5,15 @@ import {
   faArrowUp,
   faArrowDown,
   faWallet,
-  faSpinner
+  faSpinner,
+  faChartLine,
+  faSync,
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import Card from '../../ui/Card';
 import Button from '../../ui/Button';
+import TransactionFormModal from '../../forms/TransactionFormModal';
+import BudgetFormModal from '../../budget/BudgetFormModal';
 
 const QuickActionsWidget = ({ 
   actions = {},
@@ -16,6 +21,11 @@ const QuickActionsWidget = ({
   className = ''
 }) => {
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // Modal states
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   // Handle quick action with loading state
   const handleQuickAction = async (actionType, actionFn) => {
@@ -28,6 +38,41 @@ const QuickActionsWidget = ({
       console.error(`Quick action ${actionType} failed:`, error);
     } finally {
       setActionLoading(null);
+    }
+  };
+  
+  // Handle modal actions
+  const handleAddExpense = () => {
+    setShowExpenseModal(true);
+  };
+  
+  const handleAddIncome = () => {
+    setShowIncomeModal(true);
+  };
+  
+  const handleCreateBudget = () => {
+    setShowBudgetModal(true);
+  };
+  
+  const handleViewReports = () => {
+    window.location.href = '/reports';
+  };
+  
+  // Handle transaction saved
+  const handleTransactionSaved = (transaction) => {
+    console.log('Transaction saved from quick actions:', transaction);
+    // Trigger refresh if available
+    if (actions.refreshDashboard) {
+      actions.refreshDashboard();
+    }
+  };
+  
+  // Handle budget saved
+  const handleBudgetSaved = (budget) => {
+    console.log('Budget saved from quick actions:', budget);
+    // Trigger refresh if available
+    if (actions.refreshDashboard) {
+      actions.refreshDashboard();
     }
   };
 
@@ -54,7 +99,7 @@ const QuickActionsWidget = ({
       icon: faArrowDown,
       color: 'red',
       variant: 'outline',
-      action: () => handleQuickAction('add-expense', actions.addExpense)
+      action: handleAddExpense
     },
     {
       id: 'add-income',
@@ -63,7 +108,7 @@ const QuickActionsWidget = ({
       icon: faArrowUp,
       color: 'green',
       variant: 'outline',
-      action: () => handleQuickAction('add-income', actions.addIncome)
+      action: handleAddIncome
     },
     {
       id: 'create-budget',
@@ -72,7 +117,7 @@ const QuickActionsWidget = ({
       icon: faWallet,
       color: 'blue',
       variant: 'outline',
-      action: () => handleQuickAction('create-budget', actions.createQuickBudget)
+      action: handleCreateBudget
     }
   ];
 
@@ -132,7 +177,7 @@ const QuickActionsWidget = ({
                 {/* Arrow */}
                 <div className="text-gray-400">
                   <FontAwesomeIcon 
-                    icon="fa-solid fa-chevron-right" 
+                    icon={faChevronRight} 
                     className="text-xs"
                   />
                 </div>
@@ -148,7 +193,7 @@ const QuickActionsWidget = ({
           <Button
             variant="ghost"
             size="sm"
-            icon="fa-solid fa-sync"
+            icon={faSync}
             onClick={() => handleQuickAction('refresh', actions.refreshDashboard)}
             disabled={actionLoading === 'refresh'}
             className="text-xs"
@@ -159,14 +204,35 @@ const QuickActionsWidget = ({
           <Button
             variant="ghost"
             size="sm"
-            icon="fa-solid fa-chart-line"
-            onClick={() => console.log('View Reports clicked')}
+            icon={faChartLine}
+            onClick={handleViewReports}
             className="text-xs"
           >
             View Reports
           </Button>
         </div>
       </div>
+      
+      {/* Modals */}
+      <TransactionFormModal
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        transaction={{ type: 'expense' }} // Pre-set to expense
+        onTransactionSaved={handleTransactionSaved}
+      />
+      
+      <TransactionFormModal
+        isOpen={showIncomeModal}
+        onClose={() => setShowIncomeModal(false)}
+        transaction={{ type: 'income' }} // Pre-set to income
+        onTransactionSaved={handleTransactionSaved}
+      />
+      
+      <BudgetFormModal
+        isOpen={showBudgetModal}
+        onClose={() => setShowBudgetModal(false)}
+        onBudgetSaved={handleBudgetSaved}
+      />
     </Card>
   );
 };

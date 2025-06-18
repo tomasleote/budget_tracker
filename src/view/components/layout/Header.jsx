@@ -10,23 +10,28 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../ui/Button';
 import Breadcrumbs from './Breadcrumbs';
+import { NotificationDropdown } from '../ui';
+import { useNotifications } from '../../../controller/hooks';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Notifications hook
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    dismissAll
+  } = useNotifications();
+
   // Get page-specific actions
   const getPageActions = () => {
     switch (location.pathname) {
       case '/dashboard':
-        return [
-          {
-            label: 'Add Transaction',
-            icon: faPlus,
-            variant: 'primary',
-            action: () => navigate('/transactions')
-          }
-        ];
+        return []; // Removed Add Transaction button
       case '/transactions':
         return [
           {
@@ -86,17 +91,14 @@ const Header = () => {
             ))}
 
             {/* Notifications */}
-            <button
-              className="relative p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-              title="Notifications"
-              onClick={() => console.log('Notifications clicked')}
-            >
-              <FontAwesomeIcon icon={faBell} className="w-5 h-5" />
-              {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
-                <span className="w-2 h-2 bg-white rounded-full"></span>
-              </span>
-            </button>
+            <NotificationDropdown
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onDismiss={dismissNotification}
+              onDismissAll={dismissAll}
+            />
 
             {/* User Profile Dropdown */}
             <div className="relative">

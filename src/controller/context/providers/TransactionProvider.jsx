@@ -58,10 +58,19 @@ export const TransactionProvider = ({ children }) => {
     };
 
     window.addEventListener('refreshTransactions', handleCustomRefresh);
+    
+    // Listen for force sync events from other providers
+    const handleForceSync = () => {
+      console.log('🔄 Force sync event received, reloading transactions...');
+      loadTransactionsFromStorage();
+    };
+    
+    window.addEventListener('forceDataSync', handleForceSync);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('refreshTransactions', handleCustomRefresh);
+      window.removeEventListener('forceDataSync', handleForceSync);
     };
   }, []);
 

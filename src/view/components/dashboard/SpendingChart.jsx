@@ -101,7 +101,7 @@ const SpendingChart = ({
         summary={summary}
         isLoading={isLoading}
         className={className}
-        height={300}
+        height={350}
       />
     );
   }

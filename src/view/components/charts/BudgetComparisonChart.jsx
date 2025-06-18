@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartBar, faBullseye, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faChartBar, faBullseye, faExclamationTriangle, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import Card from '../ui/Card';
 
 const BudgetComparisonChart = ({ 
@@ -10,7 +10,12 @@ const BudgetComparisonChart = ({
   className = '',
   height = 350
 }) => {
-  // Helper function to format currency
+  // Get current time period info
+  const getCurrentTimePeriod = () => {
+    const now = new Date();
+    const currentMonth = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return `Current Month: ${currentMonth}`;
+  };
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -140,7 +145,13 @@ const BudgetComparisonChart = ({
       title="Budget vs Actual" 
       className={className}
       headerAction={
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
+          {/* Time Period Indicator */}
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
+            <span>{getCurrentTimePeriod()}</span>
+          </div>
+          
           {/* Status indicators */}
           {exceededCount > 0 && (
             <div className="flex items-center space-x-1">

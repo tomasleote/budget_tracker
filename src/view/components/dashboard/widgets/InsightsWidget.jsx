@@ -304,13 +304,7 @@ const InsightsWidget = ({
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2">
-          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center justify-center space-x-2">
-            <span>View Detailed Financial Report</span>
-            <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
-          </button>
-        </div>
+
       </div>
     </Card>
   );

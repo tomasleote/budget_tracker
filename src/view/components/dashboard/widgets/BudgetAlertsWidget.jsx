@@ -215,9 +215,7 @@ const BudgetAlertsWidget = ({
                   )}
                 </div>
                 
-                <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                  {alert.action}
-                </button>
+
               </div>
             ))}
           </div>
@@ -257,27 +255,7 @@ const BudgetAlertsWidget = ({
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon="fa-solid fa-plus"
-            className="flex-1 text-xs"
-            onClick={() => console.log('Create budget clicked')}
-          >
-            Create Budget
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon="fa-solid fa-chart-bar"
-            className="flex-1 text-xs"
-            onClick={() => console.log('View budgets clicked')}
-          >
-            View All
-          </Button>
-        </div>
+
       </div>
     </Card>
   );

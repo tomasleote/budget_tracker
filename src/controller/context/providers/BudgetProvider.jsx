@@ -156,9 +156,30 @@ export const BudgetProvider = ({ children }) => {
   const areTransactionsReady = () => {
     const transactions = transactionContext.transactions || [];
     const isTransactionLoading = transactionContext.isLoading;
-    // Consider transactions ready if we have some data OR if not currently loading
-    const ready = transactions.length > 0 || !isTransactionLoading;
-    console.log(`🔍 Transactions ready check: ${transactions.length} transactions, loading: ${isTransactionLoading}, ready: ${ready}`);
+    
+    // Also check localStorage directly to see if we have data that hasn't been loaded yet
+    let hasStoredData = false;
+    try {
+      const storedTransactions = localStorage.getItem('budget_tracker_transactions');
+      hasStoredData = storedTransactions && JSON.parse(storedTransactions).length > 0;
+    } catch (error) {
+      hasStoredData = false;
+    }
+    
+    // Consider transactions ready if:
+    // 1. We have transactions in context, OR
+    // 2. We're not loading AND we have stored data, OR
+    // 3. We're not loading AND localStorage is empty (no data to load)
+    const ready = transactions.length > 0 || 
+                  (!isTransactionLoading && hasStoredData) ||
+                  (!isTransactionLoading && !hasStoredData);
+    
+    console.log(`🔍 Transactions ready check:`);
+    console.log(`  - Context transactions: ${transactions.length}`);
+    console.log(`  - Is loading: ${isTransactionLoading}`);
+    console.log(`  - Has stored data: ${hasStoredData}`);
+    console.log(`  - Ready: ${ready}`);
+    
     return ready;
   };
 
@@ -300,14 +321,22 @@ export const BudgetProvider = ({ children }) => {
           if (storedTransactions) {
             const parsedTransactions = JSON.parse(storedTransactions);
             console.log(`💾 Found ${parsedTransactions.length} transactions in localStorage directly`);
-            if (parsedTransactions.length > 0 && transactionContext.actions?.refreshTransactions) {
-              console.log('🔄 Triggering transaction provider refresh...');
-              transactionContext.actions.refreshTransactions();
+            if (parsedTransactions.length > 0) {
+              // Force transaction provider to refresh immediately
+              if (transactionContext.actions?.refreshTransactions) {
+                console.log('🔄 Triggering transaction provider refresh...');
+                const refreshedTransactions = transactionContext.actions.refreshTransactions();
+                console.log(`🔄 Refreshed transactions: ${refreshedTransactions?.length || 0}`);
+              }
+              
+              // Also dispatch a custom event to force all providers to sync
+              window.dispatchEvent(new CustomEvent('forceDataSync'));
+              
               // Wait and retry budget overview calculation
               setTimeout(() => {
                 console.log('⏰ Retrying budget overview after transaction refresh...');
                 actions.loadOverview();
-              }, 1000);
+              }, 500);
               return;
             }
           }
@@ -396,16 +425,39 @@ export const BudgetProvider = ({ children }) => {
     }
   };
 
-  // Load initial data
+  // Load initial data with better timing
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         await actions.loadBudgets();
-        // Wait a bit for TransactionProvider to load, then load overview
-        setTimeout(async () => {
-          await actions.loadOverview();
-          await actions.loadAlerts();
-        }, 500);
+        
+        // Check if transactions are available, retry if not
+        const checkAndLoadOverview = async (retryCount = 0) => {
+          console.log(`🔄 Attempt ${retryCount + 1} to load budget overview...`);
+          
+          const transactions = getTransactionsForBudgetCalculations();
+          const isReady = areTransactionsReady();
+          
+          console.log(`📊 Transaction status: ${transactions.length} transactions, ready: ${isReady}`);
+          
+          if (isReady || retryCount >= 5) {
+            // Either we have transactions or we've tried enough times
+            await actions.loadOverview();
+            await actions.loadAlerts();
+          } else {
+            // Wait and retry
+            console.log(`⏳ Transactions not ready, retrying in ${500 + (retryCount * 200)}ms...`);
+            setTimeout(() => {
+              checkAndLoadOverview(retryCount + 1);
+            }, 500 + (retryCount * 200)); // Increasing delay
+          }
+        };
+        
+        // Start checking for transactions
+        setTimeout(() => {
+          checkAndLoadOverview();
+        }, 100);
+        
       } catch (error) {
         console.error('Error loading initial budget data:', error);
       }
@@ -418,7 +470,7 @@ export const BudgetProvider = ({ children }) => {
       console.log('🔄 Custom budget refresh triggered, reloading budget data...');
       setTimeout(() => {
         loadInitialData();
-      }, 500);
+      }, 100);
     };
 
     window.addEventListener('refreshBudgets', handleCustomRefresh);

@@ -1,7 +1,13 @@
-import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import React, { useState } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartPie, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faChartPie, 
+  faInfoCircle, 
+  faChartBar,
+  faList,
+  faCalendarAlt
+} from '@fortawesome/free-solid-svg-icons';
 import Card from '../ui/Card';
 
 const SpendingPieChart = ({ 
@@ -12,6 +18,22 @@ const SpendingPieChart = ({
   showLegend = true,
   height = 300
 }) => {
+  // Chart type state
+  const [chartType, setChartType] = useState('pie'); // 'pie', 'bar', 'list'
+  
+  // Chart type options
+  const chartTypes = [
+    { key: 'pie', label: 'Pie Chart', icon: faChartPie },
+    { key: 'bar', label: 'Bar Chart', icon: faChartBar },
+    { key: 'list', label: 'List View', icon: faList }
+  ];
+  
+  // Get current time period info
+  const getCurrentTimePeriod = () => {
+    const now = new Date();
+    const currentMonth = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return `Current Month: ${currentMonth}`;
+  };
   // Helper function to format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -98,72 +120,152 @@ const SpendingPieChart = ({
       title="Spending Distribution" 
       className={className}
       headerAction={
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">
+        <div className="flex items-center space-x-4">
+          {/* Time Period Indicator */}
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
+            <span>{getCurrentTimePeriod()}</span>
+          </div>
+          
+          {/* Chart Type Selector */}
+          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+            {chartTypes.map((type) => (
+              <button
+                key={type.key}
+                onClick={() => setChartType(type.key)}
+                className={`px-2 py-1 rounded text-xs transition-colors ${
+                  chartType === type.key 
+                    ? 'bg-white shadow text-blue-600' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title={type.label}
+              >
+                <FontAwesomeIcon icon={type.icon} className="w-3 h-3" />
+              </button>
+            ))}
+          </div>
+          
+          {/* Total Amount */}
+          <div className="text-sm text-gray-500">
             {formatCurrency(summary.totalExpenses)} total
-          </span>
-          <FontAwesomeIcon 
-            icon={faChartPie} 
-            className="text-gray-400" 
-          />
+          </div>
         </div>
       }
     >
       <div className="space-y-4">
-        {/* Pie Chart */}
+        {/* Chart Container */}
         <div style={{ height }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderLabel}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                animationBegin={0}
-                animationDuration={800}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              {showLegend && (
-                <Legend 
-                  verticalAlign="bottom" 
-                  height={36}
-                  formatter={(value, entry) => (
-                    <span style={{ color: entry.color }}>{value}</span>
-                  )}
+          {chartType === 'pie' && (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="45%"
+                  labelLine={false}
+                  label={renderLabel}
+                  outerRadius={70}
+                  fill="#8884d8"
+                  dataKey="value"
+                  animationBegin={0}
+                  animationDuration={800}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                {showLegend && (
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={70}
+                    wrapperStyle={{ 
+                      paddingTop: '10px',
+                      fontSize: '11px',
+                      lineHeight: '14px'
+                    }}
+                    iconType="circle"
+                    formatter={(value, entry) => (
+                      <span style={{ 
+                        color: entry.color, 
+                        fontSize: '11px',
+                        lineHeight: '14px'
+                      }}>
+                        {value}
+                      </span>
+                    )}
+                  />
+                )}
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'bar' && (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <XAxis 
+                  dataKey="name" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={80}
+                  interval={0}
+                  fontSize={12}
                 />
-              )}
-            </PieChart>
-          </ResponsiveContainer>
+                <YAxis 
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  fontSize={12}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'list' && (
+            <div className="space-y-3 h-full overflow-y-auto">
+              {chartData.map((category, index) => (
+                <div key={category.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    ></div>
+                    <div>
+                      <div className="font-medium text-gray-900">{category.name}</div>
+                      <div className="text-sm text-gray-500">{category.percentage.toFixed(1)}% of total</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-gray-900">{category.formattedValue}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Summary Stats */}
-        <div className="border-t pt-4">
+        <div className="border-t pt-6 mt-8">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-lg font-semibold text-gray-900">
-                {chartData.length}
+                {categoryBreakdown.length}
               </div>
               <div className="text-xs text-gray-500">Categories</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-gray-900">
-                {categoryBreakdown.reduce((sum, cat) => sum + (cat.count || 0), 0)}
+                {categoryBreakdown.reduce((sum, cat) => sum + (cat.transactionCount || 0), 0)}
               </div>
               <div className="text-xs text-gray-500">Transactions</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-gray-900">
-                {formatCurrency(
-                  chartData.reduce((sum, cat) => sum + cat.value, 0)
-                )}
+                {formatCurrency(summary.totalExpenses)}
               </div>
               <div className="text-xs text-gray-500">Total</div>
             </div>

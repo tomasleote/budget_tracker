@@ -220,12 +220,7 @@ const FinancialHealthWidget = ({
           </div>
         </div>
 
-        {/* Quick Action */}
-        <div className="pt-2 border-t border-gray-200">
-          <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-            View Detailed Health Report →
-          </button>
-        </div>
+
       </div>
     </Card>
   );

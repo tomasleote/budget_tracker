@@ -19,6 +19,7 @@ import Card from '../ui/Card';
 const RecentTransactions = ({ 
   recentActivity = [],
   isLoading = false,
+  onViewAll = () => window.location.href = '/transactions',
   className = ''
 }) => {
   // Helper function to format currency
@@ -211,43 +212,12 @@ const RecentTransactions = ({
           })}
         </div>
 
-        {/* Summary Stats */}
-        {recentActivity.length > 0 && (
-          <div className="border-t pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Income</div>
-                <div className="text-lg font-semibold text-green-600">
-                  {formatCurrency(
-                    recentActivity
-                      .filter(t => t.type === 'income')
-                      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0)
-                  )}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {recentActivity.filter(t => t.type === 'income').length} transactions
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Expenses</div>
-                <div className="text-lg font-semibold text-red-600">
-                  {formatCurrency(
-                    recentActivity
-                      .filter(t => t.type === 'expense')
-                      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0)
-                  )}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {recentActivity.filter(t => t.type === 'expense').length} transactions
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* View All Link */}
-        <div className="text-center pt-2">
-          <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
+        <div className="text-center pt-4 border-t">
+          <button 
+            onClick={onViewAll}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+          >
             View All Transactions
           </button>
         </div>

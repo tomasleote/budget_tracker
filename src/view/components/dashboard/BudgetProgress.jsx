@@ -12,7 +12,10 @@ import Card from '../ui/Card';
 const BudgetProgress = ({ 
   budgetOverview = [],
   isLoading = false,
-  className = ''
+  className = '',
+  onCreateBudget = () => {},
+  onViewAllBudgets = () => window.location.href = '/budget',
+  showCreateButton = true
 }) => {
   // Helper function to format currency
   const formatCurrency = (amount) => {
@@ -104,9 +107,14 @@ const BudgetProgress = ({
           />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Budgets Yet</h3>
           <p className="text-gray-500 mb-4">Create your first budget to track spending</p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            Create Budget
-          </button>
+          {showCreateButton && (
+            <button 
+              onClick={onCreateBudget}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Create Budget
+            </button>
+          )}
         </div>
       </Card>
     );
@@ -158,9 +166,9 @@ const BudgetProgress = ({
           </div>
         </div>
 
-        {/* Budget List */}
-        <div className="space-y-4">
-          {budgetOverview.slice(0, 5).map((budget, index) => {
+        {/* Budget List with Scrollbar - Show ALL budgets */}
+        <div className="space-y-4 max-h-[28rem] overflow-y-auto pr-2">
+          {budgetOverview.map((budget, index) => {
             // Calculate percentage - use provided or calculate from amounts
             const percentage = budget.progressPercentage || 
               (budget.spent && budget.budgetAmount ? (budget.spent / budget.budgetAmount * 100) : 0);
@@ -236,11 +244,14 @@ const BudgetProgress = ({
           })}
         </div>
 
-        {/* Show More Link */}
-        {budgetOverview.length > 5 && (
+        {/* Navigation to Budget Page */}
+        {budgetOverview.length > 3 && (
           <div className="text-center">
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-              View All {budgetOverview.length} Budgets
+            <button 
+              onClick={onViewAllBudgets}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+            >
+              Manage All {budgetOverview.length} Budgets
             </button>
           </div>
         )}

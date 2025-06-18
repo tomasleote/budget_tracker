@@ -1,16 +1,18 @@
 // Custom hooks exports for easy importing
-export { useAppContext } from './useAppContext.js';
-export { useTransactions } from './useTransactions.js';
-export { useBudgets } from './useBudgets.js';
-export { useCategories } from './useCategories.js';
-export { useUser } from './useUser.js';
-
-// Combined hook for accessing multiple contexts
 import { useAppContext } from './useAppContext.js';
 import { useTransactions } from './useTransactions.js';
 import { useBudgets } from './useBudgets.js';
 import { useCategories } from './useCategories.js';
 import { useUser } from './useUser.js';
+
+export { useAppContext } from './useAppContext.js';
+export { useTransactions } from './useTransactions.js';
+export { useBudgets } from './useBudgets.js';
+export { useCategories } from './useCategories.js';
+export { useUser } from './useUser.js';
+export { default as useNotifications } from './useNotifications.js';
+
+// Combined hook for accessing multiple contexts
 
 /**
  * Combined hook that provides access to all app contexts

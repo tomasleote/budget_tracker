@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome,
@@ -41,6 +41,11 @@ import mockDataGenerator from '../../data/mockDataGenerator.js';
 const { getMockDataStats } = mockDataGenerator;
 
 const Dashboard = () => {
+  // State for Monthly Analytics time period
+  const [monthsToShow, setMonthsToShow] = useState(6);
+  // State for tracking when data was last updated
+  const [lastUpdated, setLastUpdated] = useState(null);
+  
   // Hooks for data
   const {
     summary,
@@ -49,7 +54,7 @@ const Dashboard = () => {
     quickStats,
     financialHealth,
     isLoading: isDashboardLoading,
-    refreshDashboard,
+    actions,
     utils
   } = useDashboard();
 
@@ -61,6 +66,8 @@ const Dashboard = () => {
   } = useTransactions();
 
   const {
+    overview: budgetOverview,
+    isLoading: budgetIsLoading,
     createMonthlyBudget,
     isCreatingBudget
   } = useBudgets();
@@ -74,6 +81,41 @@ const Dashboard = () => {
   // Loading state
   const isLoading = isDashboardLoading;
 
+  // Update last updated time only when loading completes (one time)
+  useEffect(() => {
+    if (!isLoading && !lastUpdated) {
+      // Only set if we haven't set it yet
+      setLastUpdated(new Date());
+    }
+  }, [isLoading]); // Remove the data dependencies that cause constant updates
+
+  // Manual refresh function for better control
+  const handleRefreshDashboard = async () => {
+    try {
+      console.log('🔄 Manual dashboard refresh triggered...');
+      
+      // Update the last updated timestamp
+      setLastUpdated(new Date());
+      
+      // Dispatch force sync events to all providers
+      window.dispatchEvent(new CustomEvent('forceDataSync'));
+      window.dispatchEvent(new CustomEvent('refreshTransactions'));
+      window.dispatchEvent(new CustomEvent('refreshBudgets'));
+      
+      // Wait a bit for providers to sync
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // If all else fails, just reload the page
+      console.log('🔄 Reloading page to ensure fresh data...');
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('❌ Dashboard refresh error:', error);
+      // Fallback to page reload
+      window.location.reload();
+    }
+  };
+
   // Quick actions
   const quickActions = {
     addExpense: async (amount, category, description) => {
@@ -85,9 +127,7 @@ const Dashboard = () => {
     createQuickBudget: async (category, amount) => {
       return await createMonthlyBudget(category, amount, `Monthly budget for ${category}`);
     },
-    refreshDashboard: async () => {
-      return await refreshDashboard();
-    }
+    refreshDashboard: handleRefreshDashboard
   };
 
   // Get current time of day for greeting
@@ -134,7 +174,9 @@ const Dashboard = () => {
               {/* Last updated info */}
               <div className="hidden sm:flex items-center space-x-2 text-xs lg:text-sm text-gray-500">
                 <FontAwesomeIcon icon={faCalendarAlt} className="w-4 h-4" />
-                <span>Last updated: {new Date().toLocaleTimeString()}</span>
+                <span>
+                  Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}
+                </span>
               </div>
               
               {/* Refresh button */}
@@ -179,10 +221,12 @@ const Dashboard = () => {
             {/* Analytics Section - Takes 3 columns, responsive grid inside */}
             <div className="xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <BudgetProgress 
-                budgetOverview={summary?.budgetOverview || []}
-                isLoading={isLoading}
+                budgetOverview={budgetOverview || []}
+                isLoading={isLoading || budgetIsLoading}
                 onCreateBudget={() => window.location.href = '/budget'}
+                onViewAllBudgets={() => window.location.href = '/budget'}
                 className="h-full"
+                showCreateButton={false}
               />
               <SpendingChart 
                 categoryBreakdown={categoryBreakdown}
@@ -196,9 +240,9 @@ const Dashboard = () => {
           {/* Recent Transactions - Full Width */}
           <div className="w-full">
             <RecentTransactions 
-              recentActivity={recentActivity}
-              isLoading={isLoading}
-              onViewAll={() => window.location.href = '/transactions'}
+            recentActivity={recentActivity}
+            isLoading={isLoading}
+            onViewAll={() => window.location.href = '/transactions'}
             />
           </div>
 
@@ -206,9 +250,6 @@ const Dashboard = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">📊 Enhanced Analytics</h2>
-              <span className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium">
-                Phase 6: Recharts Integration
-              </span>
             </div>
             
             {/* Analytics Charts Grid */}
@@ -224,8 +265,8 @@ const Dashboard = () => {
               
               {/* Budget Comparison Chart */}
               <BudgetComparisonChart 
-                budgets={summary?.budgetOverview || []}
-                isLoading={isLoading}
+                budgets={budgetOverview || []}
+                isLoading={isLoading || budgetIsLoading}
                 height={350}
               />
             </div>
@@ -234,9 +275,10 @@ const Dashboard = () => {
             <div className="w-full">
               <MonthlyAnalyticsChart 
                 transactions={transactions}
-                budgets={summary?.budgetOverview || []}
-                monthsToShow={6}
-                isLoading={isLoading}
+                budgets={budgetOverview || []}
+                monthsToShow={monthsToShow}
+                onMonthsChange={setMonthsToShow}
+                isLoading={isLoading || budgetIsLoading}
                 height={400}
               />
             </div>
@@ -254,9 +296,9 @@ const Dashboard = () => {
               isLoading={isLoading}
             />
             <BudgetAlertsWidget 
-              budgetOverview={summary?.budgetOverview || []}
+              budgetOverview={budgetOverview || []}
               quickStats={quickStats}
-              isLoading={isLoading}
+              isLoading={isLoading || budgetIsLoading}
               onViewBudgets={() => window.location.href = '/budget'}
             />
             <InsightsWidget 

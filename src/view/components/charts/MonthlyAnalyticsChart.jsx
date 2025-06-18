@@ -8,10 +8,17 @@ const MonthlyAnalyticsChart = ({
   transactions = [],
   budgets = [],
   monthsToShow = 6,
+  onMonthsChange = () => {},
   isLoading = false,
   className = '',
   height = 400
 }) => {
+  // Month options
+  const monthOptions = [
+    { value: 3, label: '3 months' },
+    { value: 6, label: '6 months' },
+    { value: 12, label: '12 months' }
+  ];
   // Helper function to format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -185,10 +192,24 @@ const MonthlyAnalyticsChart = ({
       title="Monthly Analytics" 
       className={className}
       headerAction={
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">
-            Last {monthsToShow} months
-          </span>
+        <div className="flex items-center space-x-4">
+          {/* Month Selector */}
+          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+            {monthOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => onMonthsChange(option.value)}
+                className={`px-3 py-1 rounded text-xs transition-colors ${
+                  monthsToShow === option.value 
+                    ? 'bg-white shadow text-blue-600' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          
           <FontAwesomeIcon 
             icon={faChartArea} 
             className="text-gray-400" 
