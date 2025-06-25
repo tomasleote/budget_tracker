@@ -250,19 +250,27 @@ const Transactions = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen transition-colors duration-300" style={{
+      backgroundColor: 'var(--bg-primary)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
-                <FontAwesomeIcon icon={faExchangeAlt} className="text-blue-600 text-xl" />
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                <FontAwesomeIcon icon={faExchangeAlt} className="text-xl" style={{
+                  color: 'var(--accent-primary)'
+                }} />
+                <h1 className="text-2xl lg:text-3xl font-bold" style={{
+                  color: 'var(--text-primary)'
+                }}>
                   Transactions
                 </h1>
               </div>
-              <p className="text-gray-600 text-sm lg:text-base">
+              <p className="text-sm lg:text-base" style={{
+                color: 'var(--text-secondary)'
+              }}>
                 Manage and track all your financial transactions
               </p>
             </div>
@@ -291,51 +299,84 @@ const Transactions = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 lg:mb-8">
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FontAwesomeIcon icon={faExchangeAlt} className="text-blue-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--info-bg)'
+              }}>
+                <FontAwesomeIcon icon={faExchangeAlt} className="w-5 h-5" style={{
+                  color: 'var(--info)'
+                }} />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalTransactions}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Total Transactions</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--text-primary)'
+                }}>{stats.totalTransactions}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FontAwesomeIcon icon={faChartLine} className="text-green-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--success-bg)'
+              }}>
+                <FontAwesomeIcon icon={faChartLine} className="w-5 h-5" style={{
+                  color: 'var(--success)'
+                }} />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-2xl font-bold text-green-600">{summary.formattedIncome}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Total Income</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--success)'
+                }}>{summary.formattedIncome}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <FontAwesomeIcon icon={faChartLine} className="text-red-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--error-bg)'
+              }}>
+                <FontAwesomeIcon icon={faChartLine} className="w-5 h-5" style={{
+                  color: 'var(--error)'
+                }} />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-bold text-red-600">{summary.formattedExpenses}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Total Expenses</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--error)'
+                }}>{summary.formattedExpenses}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg ${summary.isPositiveBalance ? 'bg-green-100' : 'bg-red-100'}`}>
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: summary.isPositiveBalance ? 'var(--success-bg)' : 'var(--error-bg)'
+              }}>
                 <FontAwesomeIcon 
                   icon={summary.balanceIcon} 
-                  className={`w-5 h-5 ${summary.isPositiveBalance ? 'text-green-600' : 'text-red-600'}`} 
+                  className="w-5 h-5" 
+                  style={{
+                    color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
+                  }}
                 />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Net Balance</p>
-                <p className={`text-2xl font-bold ${summary.isPositiveBalance ? 'text-green-600' : 'text-red-600'}`}>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Net Balance</p>
+                <p className="text-2xl font-bold" style={{
+                  color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
+                }}>
                   {summary.formattedBalance}
                 </p>
               </div>

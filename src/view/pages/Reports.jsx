@@ -194,20 +194,20 @@ const Reports = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-64"></div>
+            <div className="h-8 rounded w-64" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white p-6 rounded-lg shadow">
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded"></div>
+                <div key={i} className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div className="h-4 rounded mb-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+                  <div className="h-8 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
                 </div>
               ))}
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
+              <div className="h-64 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
             </div>
           </div>
         </div>
@@ -216,19 +216,19 @@ const Reports = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
-                <FontAwesomeIcon icon={faChartBar} className="text-blue-600 text-xl" />
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                <FontAwesomeIcon icon={faChartBar} className="text-xl" style={{ color: 'var(--accent-primary)' }} />
+                <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Financial Reports
                 </h1>
               </div>
-              <p className="text-gray-600 text-sm lg:text-base">
+              <p className="text-sm lg:text-base" style={{ color: 'var(--text-secondary)' }}>
                 Comprehensive insights into your financial performance
               </p>
             </div>
@@ -251,11 +251,25 @@ const Reports = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Date Range Selector */}
               <div className="flex items-center space-x-4">
-                <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500" />
+                <FontAwesomeIcon icon={faCalendarAlt} style={{ color: 'var(--text-secondary)' }} />
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="px-4 py-2 rounded-lg focus:ring-2 transition-colors"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    borderColor: 'var(--border-primary)',
+                    borderWidth: '1px',
+                    color: 'var(--text-primary)'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--border-focus)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--border-primary)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 >
                   {dateRanges.map((range) => (
                     <option key={range.value} value={range.value}>
@@ -266,16 +280,27 @@ const Reports = () => {
               </div>
 
               {/* Report Type Selector */}
-              <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center space-x-1 rounded-lg p-1" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 {reportTypes.map((type) => (
                   <button
                     key={type.value}
                     onClick={() => setReportType(type.value)}
-                    className={`px-4 py-2 rounded flex items-center space-x-2 transition-colors ${
-                      reportType === type.value 
-                        ? 'bg-white shadow text-blue-600' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-4 py-2 rounded flex items-center space-x-2 transition-colors`}
+                    style={{
+                      backgroundColor: reportType === type.value ? 'var(--bg-card)' : 'transparent',
+                      color: reportType === type.value ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                      boxShadow: reportType === type.value ? 'var(--shadow-sm)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (reportType !== type.value) {
+                        e.target.style.color = 'var(--text-primary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (reportType !== type.value) {
+                        e.target.style.color = 'var(--text-secondary)';
+                      }
+                    }}
                   >
                     <FontAwesomeIcon icon={type.icon} className="w-4 h-4" />
                     <span className="font-medium hidden sm:inline">{type.label}</span>
@@ -295,39 +320,46 @@ const Reports = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="p-6">
                   <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <FontAwesomeIcon icon={faArrowTrendUp} className="text-green-600 w-6 h-6" />
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--success-bg)' }}>
+                      <FontAwesomeIcon icon={faArrowTrendUp} className="w-6 h-6" style={{ color: 'var(--success)' }} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Income</p>
-                      <p className="text-2xl font-bold text-green-600">{filteredData.summary.formattedIncome}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Income</p>
+                      <p className="text-2xl font-bold" style={{ color: 'var(--success)' }}>{filteredData.summary.formattedIncome}</p>
                     </div>
                   </div>
                 </Card>
 
                 <Card className="p-6">
                   <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-red-100 rounded-lg">
-                      <FontAwesomeIcon icon={faArrowTrendDown} className="text-red-600 w-6 h-6" />
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--error-bg)' }}>
+                      <FontAwesomeIcon icon={faArrowTrendDown} className="w-6 h-6" style={{ color: 'var(--error)' }} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                      <p className="text-2xl font-bold text-red-600">{filteredData.summary.formattedExpenses}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Total Expenses</p>
+                      <p className="text-2xl font-bold" style={{ color: 'var(--error)' }}>{filteredData.summary.formattedExpenses}</p>
                     </div>
                   </div>
                 </Card>
 
                 <Card className="p-6">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-lg ${filteredData.summary.isPositiveBalance ? 'bg-blue-100' : 'bg-red-100'}`}>
+                    <div className="p-3 rounded-lg" style={{ 
+                      backgroundColor: filteredData.summary.isPositiveBalance ? 'var(--info-bg)' : 'var(--error-bg)' 
+                    }}>
                       <FontAwesomeIcon 
                         icon={faDollarSign} 
-                        className={`w-6 h-6 ${filteredData.summary.isPositiveBalance ? 'text-blue-600' : 'text-red-600'}`} 
+                        className="w-6 h-6" 
+                        style={{ 
+                          color: filteredData.summary.isPositiveBalance ? 'var(--info)' : 'var(--error)' 
+                        }} 
                       />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Net Balance</p>
-                      <p className={`text-2xl font-bold ${filteredData.summary.isPositiveBalance ? 'text-blue-600' : 'text-red-600'}`}>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Net Balance</p>
+                      <p className="text-2xl font-bold" style={{
+                        color: filteredData.summary.isPositiveBalance ? 'var(--info)' : 'var(--error)'
+                      }}>
                         {filteredData.summary.formattedBalance}
                       </p>
                     </div>
@@ -336,12 +368,12 @@ const Reports = () => {
 
                 <Card className="p-6">
                   <div className="flex items-center space-x-3">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <FontAwesomeIcon icon={faExchangeAlt} className="text-purple-600 w-6 h-6" />
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--accent-primary)', opacity: 0.1 }}>
+                      <FontAwesomeIcon icon={faExchangeAlt} className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Transactions</p>
-                      <p className="text-2xl font-bold text-purple-600">{filteredData.transactions.length}</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Transactions</p>
+                      <p className="text-2xl font-bold" style={{ color: 'var(--accent-primary)' }}>{filteredData.transactions.length}</p>
                     </div>
                   </div>
                 </Card>
@@ -353,12 +385,12 @@ const Reports = () => {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Overall Score</h3>
-                        <p className="text-sm text-gray-600">Based on spending patterns and budget adherence</p>
+                      <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Overall Score</h3>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Based on spending patterns and budget adherence</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-3xl font-bold text-blue-600">{financialHealth.score}/100</div>
-                        <div className="text-sm text-gray-600">Grade: {financialHealth.grade}</div>
+                      <div className="text-3xl font-bold" style={{ color: 'var(--accent-primary)' }}>{financialHealth.score}/100</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Grade: {financialHealth.grade}</div>
                       </div>
                     </div>
                     <ProgressBar
@@ -413,11 +445,11 @@ const Reports = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4">Category</th>
-                          <th className="text-right py-3 px-4">Amount</th>
-                          <th className="text-right py-3 px-4">Transactions</th>
-                          <th className="text-right py-3 px-4">Percentage</th>
+                        <tr style={{ borderBottom: '1px solid var(--border-primary)' }}>
+                          <th className="text-left py-3 px-4" style={{ color: 'var(--text-primary)' }}>Category</th>
+                          <th className="text-right py-3 px-4" style={{ color: 'var(--text-primary)' }}>Amount</th>
+                          <th className="text-right py-3 px-4" style={{ color: 'var(--text-primary)' }}>Transactions</th>
+                          <th className="text-right py-3 px-4" style={{ color: 'var(--text-primary)' }}>Percentage</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -427,7 +459,7 @@ const Reports = () => {
                             : 0;
                           
                           return (
-                            <tr key={category.category} className="border-b border-gray-100">
+                            <tr key={category.category} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
                               <td className="py-3 px-4 font-medium">{category.category}</td>
                               <td className="py-3 px-4 text-right">{formatCurrency(category.amount)}</td>
                               <td className="py-3 px-4 text-right">{category.count}</td>
@@ -450,20 +482,20 @@ const Reports = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="p-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">{budgetStats.totalBudgets}</div>
-                    <div className="text-sm text-gray-600">Total Budgets</div>
+                    <div className="text-3xl font-bold mb-2" style={{ color: 'var(--accent-primary)' }}>{budgetStats.totalBudgets}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Budgets</div>
                   </div>
                 </Card>
                 <Card className="p-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-2">{budgetStats.healthyBudgets}</div>
-                    <div className="text-sm text-gray-600">Healthy Budgets</div>
+                    <div className="text-3xl font-bold mb-2" style={{ color: 'var(--success)' }}>{budgetStats.healthyBudgets}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Healthy Budgets</div>
                   </div>
                 </Card>
                 <Card className="p-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-red-600 mb-2">{budgetStats.exceededBudgets}</div>
-                    <div className="text-sm text-gray-600">Exceeded Budgets</div>
+                    <div className="text-3xl font-bold mb-2" style={{ color: 'var(--error)' }}>{budgetStats.exceededBudgets}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Exceeded Budgets</div>
                   </div>
                 </Card>
               </div>
@@ -516,8 +548,8 @@ const Reports = () => {
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Spending Insights</h4>
-                      <ul className="space-y-2 text-sm text-gray-600">
+                      <h4 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Spending Insights</h4>
+                      <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                         <li>• Average transaction: {formatCurrency(transactionStats.averageExpense || 0)}</li>
                         <li>• Most active category: {filteredData.categoryBreakdown[0]?.category || 'None'}</li>
                         <li>• Transaction frequency: {formatPercentage(transactionStats.transactionFrequency || 0)} per day</li>
@@ -526,8 +558,8 @@ const Reports = () => {
                     </div>
                     
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Recommendations</h4>
-                      <ul className="space-y-2 text-sm text-gray-600">
+                      <h4 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Recommendations</h4>
+                      <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                         {filteredData.summary.expenses > filteredData.summary.income && (
                           <li>• ⚠️ Expenses exceed income - review spending</li>
                         )}
@@ -548,21 +580,21 @@ const Reports = () => {
               <Card title="Transaction Activity">
                 <div className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{transactionStats.incomeTransactions}</div>
-                      <div className="text-sm text-gray-600">Income Transactions</div>
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{transactionStats.incomeTransactions}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Income Transactions</div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{transactionStats.expenseTransactions}</div>
-                      <div className="text-sm text-gray-600">Expense Transactions</div>
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{transactionStats.expenseTransactions}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Expense Transactions</div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(transactionStats.averageIncome || 0)}</div>
-                      <div className="text-sm text-gray-600">Avg Income</div>
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(transactionStats.averageIncome || 0)}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Avg Income</div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(transactionStats.averageExpense || 0)}</div>
-                      <div className="text-sm text-gray-600">Avg Expense</div>
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                      <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(transactionStats.averageExpense || 0)}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Avg Expense</div>
                     </div>
                   </div>
                 </div>

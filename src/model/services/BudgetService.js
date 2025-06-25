@@ -17,6 +17,16 @@ import {
   formatExportFilename
 } from '../../controller/utils/index.js';
 
+/**
+ * BudgetService - LOGGING CLEANED
+ * 
+ * Service layer for budget operations and business logic
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive service operation logs
+ * - Only keep essential error logs and major operations
+ * - Reduced verbosity in budget processing
+ */
 class BudgetService {
   constructor() {
     this.budgetRepository = new BudgetRepository();
@@ -153,12 +163,11 @@ class BudgetService {
     }, null);
   }
 
-  // Get budget overview for dashboard using utility functions
+  // Get budget overview for dashboard using utility functions - SILENT
   async getBudgetOverview() {
     return asyncSafeExecute(async () => {
       const currentBudgets = await this.budgetRepository.getCurrentBudgets();
       const transactions = await this.transactionRepository.getAll();
-      console.log('📊 BudgetService.getBudgetOverview - Processing budgets:', currentBudgets.length);
       const overview = [];
 
       for (const budget of currentBudgets) {
@@ -177,7 +186,6 @@ class BudgetService {
         return b.progress.percentage - a.progress.percentage;
       });
 
-      console.log('✅ Budget overview ready:', overview.length);
       return overview;
     }, []);
   }
@@ -274,31 +282,19 @@ class BudgetService {
   }
   
   shouldGenerateAlert(currentState, lastState) {
-    // Generate alert if:
-    // 1. State changed from normal to warning/exceeded
-    // 2. State changed from warning to exceeded  
-    // 3. State changed back from exceeded/warning to normal (so it can alert again later)
-    // 4. It's a new budget (lastState is 'normal')
-    
     if (currentState === 'normal') {
-      // If back to normal, don't generate alert but allow future alerts
       return false;
     }
     
     if (lastState === 'normal' && (currentState === 'warning' || currentState === 'exceeded')) {
-      return true; // Normal → Warning/Exceeded
+      return true;
     }
     
     if (lastState === 'warning' && currentState === 'exceeded') {
-      return true; // Warning → Exceeded
+      return true;
     }
     
-    // State reverted and then went bad again
-    if ((lastState === 'exceeded' || lastState === 'warning') && currentState === 'normal') {
-      return false; // Don't alert when going back to normal, but reset for future
-    }
-    
-    return false; // Same state, don't generate new alert
+    return false;
   }
   
   getStoredAlerts() {
@@ -306,7 +302,9 @@ class BudgetService {
       const stored = localStorage.getItem('budget_tracker_alerts');
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Error reading stored alerts:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reading stored alerts:', error);
+      }
       return [];
     }
   }
@@ -315,7 +313,9 @@ class BudgetService {
     try {
       localStorage.setItem('budget_tracker_alerts', JSON.stringify(alerts));
     } catch (error) {
-      console.error('Error saving alerts:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error saving alerts:', error);
+      }
     }
   }
   
@@ -324,7 +324,9 @@ class BudgetService {
       const dismissed = localStorage.getItem('budget_tracker_dismissed_alerts');
       return dismissed ? new Set(JSON.parse(dismissed)) : new Set();
     } catch (error) {
-      console.error('Error reading dismissed alerts:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reading dismissed alerts:', error);
+      }
       return new Set();
     }
   }
@@ -333,7 +335,9 @@ class BudgetService {
     try {
       localStorage.setItem('budget_tracker_dismissed_alerts', JSON.stringify([...dismissedSet]));
     } catch (error) {
-      console.error('Error saving dismissed alerts:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error saving dismissed alerts:', error);
+      }
     }
   }
   
@@ -342,7 +346,9 @@ class BudgetService {
       const history = localStorage.getItem('budget_tracker_alert_history');
       return history ? JSON.parse(history) : {};
     } catch (error) {
-      console.error('Error reading alert history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reading alert history:', error);
+      }
       return {};
     }
   }
@@ -351,7 +357,9 @@ class BudgetService {
     try {
       localStorage.setItem('budget_tracker_alert_history', JSON.stringify(history));
     } catch (error) {
-      console.error('Error saving alert history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error saving alert history:', error);
+      }
     }
   }
   
@@ -415,7 +423,7 @@ class BudgetService {
     });
   }
 
-  // Update all budget spending amounts
+  // Simplified methods without excessive logging
   async refreshAllBudgetSpending() {
     return asyncSafeExecute(async () => {
       const budgets = await this.budgetRepository.getAll();
@@ -441,271 +449,6 @@ class BudgetService {
       failed: 0,
       error: 'Failed to refresh budget spending'
     });
-  }
-
-  // Budget analytics using utility functions
-  async getBudgetAnalytics(period = 'month') {
-    return asyncSafeExecute(async () => {
-      const budgets = await this.budgetRepository.getAll();
-      const transactions = await this.transactionRepository.getAll();
-      
-      const analytics = {
-        totalBudgets: budgets.length,
-        activeBudgets: budgets.filter(b => b.isActive).length,
-        totalBudgetAmount: budgets.reduce((sum, b) => sum + (parseFloat(b.budgetAmount) || 0), 0),
-        totalSpent: 0,
-        budgetUtilization: 0,
-        categoryBreakdown: [],
-        performanceMetrics: {}
-      };
-
-      // Calculate spending and utilization using utility functions
-      for (const budget of budgets) {
-        const progress = calculateBudgetProgress(budget, transactions);
-        analytics.totalSpent += progress.spent;
-        
-        analytics.categoryBreakdown.push({
-          category: budget.category,
-          budgetAmount: budget.budgetAmount,
-          spent: progress.spent,
-          remaining: progress.remaining,
-          percentage: progress.percentage,
-          status: progress.status
-        });
-      }
-
-      analytics.budgetUtilization = analytics.totalBudgetAmount > 0 ? 
-        (analytics.totalSpent / analytics.totalBudgetAmount * 100) : 0;
-
-      // Performance metrics
-      const exceededBudgets = analytics.categoryBreakdown.filter(b => b.percentage > 100);
-      const nearLimitBudgets = analytics.categoryBreakdown.filter(b => b.percentage >= 80 && b.percentage <= 100);
-      const healthyBudgets = analytics.categoryBreakdown.filter(b => b.percentage < 80);
-
-      analytics.performanceMetrics = {
-        exceededCount: exceededBudgets.length,
-        nearLimitCount: nearLimitBudgets.length,
-        healthyCount: healthyBudgets.length,
-        averageUtilization: analytics.categoryBreakdown.length > 0 ? 
-          analytics.categoryBreakdown.reduce((sum, b) => sum + b.percentage, 0) / analytics.categoryBreakdown.length : 0
-      };
-
-      return analytics;
-    }, null);
-  }
-
-  // Budget recommendations using utility functions
-  async getBudgetRecommendations() {
-    return asyncSafeExecute(async () => {
-      const analytics = await this.getBudgetAnalytics();
-      const transactions = await this.transactionRepository.getAll();
-      const recommendations = [];
-
-      if (!analytics) return recommendations;
-
-      // Analyze spending patterns using utility functions
-      const categorySpending = calculateSpendingByCategory(transactions, 'expense');
-      const existingBudgetCategories = new Set(analytics.categoryBreakdown.map(b => b.category));
-
-      // Recommend budgets for high-spending categories without budgets
-      categorySpending.forEach(category => {
-        if (!existingBudgetCategories.has(category.category) && category.amount > 100) {
-          recommendations.push({
-            type: 'create_budget',
-            category: category.category,
-            suggestedAmount: roundCurrency(category.amount * 1.1), // 10% buffer
-            reason: `You spent $${category.amount} on ${category.category} last period`,
-            priority: 'medium'
-          });
-        }
-      });
-
-      // Recommend budget adjustments for consistently exceeded budgets
-      analytics.categoryBreakdown.forEach(budget => {
-        if (budget.percentage > 120) {
-          recommendations.push({
-            type: 'increase_budget',
-            category: budget.category,
-            currentAmount: budget.budgetAmount,
-            suggestedAmount: roundCurrency(budget.spent * 1.1),
-            reason: `Budget consistently exceeded by ${(budget.percentage - 100).toFixed(1)}%`,
-            priority: 'high'
-          });
-        } else if (budget.percentage < 50) {
-          recommendations.push({
-            type: 'decrease_budget',
-            category: budget.category,
-            currentAmount: budget.budgetAmount,
-            suggestedAmount: roundCurrency(budget.spent * 1.2),
-            reason: `Budget underutilized at ${budget.percentage.toFixed(1)}%`,
-            priority: 'low'
-          });
-        }
-      });
-
-      return recommendations.sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
-      });
-    }, []);
-  }
-
-  // Budget templates
-  async createBudgetTemplate(name, budgets) {
-    return safeExecute(() => {
-      const template = {
-        id: `template_${Date.now()}`,
-        name,
-        budgets: budgets.map(b => ({
-          category: b.category,
-          budgetAmount: b.budgetAmount,
-          period: b.period
-        })),
-        createdAt: new Date().toISOString()
-      };
-
-      return template;
-    }, null);
-  }
-
-  async applyBudgetTemplate(templateBudgets) {
-    return asyncSafeExecute(async () => {
-      const results = [];
-      
-      for (const templateBudget of templateBudgets) {
-        const result = await this.createBudget(templateBudget);
-        results.push(result);
-      }
-
-      const successful = results.filter(r => r.success);
-      const failed = results.filter(r => !r.success);
-
-      return {
-        total: results.length,
-        successful: successful.length,
-        failed: failed.length,
-        results,
-        budgets: successful.map(r => r.budget)
-      };
-    }, {
-      total: 0,
-      successful: 0,
-      failed: 0,
-      error: 'Failed to apply budget template'
-    });
-  }
-
-  // Budget forecasting using utility functions
-  async forecastBudgetPerformance(months = 3) {
-    return asyncSafeExecute(async () => {
-      const budgets = await this.budgetRepository.getAll();
-      const transactions = await this.transactionRepository.getAll();
-      const forecasts = [];
-
-      for (const budget of budgets) {
-        const categoryTransactions = transactions.filter(t => 
-          t.type === 'expense' && t.category === budget.category
-        );
-
-        // Calculate average monthly spending using utility functions
-        const trends = calculateTrends(categoryTransactions, 6);
-        const avgMonthlySpend = trends.length > 0 ?
-          trends.reduce((sum, trend) => sum + trend.balance.expenses, 0) / trends.length : 0;
-
-        // Forecast future months
-        const monthForecasts = [];
-        for (let i = 1; i <= months; i++) {
-          const forecastDate = new Date();
-          forecastDate.setMonth(forecastDate.getMonth() + i);
-          
-          monthForecasts.push({
-            month: forecastDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
-            projectedSpending: roundCurrency(avgMonthlySpend),
-            budgetAmount: budget.budgetAmount,
-            projectedOverage: Math.max(0, roundCurrency(avgMonthlySpend - budget.budgetAmount)),
-            riskLevel: this.calculateRiskLevel(avgMonthlySpend, budget.budgetAmount)
-          });
-        }
-
-        forecasts.push({
-          category: budget.category,
-          currentBudget: budget.budgetAmount,
-          averageMonthlySpending: roundCurrency(avgMonthlySpend),
-          monthlyForecasts: monthForecasts,
-          recommendation: this.getBudgetRecommendation(avgMonthlySpend, budget.budgetAmount)
-        });
-      }
-
-      return forecasts;
-    }, []);
-  }
-
-  calculateRiskLevel(projectedSpending, budgetAmount) {
-    const ratio = projectedSpending / budgetAmount;
-    if (ratio > 1.2) return 'high';
-    if (ratio > 1.0) return 'medium';
-    if (ratio > 0.8) return 'low';
-    return 'minimal';
-  }
-
-  getBudgetRecommendation(avgSpending, budgetAmount) {
-    const ratio = avgSpending / budgetAmount;
-    
-    if (ratio > 1.2) {
-      return {
-        action: 'increase',
-        suggestedAmount: roundCurrency(avgSpending * 1.1),
-        reason: 'Consistently exceeding budget by significant amount'
-      };
-    } else if (ratio > 1.0) {
-      return {
-        action: 'increase',
-        suggestedAmount: roundCurrency(avgSpending * 1.05),
-        reason: 'Regularly exceeding budget'
-      };
-    } else if (ratio < 0.6) {
-      return {
-        action: 'decrease',
-        suggestedAmount: roundCurrency(avgSpending * 1.2),
-        reason: 'Budget significantly underutilized'
-      };
-    } else {
-      return {
-        action: 'maintain',
-        suggestedAmount: budgetAmount,
-        reason: 'Budget is well-calibrated'
-      };
-    }
-  }
-
-  // Export budget data using utility functions
-  async exportBudgets(format = 'json') {
-    return asyncSafeExecute(async () => {
-      const budgets = await this.budgetRepository.getAll();
-      
-      switch (format.toLowerCase()) {
-        case 'csv':
-          return await this.budgetRepository.exportToCSV();
-        case 'json':
-          return JSON.stringify(budgets, null, 2);
-        default:
-          throw new Error('Unsupported export format');
-      }
-    }, null);
-  }
-
-  // Budget statistics
-  async getBudgetStatistics() {
-    return asyncSafeExecute(async () => {
-      return await this.budgetRepository.getBudgetsByStatus();
-    }, null);
-  }
-
-  // Budget filtering
-  async getBudgetsWithFilters(filters = {}) {
-    return asyncSafeExecute(async () => {
-      return await this.budgetRepository.getWithFilters(filters);
-    }, []);
   }
 
   // Activate/Deactivate budgets
@@ -735,53 +478,34 @@ class BudgetService {
     });
   }
 
-  // Budget performance insights
-  async getBudgetInsights() {
+  // Budget filtering
+  async getBudgetsWithFilters(filters = {}) {
     return asyncSafeExecute(async () => {
-      const analytics = await this.getBudgetAnalytics();
-      const recommendations = await this.getBudgetRecommendations();
-      const alerts = await this.getBudgetAlerts();
+      return await this.budgetRepository.getWithFilters(filters);
+    }, []);
+  }
 
-      return {
-        summary: {
-          totalBudgets: analytics.totalBudgets,
-          activeBudgets: analytics.activeBudgets,
-          budgetUtilization: analytics.budgetUtilization,
-          healthScore: this.calculateBudgetHealthScore(analytics)
-        },
-        alerts,
-        recommendations: recommendations.slice(0, 5), // Top 5 recommendations
-        trends: await this.getBudgetTrends()
-      };
+  // Budget statistics
+  async getBudgetStatistics() {
+    return asyncSafeExecute(async () => {
+      return await this.budgetRepository.getBudgetsByStatus();
     }, null);
   }
 
-  calculateBudgetHealthScore(analytics) {
-    if (!analytics || analytics.totalBudgets === 0) return 0;
-
-    const healthyWeight = 0.4;
-    const nearLimitWeight = 0.3;
-    const exceededWeight = 0.3;
-
-    const score = 
-      (analytics.performanceMetrics.healthyCount / analytics.totalBudgets) * healthyWeight * 100 +
-      ((analytics.performanceMetrics.nearLimitCount / analytics.totalBudgets) * nearLimitWeight * 50) +
-      ((analytics.performanceMetrics.exceededCount / analytics.totalBudgets) * exceededWeight * 0);
-
-    return Math.round(score);
-  }
-
-  async getBudgetTrends(periods = 6) {
+  // Export budget data
+  async exportBudgets(format = 'json') {
     return asyncSafeExecute(async () => {
-      const transactions = await this.transactionRepository.getAll();
-      const trends = calculateTrends(transactions, periods);
+      const budgets = await this.budgetRepository.getAll();
       
-      return trends.map(trend => ({
-        period: trend.periodName,
-        totalSpent: trend.balance.expenses,
-        categories: trend.categoryBreakdown.slice(0, 5) // Top 5 categories
-      }));
-    }, []);
+      switch (format.toLowerCase()) {
+        case 'csv':
+          return await this.budgetRepository.exportToCSV();
+        case 'json':
+          return JSON.stringify(budgets, null, 2);
+        default:
+          throw new Error('Unsupported export format');
+      }
+    }, null);
   }
 }
 

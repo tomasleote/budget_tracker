@@ -10,7 +10,7 @@ const Card = ({
   headerAction = null,
   ...props 
 }) => {
-  const baseClasses = 'bg-white rounded-lg border border-gray-200';
+  const baseClasses = 'rounded-lg transition-colors duration-300';
   
   const paddingClasses = {
     none: '',
@@ -33,16 +33,30 @@ const Card = ({
     ${className}
   `.trim().replace(/\s+/g, ' ');
 
+  const cardStyle = {
+    backgroundColor: 'var(--bg-card)',
+    borderColor: 'var(--border-primary)',
+    borderWidth: '1px',
+    color: 'var(--text-primary)',
+    boxShadow: shadow !== 'none' ? 'var(--shadow-sm)' : 'none'
+  };
+
   if (title) {
     return (
-      <div className={cardClasses} {...props}>
+      <div className={cardClasses} style={cardStyle} {...props}>
         {/* Card Header */}
-        <div className={`border-b border-gray-200 ${paddingClasses[padding]} pb-4`}>
+        <div className={`pb-4 ${paddingClasses[padding]}`} style={{
+          borderBottom: '1px solid var(--border-primary)'
+        }}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <h3 className="text-lg font-semibold" style={{
+                color: 'var(--text-primary)'
+              }}>{title}</h3>
               {subtitle && (
-                <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+                <p className="text-sm mt-1" style={{
+                  color: 'var(--text-secondary)'
+                }}>{subtitle}</p>
               )}
             </div>
             {headerAction && (
@@ -60,7 +74,7 @@ const Card = ({
   }
 
   return (
-    <div className={cardClasses} {...props}>
+    <div className={cardClasses} style={cardStyle} {...props}>
       {children}
     </div>
   );

@@ -266,15 +266,25 @@ const TransactionList = ({
     return (
       <Card className={className}>
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-6 rounded w-1/3" style={{
+            backgroundColor: 'var(--bg-tertiary)'
+          }}></div>
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div className="w-10 h-10 rounded-full" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
               <div className="flex-1 space-y-1">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 rounded w-3/4" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
+                <div className="h-3 rounded w-1/2" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
               </div>
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-4 rounded w-16" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
             </div>
           ))}
         </div>
@@ -288,8 +298,13 @@ const TransactionList = ({
       title={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold text-gray-900">Transactions</h3>
-            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-sm">
+            <h3 className="text-lg font-semibold" style={{
+              color: 'var(--text-primary)'
+            }}>Transactions</h3>
+            <span className="px-2 py-1 rounded text-sm" style={{
+              backgroundColor: 'var(--bg-secondary)',
+              color: 'var(--text-secondary)'
+            }}>
               {filteredTransactions.length}
             </span>
           </div>
@@ -327,17 +342,27 @@ const TransactionList = ({
 
           {/* Advanced Filters */}
           {showFilters && showAdvancedFilters && (
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="rounded-lg p-4 space-y-4" style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-primary)'
+            }}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Type Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1" style={{
+                    color: 'var(--text-primary)'
+                  }}>
                     Type
                   </label>
                   <select
                     value={filters.type}
                     onChange={(e) => handleFilterChange('type', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   >
                     <option value="all">All Types</option>
                     <option value="income">Income</option>
@@ -347,13 +372,20 @@ const TransactionList = ({
 
                 {/* Category Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1" style={{
+                    color: 'var(--text-primary)'
+                  }}>
                     Category
                   </label>
                   <select
                     value={filters.category}
                     onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   >
                     <option value="all">All Categories</option>
                     {uniqueCategories.map(category => (
@@ -366,27 +398,41 @@ const TransactionList = ({
 
                 {/* Date From */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1" style={{
+                    color: 'var(--text-primary)'
+                  }}>
                     From Date
                   </label>
                   <input
                     type="date"
                     value={filters.dateFrom}
                     onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   />
                 </div>
 
                 {/* Date To */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1" style={{
+                    color: 'var(--text-primary)'
+                  }}>
                     To Date
                   </label>
                   <input
                     type="date"
                     value={filters.dateTo}
                     onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{
+                      backgroundColor: 'var(--bg-primary)',
+                      border: '1px solid var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   />
                 </div>
               </div>
@@ -395,13 +441,20 @@ const TransactionList = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       Sort By
                     </label>
                     <select
                       value={filters.sortBy}
                       onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="px-3 py-2 rounded-lg"
+                      style={{
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-primary)',
+                        color: 'var(--text-primary)'
+                      }}
                     >
                       <option value="date">Date</option>
                       <option value="amount">Amount</option>
@@ -410,13 +463,20 @@ const TransactionList = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       Order
                     </label>
                     <select
                       value={filters.sortOrder}
                       onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="px-3 py-2 rounded-lg"
+                      style={{
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-primary)',
+                        color: 'var(--text-primary)'
+                      }}
                     >
                       <option value="desc">Descending</option>
                       <option value="asc">Ascending</option>
@@ -439,9 +499,14 @@ const TransactionList = ({
 
       {/* Bulk Actions */}
       {selectedTransactions.size > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="rounded-lg p-4 mb-4" style={{
+          backgroundColor: 'var(--info-bg)',
+          border: '1px solid var(--info-border)'
+        }}>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-blue-700">
+            <span className="text-sm" style={{
+              color: 'var(--info)'
+            }}>
               {selectedTransactions.size} transaction(s) selected
             </span>
             <div className="flex items-center space-x-2">
@@ -471,15 +536,20 @@ const TransactionList = ({
         <div className="text-center py-8">
           <FontAwesomeIcon 
             icon={faInfoCircle} 
-            className="text-gray-400 text-3xl mb-4" 
+            className="text-3xl mb-4" 
+            style={{ color: 'var(--text-tertiary)' }}
           />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium mb-2" style={{
+            color: 'var(--text-primary)'
+          }}>
             {searchTerm || Object.values(filters).some(f => f !== 'all' && f !== 'date' && f !== 'desc' && f !== '') 
               ? 'No transactions found' 
               : 'No transactions yet'
             }
           </h3>
-          <p className="text-gray-500 mb-4">
+          <p className="mb-4" style={{
+            color: 'var(--text-secondary)'
+          }}>
             {searchTerm || Object.values(filters).some(f => f !== 'all' && f !== 'date' && f !== 'desc' && f !== '')
               ? 'Try adjusting your search or filters'
               : 'Start by adding your first transaction'
@@ -490,36 +560,56 @@ const TransactionList = ({
         <div className="space-y-3">
           {/* Select All Header */}
           {showActions && (
-            <div className="flex items-center space-x-3 py-2 border-b border-gray-200">
+            <div className="flex items-center space-x-3 py-2" style={{
+              borderBottom: '1px solid var(--border-primary)'
+            }}>
               <input
                 type="checkbox"
                 checked={selectedTransactions.size === filteredTransactions.length && filteredTransactions.length > 0}
                 onChange={handleSelectAll}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 rounded"
+                style={{
+                  accentColor: 'var(--accent-primary)'
+                }}
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium" style={{
+                color: 'var(--text-primary)'
+              }}>
                 Select All
               </span>
             </div>
           )}
 
           {/* Transaction Items - Scrollable Container */}
-          <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+          <div className="max-h-96 overflow-y-auto rounded-lg" style={{
+            border: '1px solid var(--border-primary)'
+          }}>
             <div className="space-y-0">
               {filteredTransactions.map((transaction, index) => {
                 const isIncome = transaction.type === 'income';
                 const categoryIcon = getCategoryIcon(transaction.category);
+                const isSelected = selectedTransactions.has(transaction.id);
                 
                 return (
                   <div 
                     key={transaction.id}
-                    className={`flex items-center space-x-3 p-4 transition-colors cursor-pointer ${
-                      index !== filteredTransactions.length - 1 ? 'border-b border-gray-100' : ''
-                    } ${
-                      selectedTransactions.has(transaction.id)
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'hover:bg-gray-50'
-                    }`}
+                    className="flex items-center space-x-3 p-4 transition-colors cursor-pointer"
+                    style={{
+                      borderBottom: index !== filteredTransactions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                      backgroundColor: isSelected 
+                        ? 'var(--info-bg)' 
+                        : 'var(--bg-card)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+                      }
+                    }}
                   >
                     {/* Selection Checkbox */}
                     {showActions && (

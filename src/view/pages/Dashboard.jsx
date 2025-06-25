@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome,
@@ -40,11 +40,30 @@ import { useUser } from '../../controller/hooks/useUser';
 import mockDataGenerator from '../../data/mockDataGenerator.js';
 const { getMockDataStats } = mockDataGenerator;
 
+/**
+ * Dashboard Component - Performance Optimized
+ * 
+ * TIMESTAMP MANAGEMENT OPTIMIZATIONS (Phase 3):
+ * - Initializes timestamp immediately (no "Loading..." state)
+ * - Uses data hash to detect real changes vs re-renders
+ * - Updates timestamp only when:
+ *   1. Initial load completes
+ *   2. Data actually changes (transactions, budgets, balance)
+ *   3. Manual refresh is triggered
+ *   4. User performs actions (add transaction, create budget)
+ * - Stable functions with useCallback and useMemo
+ * - Development mode indicators for debugging
+ * 
+ * This prevents the "Last updated" from changing every second due to re-renders.
+ */
 const Dashboard = () => {
   // State for Monthly Analytics time period
   const [monthsToShow, setMonthsToShow] = useState(6);
-  // State for tracking when data was last updated
-  const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // State for tracking when data was last updated - OPTIMIZED
+  const [lastUpdated, setLastUpdated] = useState(() => new Date()); // Initialize immediately
+  const hasInitialized = useRef(false);
+  const lastDataHash = useRef(''); // Track actual data changes
   
   // Hooks for data
   const {
@@ -81,54 +100,118 @@ const Dashboard = () => {
   // Loading state
   const isLoading = isDashboardLoading;
 
-  // Update last updated time only when loading completes (one time)
-  useEffect(() => {
-    if (!isLoading && !lastUpdated) {
-      // Only set if we haven't set it yet
-      setLastUpdated(new Date());
-    }
-  }, [isLoading]); // Remove the data dependencies that cause constant updates
+  // Create a stable data hash to detect real changes
+  const currentDataHash = `${summary.totalTransactions}-${summary.totalBudgets}-${summary.currentBalance}-${recentActivity.length}`;
 
-  // Manual refresh function for better control
-  const handleRefreshDashboard = async () => {
+  // Optimized timestamp update function
+  const updateTimestamp = useCallback((reason = 'data_change') => {
+    // Only log in development mode and not too frequently
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🕒 Updating timestamp: ${reason}`);
+    }
+    setLastUpdated(new Date());
+  }, []);
+
+  // Update timestamp only when data actually changes or on initial load
+  useEffect(() => {
+    // Initial load - set timestamp once
+    if (!hasInitialized.current && !isLoading) {
+      hasInitialized.current = true;
+      updateTimestamp('initial_load');
+      lastDataHash.current = currentDataHash;
+      return;
+    }
+
+    // Data change detection - only update if data actually changed
+    if (hasInitialized.current && lastDataHash.current !== currentDataHash) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 Data changed: ${lastDataHash.current} → ${currentDataHash}`);
+      }
+      updateTimestamp('data_change');
+      lastDataHash.current = currentDataHash;
+    }
+  }, [
+    isLoading,
+    currentDataHash,
+    updateTimestamp
+  ]);
+
+  // Manual refresh function for better control - OPTIMIZED
+  const handleRefreshDashboard = useCallback(async () => {
     try {
       console.log('🔄 Manual dashboard refresh triggered...');
       
-      // Update the last updated timestamp
-      setLastUpdated(new Date());
+      // Update the last updated timestamp immediately for manual refresh
+      updateTimestamp('manual_refresh');
       
-      // Dispatch force sync events to all providers
-      window.dispatchEvent(new CustomEvent('forceDataSync'));
-      window.dispatchEvent(new CustomEvent('refreshTransactions'));
-      window.dispatchEvent(new CustomEvent('refreshBudgets'));
+      // Use the dashboard action instead of custom events
+      if (actions && actions.refreshDashboard) {
+        await actions.refreshDashboard();
+      } else {
+        // Fallback to custom events if action not available
+        window.dispatchEvent(new CustomEvent('forceDataSync'));
+        window.dispatchEvent(new CustomEvent('refreshTransactions'));
+        window.dispatchEvent(new CustomEvent('refreshBudgets'));
+      }
       
-      // Wait a bit for providers to sync
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // If all else fails, just reload the page
-      console.log('🔄 Reloading page to ensure fresh data...');
-      window.location.reload();
+      console.log('✅ Dashboard refresh complete');
       
     } catch (error) {
       console.error('❌ Dashboard refresh error:', error);
-      // Fallback to page reload
-      window.location.reload();
+      // Still update timestamp even if refresh fails
+      updateTimestamp('refresh_error');
     }
-  };
+  }, [actions, updateTimestamp]);
 
-  // Quick actions
-  const quickActions = {
+  // Quick actions with timestamp updates - OPTIMIZED
+  const quickActions = useMemo(() => ({
     addExpense: async (amount, category, description) => {
-      return await addExpense(amount, category, description);
+      try {
+        const result = await addExpense(amount, category, description);
+        if (result) {
+          updateTimestamp('expense_added');
+        }
+        return result;
+      } catch (error) {
+        console.error('Error adding expense:', error);
+        throw error;
+      }
     },
+    
     addIncome: async (amount, category, description) => {
-      return await addIncome(amount, category, description);
+      try {
+        const result = await addIncome(amount, category, description);
+        if (result) {
+          updateTimestamp('income_added');
+        }
+        return result;
+      } catch (error) {
+        console.error('Error adding income:', error);
+        throw error;
+      }
     },
+    
     createQuickBudget: async (category, amount) => {
-      return await createMonthlyBudget(category, amount, `Monthly budget for ${category}`);
+      try {
+        const result = await createMonthlyBudget(category, amount, `Monthly budget for ${category}`);
+        if (result) {
+          updateTimestamp('budget_created');
+        }
+        return result;
+      } catch (error) {
+        console.error('Error creating budget:', error);
+        throw error;
+      }
     },
+    
     refreshDashboard: handleRefreshDashboard
-  };
+  }), [
+    addExpense,
+    addIncome,
+    createMonthlyBudget,
+    handleRefreshDashboard,
+    updateTimestamp
+  ]);
 
   // Get current time of day for greeting
   const getTimeGreeting = () => {
@@ -171,12 +254,18 @@ const Dashboard = () => {
             </div>
             
             <div className="flex items-center space-x-3">
-              {/* Last updated info */}
+              {/* Last updated info - OPTIMIZED */}
               <div className="hidden sm:flex items-center space-x-2 text-xs lg:text-sm text-gray-500">
                 <FontAwesomeIcon icon={faCalendarAlt} className="w-4 h-4" />
                 <span>
-                  Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}
+                  Last updated: {lastUpdated.toLocaleTimeString()}
                 </span>
+                {/* Development mode: show update reason */}
+                {process.env.NODE_ENV === 'development' && (
+                  <span className="text-xs text-blue-500">
+                    🕒
+                  </span>
+                )}
               </div>
               
               {/* Refresh button */}

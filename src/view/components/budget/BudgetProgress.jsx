@@ -32,9 +32,15 @@ const BudgetProgress = ({
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded"></div>
+              <div className="h-4 rounded mb-2" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
+              <div className="h-6 rounded mb-2" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
+              <div className="h-3 rounded" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
             </div>
           ))}
         </div>
@@ -49,12 +55,17 @@ const BudgetProgress = ({
         <div className="text-center py-8">
           <FontAwesomeIcon 
             icon={faWallet} 
-            className="text-gray-400 text-4xl mb-4" 
+            className="text-4xl mb-4" 
+            style={{ color: 'var(--text-tertiary)' }}
           />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium mb-2" style={{
+            color: 'var(--text-primary)'
+          }}>
             No Budgets Yet
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="mb-6" style={{
+            color: 'var(--text-secondary)'
+          }}>
             Create your first budget to track spending and stay on target.
           </p>
           {showCreateButton && (
@@ -82,10 +93,6 @@ const BudgetProgress = ({
         status: 'exceeded',
         color: 'red',
         icon: faExclamationTriangle,
-        iconColor: 'text-red-500',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        textColor: 'text-red-700',
         progressColor: 'red'
       };
     } else if (isNearLimit) {
@@ -93,10 +100,6 @@ const BudgetProgress = ({
         status: 'warning',
         color: 'yellow',
         icon: faExclamationTriangle,
-        iconColor: 'text-yellow-500',
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-200',
-        textColor: 'text-yellow-700',
         progressColor: 'yellow'
       };
     } else {
@@ -104,10 +107,6 @@ const BudgetProgress = ({
         status: 'good',
         color: 'green',
         icon: faCheckCircle,
-        iconColor: 'text-green-500',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200',
-        textColor: 'text-green-700',
         progressColor: 'dynamic'
       };
     }
@@ -141,17 +140,38 @@ const BudgetProgress = ({
       <div className="space-y-6 pt-4">
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-            <div className="text-lg font-bold text-green-600">{healthyBudgets}</div>
-            <div className="text-xs text-green-600">Healthy</div>
+          <div className="text-center p-3 rounded-lg border" style={{
+            backgroundColor: 'var(--success-bg)',
+            borderColor: 'var(--success-border)'
+          }}>
+            <div className="text-lg font-bold" style={{
+              color: 'var(--success)'
+            }}>{healthyBudgets}</div>
+            <div className="text-xs" style={{
+              color: 'var(--success)'
+            }}>Healthy</div>
           </div>
-          <div className="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-            <div className="text-lg font-bold text-yellow-600">{warningBudgets}</div>
-            <div className="text-xs text-yellow-600">Near Limit</div>
+          <div className="text-center p-3 rounded-lg border" style={{
+            backgroundColor: 'var(--warning-bg)',
+            borderColor: 'var(--warning-border)'
+          }}>
+            <div className="text-lg font-bold" style={{
+              color: 'var(--warning)'
+            }}>{warningBudgets}</div>
+            <div className="text-xs" style={{
+              color: 'var(--warning)'
+            }}>Near Limit</div>
           </div>
-          <div className="text-center p-3 bg-red-50 rounded-lg border border-red-200">
-            <div className="text-lg font-bold text-red-600">{exceededBudgets}</div>
-            <div className="text-xs text-red-600">Exceeded</div>
+          <div className="text-center p-3 rounded-lg border" style={{
+            backgroundColor: 'var(--error-bg)',
+            borderColor: 'var(--error-border)'
+          }}>
+            <div className="text-lg font-bold" style={{
+              color: 'var(--error)'
+            }}>{exceededBudgets}</div>
+            <div className="text-xs" style={{
+              color: 'var(--error)'
+            }}>Exceeded</div>
           </div>
         </div>
 
@@ -164,14 +184,46 @@ const BudgetProgress = ({
             const remaining = budget.progress?.remaining || budget.budgetAmount;
             const budgetAmount = budget.budgetAmount || 0;
 
+            // Get status-based colors
+            const getStatusColors = () => {
+              if (statusInfo.status === 'exceeded') {
+                return {
+                  bg: 'var(--error-bg)',
+                  border: 'var(--error-border)',
+                  icon: 'var(--error)',
+                  statusBg: 'var(--error-bg)',
+                  statusText: 'var(--error)'
+                };
+              } else if (statusInfo.status === 'warning') {
+                return {
+                  bg: 'var(--warning-bg)',
+                  border: 'var(--warning-border)',
+                  icon: 'var(--warning)',
+                  statusBg: 'var(--warning-bg)',
+                  statusText: 'var(--warning)'
+                };
+              } else {
+                return {
+                  bg: 'var(--bg-card)',
+                  border: 'var(--border-primary)',
+                  icon: 'var(--success)',
+                  statusBg: 'var(--success-bg)',
+                  statusText: 'var(--success)'
+                };
+              }
+            };
+
+            const colors = getStatusColors();
+
             return (
               <div
                 key={budget.id}
                 onClick={() => onBudgetClick(budget)}
-                className={`
-                  p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md
-                  ${statusInfo.bgColor} ${statusInfo.borderColor}
-                `}
+                className="p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md"
+                style={{
+                  backgroundColor: colors.bg,
+                  borderColor: colors.border
+                }}
               >
                 {/* Budget Header */}
                 <div className="flex items-center justify-between mb-3">
@@ -179,23 +231,31 @@ const BudgetProgress = ({
                     <div className="flex items-center space-x-2">
                       <FontAwesomeIcon 
                         icon={faTag} 
-                        className="text-gray-500 w-4 h-4" 
+                        className="w-4 h-4" 
+                        style={{ color: 'var(--text-secondary)' }}
                       />
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium" style={{
+                        color: 'var(--text-primary)'
+                      }}>
                         {budget.categoryName || budget.category}
                       </span>
                     </div>
                     <FontAwesomeIcon 
                       icon={statusInfo.icon} 
-                      className={`w-4 h-4 ${statusInfo.iconColor}`} 
+                      className="w-4 h-4" 
+                      style={{ color: colors.icon }}
                     />
                   </div>
                   
                   <div className="text-right">
-                    <div className="font-bold text-gray-900">
+                    <div className="font-bold" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       {formatCurrency(budgetAmount)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs" style={{
+                      color: 'var(--text-secondary)'
+                    }}>
                       {budget.formattedPeriod || budget.period || 'monthly'}
                     </div>
                   </div>
@@ -220,11 +280,14 @@ const BudgetProgress = ({
                     <div className="flex items-center space-x-2 mb-1">
                       <FontAwesomeIcon 
                         icon={faArrowTrendUp} 
-                        className="text-red-500 w-3 h-3" 
+                        className="w-3 h-3" 
+                        style={{ color: 'var(--error)' }}
                       />
-                      <span className="text-gray-600">Spent</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Spent</span>
                     </div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       {formatCurrency(spent)}
                     </div>
                   </div>
@@ -233,13 +296,16 @@ const BudgetProgress = ({
                     <div className="flex items-center space-x-2 mb-1">
                       <FontAwesomeIcon 
                         icon={remaining >= 0 ? faArrowTrendDown : faExclamationTriangle} 
-                        className={`w-3 h-3 ${remaining >= 0 ? 'text-green-500' : 'text-red-500'}`} 
+                        className="w-3 h-3" 
+                        style={{ color: remaining >= 0 ? 'var(--success)' : 'var(--error)' }}
                       />
-                      <span className="text-gray-600">
+                      <span style={{ color: 'var(--text-secondary)' }}>
                         {remaining >= 0 ? 'Remaining' : 'Over Budget'}
                       </span>
                     </div>
-                    <div className={`font-semibold ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className="font-semibold" style={{
+                      color: remaining >= 0 ? 'var(--success)' : 'var(--error)'
+                    }}>
                       {formatCurrency(Math.abs(remaining))}
                     </div>
                   </div>
@@ -247,14 +313,20 @@ const BudgetProgress = ({
 
                 {/* Status Message */}
                 {statusInfo.status === 'exceeded' && (
-                  <div className={`mt-3 p-2 rounded text-xs ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                  <div className="mt-3 p-2 rounded text-xs" style={{
+                    backgroundColor: colors.statusBg,
+                    color: colors.statusText
+                  }}>
                     <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
                     Budget exceeded by {formatCurrency(Math.abs(remaining))}
                   </div>
                 )}
                 
                 {statusInfo.status === 'warning' && (
-                  <div className={`mt-3 p-2 rounded text-xs ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                  <div className="mt-3 p-2 rounded text-xs" style={{
+                    backgroundColor: colors.statusBg,
+                    color: colors.statusText
+                  }}>
                     <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
                     {formatPercentage(percentage)} of budget used
                   </div>
@@ -262,7 +334,9 @@ const BudgetProgress = ({
 
                 {/* Period Info */}
                 {budget.startDate && budget.endDate && (
-                  <div className="mt-3 flex items-center space-x-2 text-xs text-gray-500">
+                  <div className="mt-3 flex items-center space-x-2 text-xs" style={{
+                    color: 'var(--text-secondary)'
+                  }}>
                     <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
                     <span>
                       {new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()}

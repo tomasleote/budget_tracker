@@ -52,7 +52,8 @@ const Modal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 transition-opacity"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         onClick={handleOverlayClick}
       />
       
@@ -60,15 +61,20 @@ const Modal = ({
       <div className="flex min-h-full items-center justify-center p-4 text-center">
         <div 
           className={`
-            relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full
+            relative transform overflow-hidden rounded-lg text-left transition-all w-full
             ${sizes[size]}
             ${className}
           `}
+          style={{
+            backgroundColor: 'var(--bg-modal)',
+            boxShadow: 'var(--shadow-xl)',
+            color: 'var(--text-primary)'
+          }}
         >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid var(--border-primary)' }}>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {title}
               </h3>
               {showCloseButton && (
@@ -76,7 +82,16 @@ const Modal = ({
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="transition-colors"
+                  style={{
+                    color: 'var(--text-tertiary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = 'var(--text-secondary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = 'var(--text-tertiary)';
+                  }}
                 >
                   <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
                 </Button>
@@ -91,7 +106,10 @@ const Modal = ({
           
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-end space-x-3 p-6" style={{
+              borderTop: '1px solid var(--border-primary)',
+              backgroundColor: 'var(--bg-tertiary)'
+            }}>
               {footer}
             </div>
           )}

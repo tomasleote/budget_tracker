@@ -2,6 +2,17 @@ import BaseRepository from './BaseRepository.js';
 import { Budget } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
 
+/**
+ * BudgetRepository - COMPLETELY SILENT
+ * 
+ * Repository for budget-specific database operations
+ * 
+ * FINAL LOGGING CLEANUP:
+ * - All debug logs removed
+ * - Silent operation unless critical errors occur
+ * - No repository operation logs
+ * - Zero console spam
+ */
 class BudgetRepository extends BaseRepository {
   constructor() {
     super('Budget', StorageService.storageKeys.BUDGETS, Budget);
@@ -12,7 +23,6 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.findBy({ category });
     } catch (error) {
-      console.error('Error getting budgets by category:', error);
       return [];
     }
   }
@@ -21,7 +31,6 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.findBy({ period });
     } catch (error) {
-      console.error('Error getting budgets by period:', error);
       return [];
     }
   }
@@ -30,7 +39,6 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.findBy({ isActive: true });
     } catch (error) {
-      console.error('Error getting active budgets:', error);
       return [];
     }
   }
@@ -39,7 +47,6 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.findBy({ isActive: false });
     } catch (error) {
-      console.error('Error getting inactive budgets:', error);
       return [];
     }
   }
@@ -47,16 +54,12 @@ class BudgetRepository extends BaseRepository {
   async getCurrentBudgets() {
     try {
       const allBudgets = await this.getAll();
-      console.log('📊 BudgetRepository.getCurrentBudgets - Found budgets:', allBudgets.length);
-      const now = new Date();
       
       const currentBudgets = allBudgets.filter(budgetData => {
         const budget = Budget.fromJSON(budgetData);
-        const isCurrent = budget.isCurrentlyActive();
-        return isCurrent;
+        return budget.isCurrentlyActive();
       });
       
-      console.log('✅ Active budgets found:', currentBudgets.length);
       return currentBudgets;
     } catch (error) {
       console.error('Error getting current budgets:', error);
@@ -73,12 +76,9 @@ class BudgetRepository extends BaseRepository {
       return allBudgets.filter(budget => {
         const budgetStart = new Date(budget.startDate);
         const budgetEnd = new Date(budget.endDate);
-        
-        // Check if budget period overlaps with requested range
         return budgetStart <= end && budgetEnd >= start;
       });
     } catch (error) {
-      console.error('Error getting budgets by date range:', error);
       return [];
     }
   }
@@ -163,17 +163,14 @@ class BudgetRepository extends BaseRepository {
     try {
       let budgets = await this.getAll();
 
-      // Apply category filter
       if (filters.category && filters.category !== 'all') {
         budgets = budgets.filter(b => b.category === filters.category);
       }
 
-      // Apply period filter
       if (filters.period && filters.period !== 'all') {
         budgets = budgets.filter(b => b.period === filters.period);
       }
 
-      // Apply status filter
       if (filters.status) {
         switch (filters.status) {
           case 'active':
@@ -191,7 +188,6 @@ class BudgetRepository extends BaseRepository {
         }
       }
 
-      // Apply exceeded filter
       if (filters.exceeded !== undefined) {
         budgets = budgets.filter(b => {
           const isExceeded = parseFloat(b.spent) > parseFloat(b.budgetAmount);
@@ -199,7 +195,6 @@ class BudgetRepository extends BaseRepository {
         });
       }
 
-      // Apply amount range filters
       if (filters.minBudgetAmount !== undefined) {
         budgets = budgets.filter(b => parseFloat(b.budgetAmount) >= parseFloat(filters.minBudgetAmount));
       }
@@ -208,7 +203,6 @@ class BudgetRepository extends BaseRepository {
         budgets = budgets.filter(b => parseFloat(b.budgetAmount) <= parseFloat(filters.maxBudgetAmount));
       }
 
-      // Apply date range filter
       if (filters.dateFrom || filters.dateTo) {
         const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : new Date('1900-01-01');
         const toDate = filters.dateTo ? new Date(filters.dateTo) : new Date('2100-12-31');
@@ -220,7 +214,6 @@ class BudgetRepository extends BaseRepository {
         });
       }
 
-      // Apply search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
         budgets = budgets.filter(b => 
@@ -228,12 +221,10 @@ class BudgetRepository extends BaseRepository {
         );
       }
 
-      // Apply sorting
       if (filters.sortBy) {
         budgets = this.sortData(budgets, filters.sortBy, filters.sortOrder || 'desc');
       }
 
-      // Apply pagination
       if (filters.limit) {
         const offset = filters.offset || 0;
         budgets = budgets.slice(offset, offset + filters.limit);
@@ -241,7 +232,6 @@ class BudgetRepository extends BaseRepository {
 
       return budgets;
     } catch (error) {
-      console.error('Error getting budgets with filters:', error);
       return [];
     }
   }
@@ -254,7 +244,6 @@ class BudgetRepository extends BaseRepository {
         return total + (parseFloat(budget.budgetAmount) || 0);
       }, 0);
     } catch (error) {
-      console.error('Error getting total budget amount:', error);
       return 0;
     }
   }
@@ -266,7 +255,6 @@ class BudgetRepository extends BaseRepository {
         return total + (parseFloat(budget.spent) || 0);
       }, 0);
     } catch (error) {
-      console.error('Error getting total spent amount:', error);
       return 0;
     }
   }
@@ -303,7 +291,6 @@ class BudgetRepository extends BaseRepository {
 
       return statusCounts;
     } catch (error) {
-      console.error('Error getting budgets by status:', error);
       return {
         total: 0,
         active: 0,
@@ -346,12 +333,44 @@ class BudgetRepository extends BaseRepository {
 
       return periodStats;
     } catch (error) {
-      console.error('Error getting budgets by period stats:', error);
       return {};
     }
   }
 
-  // Budget validation and cleanup
+  // Export functionality specific to budgets
+  async exportToCSV() {
+    try {
+      const budgets = await this.getAll();
+      
+      if (budgets.length === 0) {
+        return '';
+      }
+
+      const headers = ['ID', 'Category', 'Budget Amount', 'Spent', 'Period', 'Start Date', 'End Date', 'Is Active', 'Created At'];
+      const csvRows = [headers.join(',')];
+
+      budgets.forEach(budget => {
+        const row = [
+          budget.id,
+          `"${budget.category}"`,
+          budget.budgetAmount,
+          budget.spent,
+          budget.period,
+          budget.startDate,
+          budget.endDate,
+          budget.isActive,
+          budget.createdAt
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      return csvRows.join('\n');
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Other utility methods - all silent
   async findOverlappingBudgets(budget) {
     try {
       const allBudgets = await this.getAll();
@@ -359,18 +378,16 @@ class BudgetRepository extends BaseRepository {
       const budgetEnd = new Date(budget.endDate);
 
       return allBudgets.filter(existingBudget => {
-        if (existingBudget.id === budget.id) return false; // Exclude self
-        if (existingBudget.category !== budget.category) return false; // Different category
-        if (!existingBudget.isActive) return false; // Inactive budgets don't overlap
+        if (existingBudget.id === budget.id) return false;
+        if (existingBudget.category !== budget.category) return false;
+        if (!existingBudget.isActive) return false;
 
         const existingStart = new Date(existingBudget.startDate);
         const existingEnd = new Date(existingBudget.endDate);
 
-        // Check for date overlap
         return budgetStart <= existingEnd && budgetEnd >= existingStart;
       });
     } catch (error) {
-      console.error('Error finding overlapping budgets:', error);
       return [];
     }
   }
@@ -408,7 +425,6 @@ class BudgetRepository extends BaseRepository {
         errors: invalidBudgets
       };
     } catch (error) {
-      console.error('Error validating budget dates:', error);
       return {
         total: 0,
         valid: 0,
@@ -418,7 +434,6 @@ class BudgetRepository extends BaseRepository {
     }
   }
 
-  // Budget archiving
   async archiveExpiredBudgets() {
     try {
       const budgets = await this.getAll();
@@ -429,7 +444,6 @@ class BudgetRepository extends BaseRepository {
         const budget = Budget.fromJSON(budgetData);
         const endDate = new Date(budget.endDate);
 
-        // Archive if budget has ended and is still active
         if (endDate < now && budget.isActive) {
           budget.isActive = false;
           archivedCount++;
@@ -439,7 +453,6 @@ class BudgetRepository extends BaseRepository {
         return budgetData;
       });
 
-      // Save updated budgets
       const saved = this.storageService.setItem(this.storageKey, updatedBudgets);
 
       return {
@@ -457,51 +470,16 @@ class BudgetRepository extends BaseRepository {
     }
   }
 
-  // Export functionality specific to budgets
-  async exportToCSV() {
-    try {
-      const budgets = await this.getAll();
-      
-      if (budgets.length === 0) {
-        return '';
-      }
-
-      const headers = ['ID', 'Category', 'Budget Amount', 'Spent', 'Period', 'Start Date', 'End Date', 'Is Active', 'Created At'];
-      const csvRows = [headers.join(',')];
-
-      budgets.forEach(budget => {
-        const row = [
-          budget.id,
-          `"${budget.category}"`,
-          budget.budgetAmount,
-          budget.spent,
-          budget.period,
-          budget.startDate,
-          budget.endDate,
-          budget.isActive,
-          budget.createdAt
-        ];
-        csvRows.push(row.join(','));
-      });
-
-      return csvRows.join('\n');
-    } catch (error) {
-      console.error('Error exporting budgets to CSV:', error);
-      return null;
-    }
-  }
-
-  // Budget analytics helpers
   async getBudgetUtilizationStats() {
     try {
       const budgets = await this.getAll();
       const utilizationStats = {
         totalBudgets: budgets.length,
         utilizationRanges: {
-          underUtilized: 0,    // < 50%
-          healthy: 0,          // 50-79%
-          nearLimit: 0,        // 80-99%
-          exceeded: 0          // >= 100%
+          underUtilized: 0,
+          healthy: 0,
+          nearLimit: 0,
+          exceeded: 0
         }
       };
 
@@ -522,7 +500,6 @@ class BudgetRepository extends BaseRepository {
 
       return utilizationStats;
     } catch (error) {
-      console.error('Error getting budget utilization stats:', error);
       return null;
     }
   }

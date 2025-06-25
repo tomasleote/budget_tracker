@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import TransactionContext from '../TransactionContext.jsx';
 
 // Working TransactionProvider with localStorage persistence
@@ -83,8 +83,20 @@ export const TransactionProvider = ({ children }) => {
     }
   }, [transactions]);
 
-  // Actions
-  const createTransaction = async (transactionData) => {
+  // Memoized computed values to prevent unnecessary re-renders
+  const recentTransactions = useMemo(() => {
+    return transactions.slice(0, 5);
+  }, [transactions]);
+
+  const summary = useMemo(() => {
+    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
+    const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
+    const balance = income - expenses;
+    return { income, expenses, balance };
+  }, [transactions]);
+
+  // Stable action functions using useCallback
+  const createTransaction = useCallback(async (transactionData) => {
     try {
       setIsLoading(true);
       setErrors({});
@@ -128,9 +140,9 @@ export const TransactionProvider = ({ children }) => {
       setIsLoading(false);
       throw error;
     }
-  };
+  }, []);
 
-  const updateTransaction = async (id, transactionData) => {
+  const updateTransaction = useCallback(async (id, transactionData) => {
     try {
       setIsLoading(true);
       setErrors({});
@@ -161,9 +173,9 @@ export const TransactionProvider = ({ children }) => {
       setIsLoading(false);
       throw error;
     }
-  };
+  }, []);
 
-  const deleteTransaction = async (id) => {
+  const deleteTransaction = useCallback(async (id) => {
     try {
       setIsLoading(true);
       setErrors({});
@@ -188,54 +200,58 @@ export const TransactionProvider = ({ children }) => {
       setIsLoading(false);
       throw error;
     }
-  };
+  }, []);
 
-  const clearErrors = () => {
+  const clearErrors = useCallback(() => {
     setErrors({});
-  };
+  }, []);
 
   // Debug function to clear all data
-  const clearAllData = () => {
+  const clearAllData = useCallback(() => {
     localStorage.removeItem('budget_tracker_transactions');
     setTransactions([]);
     setErrors({});
-  };
+  }, []);
 
   // Refresh function to reload data from storage
-  const refreshTransactions = () => {
+  const refreshTransactions = useCallback(() => {
     return loadTransactionsFromStorage();
-  };
+  }, []);
 
-  // Helper functions
-  const hasError = (type) => {
+  // Helper functions (memoized)
+  const hasError = useCallback((type) => {
     if (type) return Boolean(errors[type]);
     return Object.keys(errors).length > 0;
-  };
+  }, [errors]);
 
-  const getError = (type) => {
+  const getError = useCallback((type) => {
     return errors[type] || null;
-  };
+  }, [errors]);
 
-  const value = {
+  // Memoized actions object to prevent recreating on every render
+  const actions = useMemo(() => ({
+    loadTransactions: refreshTransactions,
+    loadSummary: async () => {},
+    loadRecentTransactions: async () => {},
+    createTransaction,
+    updateTransaction,
+    deleteTransaction,
+    clearErrors,
+    clearAllData, // Debug function
+    refreshTransactions // Add refresh function
+  }), [refreshTransactions, createTransaction, updateTransaction, deleteTransaction, clearErrors, clearAllData]);
+
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     transactions,
-    recentTransactions: transactions.slice(0, 5),
-    summary: { income: 0, expenses: 0, balance: 0 },
-    categoryBreakdown: [],
+    recentTransactions,
+    summary,
+    categoryBreakdown: [], // Static for now
     isLoading,
     hasError,
     getError,
-    actions: {
-      loadTransactions: refreshTransactions,
-      loadSummary: async () => {},
-      loadRecentTransactions: async () => {},
-      createTransaction,
-      updateTransaction,
-      deleteTransaction,
-      clearErrors,
-      clearAllData, // Debug function
-      refreshTransactions // Add refresh function
-    }
-  };
+    actions
+  }), [transactions, recentTransactions, summary, isLoading, hasError, getError, actions]);
 
   return (
     <TransactionContext.Provider value={value}>

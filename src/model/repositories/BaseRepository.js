@@ -1,6 +1,16 @@
 import StorageService from '../services/StorageService.js';
 import ValidationService from '../services/ValidationService.js';
 
+/**
+ * BaseRepository - LOGGING CLEANED
+ * 
+ * Generic repository class for CRUD operations with localStorage
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive operation logs that were causing performance issues
+ * - Keep only essential error logs for debugging
+ * - Reduced verbosity in development mode
+ */
 class BaseRepository {
   constructor(entityName, storageKey, EntityClass) {
     this.entityName = entityName;
@@ -45,7 +55,9 @@ class BaseRepository {
     try {
       return this.storageService.getItem(this.storageKey, []);
     } catch (error) {
-      console.error(`Error getting all ${this.entityName}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error getting all ${this.entityName}:`, error);
+      }
       return [];
     }
   }
@@ -55,7 +67,9 @@ class BaseRepository {
       const allData = await this.getAll();
       return allData.find(item => item.id === id) || null;
     } catch (error) {
-      console.error(`Error getting ${this.entityName} by ID:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error getting ${this.entityName} by ID:`, error);
+      }
       return null;
     }
   }
@@ -196,7 +210,9 @@ class BaseRepository {
         });
       });
     } catch (error) {
-      console.error(`Error finding ${this.entityName} by criteria:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error finding ${this.entityName} by criteria:`, error);
+      }
       return [];
     }
   }
@@ -206,7 +222,9 @@ class BaseRepository {
       const results = await this.findBy(criteria);
       return results.length > 0 ? results[0] : null;
     } catch (error) {
-      console.error(`Error finding one ${this.entityName}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error finding one ${this.entityName}:`, error);
+      }
       return null;
     }
   }
@@ -235,7 +253,9 @@ class BaseRepository {
         }
       };
     } catch (error) {
-      console.error(`Error getting paginated ${this.entityName}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error getting paginated ${this.entityName}:`, error);
+      }
       return {
         data: [],
         pagination: {
@@ -330,7 +350,9 @@ class BaseRepository {
         count: allData.length
       };
     } catch (error) {
-      console.error(`Error backing up ${this.entityName}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error backing up ${this.entityName}:`, error);
+      }
       return null;
     }
   }
@@ -385,7 +407,9 @@ class BaseRepository {
 
       return results;
     } catch (error) {
-      console.error(`Error validating ${this.entityName} data:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error validating ${this.entityName} data:`, error);
+      }
       return {
         total: 0,
         valid: 0,
@@ -416,7 +440,9 @@ class BaseRepository {
         });
       });
     } catch (error) {
-      console.error(`Error searching ${this.entityName}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error searching ${this.entityName}:`, error);
+      }
       return [];
     }
   }

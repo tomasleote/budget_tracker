@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 
 // Initial state for the app
 const initialState = {
@@ -224,8 +224,8 @@ export const useAppContext = () => {
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Action creators
-  const actions = {
+  // Memoized action creators to prevent recreation on every render
+  const actions = useMemo(() => ({
     // Loading actions
     setLoading: (type, value) => {
       dispatch({
@@ -264,15 +264,19 @@ export const AppProvider = ({ children }) => {
     
     // Notification actions
     addNotification: (notification) => {
+      const notificationId = notification.id || Date.now();
       dispatch({
         type: APP_ACTIONS.ADD_NOTIFICATION,
-        payload: notification
+        payload: { ...notification, id: notificationId }
       });
       
       // Auto-remove notification after 5 seconds if not persistent
       if (!notification.persistent) {
         setTimeout(() => {
-          actions.removeNotification(notification.id || Date.now());
+          dispatch({
+            type: APP_ACTIONS.REMOVE_NOTIFICATION,
+            payload: notificationId
+          });
         }, notification.duration || 5000);
       }
     },
@@ -365,7 +369,7 @@ export const AppProvider = ({ children }) => {
         ...options
       });
     }
-  };
+  }), []); // Empty dependency array since actions only use dispatch which is stable
 
   // Initialize app on mount
   useEffect(() => {
@@ -391,18 +395,25 @@ export const AppProvider = ({ children }) => {
     }
   }, [state.meta.initialized]);
 
-  const value = {
+  // Memoized convenience getters to prevent recreation
+  const isLoading = useCallback((type) => type ? state.loading[type] : state.loading.global, [state.loading]);
+  const hasError = useCallback((type) => type ? !!state.errors[type] : !!state.errors.global, [state.errors]);
+  const getError = useCallback((type) => type ? state.errors[type] : state.errors.global, [state.errors]);
+  const isModalOpen = useCallback((modal) => state.ui.modals[modal] || false, [state.ui.modals]);
+
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     state,
     actions,
     // Convenience getters
-    isLoading: (type) => type ? state.loading[type] : state.loading.global,
-    hasError: (type) => type ? !!state.errors[type] : !!state.errors.global,
-    getError: (type) => type ? state.errors[type] : state.errors.global,
-    isModalOpen: (modal) => state.ui.modals[modal] || false,
+    isLoading,
+    hasError,
+    getError,
+    isModalOpen,
     currentTheme: state.ui.theme,
     currentPage: state.ui.currentPage,
     notifications: state.notifications
-  };
+  }), [state, actions, isLoading, hasError, getError, isModalOpen]);
 
   return (
     <AppContext.Provider value={value}>

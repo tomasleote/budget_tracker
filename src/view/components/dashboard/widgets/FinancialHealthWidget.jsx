@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHeartbeat,
-  faCheckCircle,
+  faCircleCheck,
   faExclamationTriangle,
   faTimesCircle,
   faInfoCircle,
@@ -45,7 +45,7 @@ const FinancialHealthWidget = ({
 
   // Calculate health status
   const getHealthStatus = (score) => {
-    if (score >= 80) return { status: 'excellent', color: 'green', icon: faCheckCircle };
+    if (score >= 80) return { status: 'excellent', color: 'green', icon: faCircleCheck };
     if (score >= 60) return { status: 'good', color: 'blue', icon: faInfoCircle };
     if (score >= 40) return { status: 'warning', color: 'yellow', icon: faExclamationTriangle };
     return { status: 'poor', color: 'red', icon: faTimesCircle };
@@ -68,7 +68,7 @@ const FinancialHealthWidget = ({
     } else if (savingsRate >= 20) {
       insights.push({
         type: 'success',
-        icon: faCheckCircle,
+        icon: faCircleCheck,
         text: 'Excellent savings rate!'
       });
     }

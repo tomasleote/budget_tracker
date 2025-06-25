@@ -1,34 +1,60 @@
 import { CURRENCY_CONFIG, DATE_FORMATS } from './constants.js';
 
-// Currency Formatting
+// Get user preferences from localStorage (fallback until full context integration)
+const getUserPreferences = () => {
+  try {
+    const stored = localStorage.getItem('budget_tracker_preferences');
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+// Currency Formatting with User Preferences
 export const formatCurrency = (amount, options = {}) => {
+  const userPrefs = getUserPreferences();
   const {
-    currency = CURRENCY_CONFIG.DEFAULT,
+    currency = userPrefs.currency || CURRENCY_CONFIG.DEFAULT,
     locale = 'en-US',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2
+    minimumFractionDigits = userPrefs.decimalPlaces ?? 2,
+    maximumFractionDigits = userPrefs.decimalPlaces ?? 2,
+    useUserFormat = true
   } = options;
 
   const currencyInfo = CURRENCY_CONFIG.SUPPORTED.find(c => c.code === currency);
   const localeToUse = currencyInfo?.locale || locale;
 
   try {
-    return new Intl.NumberFormat(localeToUse, {
+    let formatted = new Intl.NumberFormat(localeToUse, {
       style: 'currency',
       currency,
       minimumFractionDigits,
       maximumFractionDigits
     }).format(parseFloat(amount) || 0);
+    
+    // Apply user thousands separator preference if enabled
+    if (useUserFormat && userPrefs.thousandsSeparator && userPrefs.thousandsSeparator !== ',') {
+      if (userPrefs.thousandsSeparator === '.') {
+        // European style: swap . and ,
+        formatted = formatted.replace(/,/g, 'TEMP').replace(/\./g, ',').replace(/TEMP/g, '.');
+      } else if (userPrefs.thousandsSeparator === ' ') {
+        // Space separator
+        formatted = formatted.replace(/,/g, ' ');
+      }
+    }
+    
+    return formatted;
   } catch (error) {
     // Fallback formatting
     const symbol = currencyInfo?.symbol || '$';
-    return `${symbol}${(parseFloat(amount) || 0).toFixed(2)}`;
+    return `${symbol}${(parseFloat(amount) || 0).toFixed(minimumFractionDigits)}`;
   }
 };
 
 // Compact currency formatting (e.g., $1.2K, $2.5M)
 export const formatCurrencyCompact = (amount, options = {}) => {
-  const { currency = CURRENCY_CONFIG.DEFAULT, locale = 'en-US' } = options;
+  const userPrefs = getUserPreferences();
+  const { currency = userPrefs.currency || CURRENCY_CONFIG.DEFAULT, locale = 'en-US' } = options;
   const value = parseFloat(amount) || 0;
 
   try {
@@ -53,12 +79,13 @@ export const formatCurrencyCompact = (amount, options = {}) => {
   }
 };
 
-// Number formatting
+// Number formatting with user preferences
 export const formatNumber = (number, options = {}) => {
+  const userPrefs = getUserPreferences();
   const {
     locale = 'en-US',
     minimumFractionDigits = 0,
-    maximumFractionDigits = 2
+    maximumFractionDigits = userPrefs.decimalPlaces ?? 2
   } = options;
 
   try {
@@ -90,8 +117,9 @@ export const formatPercentage = (value, options = {}) => {
   }
 };
 
-// Date formatting
+// Date formatting with user preferences
 export const formatDate = (date, format = DATE_FORMATS.MEDIUM, options = {}) => {
+  const userPrefs = getUserPreferences();
   const { locale = 'en-US', timeZone } = options;
   const dateObj = new Date(date);
 
@@ -100,8 +128,13 @@ export const formatDate = (date, format = DATE_FORMATS.MEDIUM, options = {}) => 
   }
 
   const formatOptions = { timeZone };
+  const userFormat = format || userPrefs.dateFormat || DATE_FORMATS.MEDIUM;
 
-  switch (format) {
+  switch (userFormat) {
+    case 'DD/MM/YYYY':
+      return dateObj.toLocaleDateString('en-GB');
+    case 'YYYY-MM-DD':
+      return dateObj.toISOString().split('T')[0];
     case DATE_FORMATS.SHORT:
       return dateObj.toLocaleDateString(locale, {
         ...formatOptions,
@@ -127,8 +160,9 @@ export const formatDate = (date, format = DATE_FORMATS.MEDIUM, options = {}) => 
       return dateObj.toISOString().split('T')[0];
     case DATE_FORMATS.TIMESTAMP:
       return dateObj.toISOString().replace('T', ' ').slice(0, -5);
+    case 'MM/DD/YYYY':
     default:
-      return dateObj.toLocaleDateString(locale, formatOptions);
+      return dateObj.toLocaleDateString('en-US');
   }
 };
 

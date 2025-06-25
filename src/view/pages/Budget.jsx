@@ -226,24 +226,37 @@ const Budget = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen transition-colors duration-300" style={{
+      backgroundColor: 'var(--bg-primary)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
-                <FontAwesomeIcon icon={faWallet} className="text-blue-600 text-xl" />
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                <FontAwesomeIcon 
+                  icon={faWallet} 
+                  className="text-xl" 
+                  style={{ color: 'var(--accent-primary)' }}
+                />
+                <h1 className="text-2xl lg:text-3xl font-bold" style={{
+                  color: 'var(--text-primary)'
+                }}>
                   Budget Management
                 </h1>
                 {hasAlerts && (
-                  <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                  <span className="text-xs font-medium px-2 py-1 rounded-full" style={{
+                    backgroundColor: 'var(--error-bg)',
+                    color: 'var(--error)'
+                  }}>
                     {alerts.length} alerts
                   </span>
                 )}
               </div>
-              <p className="text-gray-600 text-sm lg:text-base">
+              <p className="text-sm lg:text-base" style={{
+                color: 'var(--text-secondary)'
+              }}>
                 Create and track budgets to stay on top of your spending
               </p>
             </div>
@@ -291,48 +304,88 @@ const Budget = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 lg:mb-8">
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FontAwesomeIcon icon={faWallet} className="text-blue-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--info-bg)'
+              }}>
+                <FontAwesomeIcon 
+                  icon={faWallet} 
+                  className="w-5 h-5" 
+                  style={{ color: 'var(--info)' }}
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Budgets</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalBudgets}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Total Budgets</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--text-primary)'
+                }}>{stats.totalBudgets}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--success-bg)'
+              }}>
+                <FontAwesomeIcon 
+                  icon={faCheckCircle} 
+                  className="w-5 h-5" 
+                  style={{ color: 'var(--success)' }}
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Healthy Budgets</p>
-                <p className="text-2xl font-bold text-green-600">{stats.healthyBudgets}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Healthy Budgets</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--success)'
+                }}>{stats.healthyBudgets}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-yellow-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--warning-bg)'
+              }}>
+                <FontAwesomeIcon 
+                  icon={faExclamationTriangle} 
+                  className="w-5 h-5" 
+                  style={{ color: 'var(--warning)' }}
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Near Limit</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.nearLimitBudgets}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Near Limit</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--warning)'
+                }}>{stats.nearLimitBudgets}</p>
               </div>
             </div>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-600 w-5 h-5" />
+              <div className="p-2 rounded-lg" style={{
+                backgroundColor: 'var(--error-bg)'
+              }}>
+                <FontAwesomeIcon 
+                  icon={faExclamationTriangle} 
+                  className="w-5 h-5" 
+                  style={{ color: 'var(--error)' }}
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Exceeded</p>
-                <p className="text-2xl font-bold text-red-600">{stats.exceededBudgets}</p>
+                <p className="text-sm font-medium" style={{
+                  color: 'var(--text-secondary)'
+                }}>Exceeded</p>
+                <p className="text-2xl font-bold" style={{
+                  color: 'var(--error)'
+                }}>{stats.exceededBudgets}</p>
               </div>
             </div>
           </Card>
@@ -340,7 +393,9 @@ const Budget = () => {
 
         {/* View Mode Selector */}
         <div className="mb-6 lg:mb-8">
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 w-fit">
+          <div className="flex items-center space-x-1 p-1 w-fit rounded-lg transition-colors duration-300" style={{
+            backgroundColor: 'var(--bg-secondary)'
+          }}>
             {viewModes.map((mode) => (
               <button
                 key={mode.key}
@@ -351,16 +406,36 @@ const Budget = () => {
                     setViewingBudget(null);
                   }
                 }}
-                className={`relative px-4 py-2 rounded flex items-center space-x-2 transition-colors ${
-                  viewMode === mode.key 
-                    ? 'bg-white shadow text-blue-600' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className="relative px-4 py-2 rounded flex items-center space-x-2 transition-all duration-200"
+                style={{
+                  backgroundColor: viewMode === mode.key 
+                    ? 'var(--bg-card)' 
+                    : 'transparent',
+                  color: viewMode === mode.key 
+                    ? 'var(--accent-primary)' 
+                    : 'var(--text-secondary)',
+                  boxShadow: viewMode === mode.key 
+                    ? 'var(--shadow-sm)' 
+                    : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (viewMode !== mode.key) {
+                    e.target.style.color = 'var(--text-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (viewMode !== mode.key) {
+                    e.target.style.color = 'var(--text-secondary)';
+                  }
+                }}
               >
                 <FontAwesomeIcon icon={mode.icon} className="w-4 h-4" />
                 <span className="font-medium">{mode.label}</span>
                 {mode.badge && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 text-xs rounded-full w-5 h-5 flex items-center justify-center" style={{
+                    backgroundColor: 'var(--error)',
+                    color: 'var(--text-inverse)'
+                  }}>
                     {mode.badge}
                   </span>
                 )}
@@ -399,22 +474,34 @@ const Budget = () => {
                       <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="text-center">
-                            <div className="text-3xl font-bold text-blue-600 mb-2">
+                            <div className="text-3xl font-bold mb-2" style={{
+                              color: 'var(--accent-primary)'
+                            }}>
                               {analytics.formattedTotalBudget}
                             </div>
-                            <div className="text-sm text-gray-600">Total Budget Amount</div>
+                            <div className="text-sm" style={{
+                              color: 'var(--text-secondary)'
+                            }}>Total Budget Amount</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-3xl font-bold text-red-600 mb-2">
+                            <div className="text-3xl font-bold mb-2" style={{
+                              color: 'var(--error)'
+                            }}>
                               {analytics.formattedTotalSpent}
                             </div>
-                            <div className="text-sm text-gray-600">Total Spent</div>
+                            <div className="text-sm" style={{
+                              color: 'var(--text-secondary)'
+                            }}>Total Spent</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-3xl font-bold text-gray-900 mb-2">
+                            <div className="text-3xl font-bold mb-2" style={{
+                              color: 'var(--text-primary)'
+                            }}>
                               {analytics.formattedUtilization}
                             </div>
-                            <div className="text-sm text-gray-600">Overall Utilization</div>
+                            <div className="text-sm" style={{
+                              color: 'var(--text-secondary)'
+                            }}>Overall Utilization</div>
                           </div>
                         </div>
                       </div>
@@ -463,8 +550,14 @@ const Budget = () => {
         {/* Error Display */}
         {hasError && (
           <Card className="mt-6">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700">
+            <div className="p-4 rounded-lg" style={{
+              backgroundColor: 'var(--error-bg)',
+              borderColor: 'var(--error-border)',
+              borderWidth: '1px'
+            }}>
+              <p style={{
+                color: 'var(--error)'
+              }}>
                 Error loading budgets. Please try refreshing the page.
               </p>
             </div>

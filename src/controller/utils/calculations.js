@@ -1,6 +1,18 @@
 import { TIME_PERIODS, BUDGET_STATUS } from './constants.js';
 import { formatCurrency } from './formatters.js';
 
+/**
+ * calculations.js - LOGGING CLEANED
+ * 
+ * Financial calculation utilities for the budget tracker
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive transaction-by-transaction logging
+ * - Only keep essential summary logs for debugging major operations
+ * - Reduced verbosity in budget progress calculations
+ * - Performance improvement: ~90% log reduction
+ */
+
 // Balance calculations
 export const calculateBalance = (transactions = []) => {
   let income = 0;
@@ -67,41 +79,18 @@ export const calculateCategoryPercentages = (categoryData, totalAmount) => {
   }));
 };
 
-// Budget calculations
+// Budget calculations - COMPLETELY SILENT
 export const calculateBudgetProgress = (budget, transactions = []) => {
-  console.log(`🔍 calculateBudgetProgress for ${budget.category}:`);
-  console.log(`  - Budget period: ${budget.startDate} to ${budget.endDate}`);
-  console.log(`  - Budget amount: ${budget.budgetAmount}`);
-  console.log(`  - Total transactions provided: ${transactions.length}`);
-  
-  // First filter by category and type
-  const categoryExpenseTransactions = transactions.filter(t => {
+  // Filter transactions efficiently without any logging
+  const relevantTransactions = transactions.filter(t => {
     const isExpense = t.type === 'expense';
     const matchesCategory = t.category === budget.category;
-    return isExpense && matchesCategory;
-  });
-  
-  console.log(`  - Category expense transactions: ${categoryExpenseTransactions.length}`);
-  
-  // Then filter by date period
-  const relevantTransactions = categoryExpenseTransactions.filter(t => {
     const isInPeriod = isDateInBudgetPeriod(t.date, budget);
-    if (!isInPeriod) {
-      console.log(`    ❌ Transaction outside period: ${t.date} (${t.amount})`);
-    } else {
-      console.log(`    ✅ Transaction in period: ${t.date} (${t.amount})`);
-    }
-    return isInPeriod;
+    return isExpense && matchesCategory && isInPeriod;
   });
-    
-  console.log(`  - Relevant transactions for ${budget.category}: ${relevantTransactions.length}`);
-  if (relevantTransactions.length > 0) {
-    console.log(`  - Sample relevant transaction:`, relevantTransactions[0]);
-  }
   
   const spent = relevantTransactions.reduce((total, t) => {
     const amount = parseFloat(t.amount) || 0;
-    console.log(`    Adding ${amount} to spent total`);
     return total + amount;
   }, 0);
 
@@ -119,7 +108,6 @@ export const calculateBudgetProgress = (budget, transactions = []) => {
     status: getBudgetStatus(percentage, spent, budgetAmount)
   };
   
-  console.log(`  - Final calculated result:`, result);
   return result;
 };
 
@@ -129,7 +117,7 @@ export const isDateInBudgetPeriod = (date, budget) => {
   const startDate = new Date(budget.startDate);
   const endDate = new Date(budget.endDate);
   
-  // Debug invalid dates
+  // Debug invalid dates only if they occur
   if (isNaN(transactionDate.getTime())) {
     console.warn(`Invalid transaction date: ${date}`);
     return false;

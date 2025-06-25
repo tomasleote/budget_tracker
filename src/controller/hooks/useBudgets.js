@@ -2,12 +2,25 @@ import { useBudgetContext } from '../context/BudgetContext.jsx';
 import { useMemo } from 'react';
 import { formatCurrency, formatPercentage } from '../utils/index.js';
 
+/**
+ * useBudgets - LOGGING CLEANED
+ * 
+ * Budget controller hook for managing budget operations
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive analytics calculation logs
+ * - Silent budget operations unless errors occur
+ * - Clean budget state management without console spam
+ */
+
 // Simple safe execute function
 const safeExecute = (fn, fallback) => {
   try {
     return fn();
   } catch (error) {
-    console.warn('Safe execute error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Safe execute error:', error);
+    }
     return fallback;
   }
 };
@@ -16,14 +29,13 @@ const asyncSafeExecute = async (fn, fallback) => {
   try {
     return await fn();
   } catch (error) {
-    console.warn('Async safe execute error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Async safe execute error:', error);
+    }
     return fallback;
   }
 };
 
-/**
- * Simplified Budget Controller Hook
- */
 export const useBudgets = () => {
   const context = useBudgetContext();
 
@@ -64,7 +76,7 @@ export const useBudgets = () => {
         };
       });
     }, []);
-  }, [context.budgets, context.overview]); // Include both dependencies
+  }, [context.budgets, context.overview]);
 
   // Basic overview
   const overview = useMemo(() => {
@@ -88,7 +100,7 @@ export const useBudgets = () => {
     }, []);
   }, [context.overview]);
 
-  // Basic analytics
+  // Basic analytics - CLEANED (no logging)
   const analytics = useMemo(() => {
     return safeExecute(() => {
       // Use overview data which has the calculated progress, not budgets array
@@ -99,11 +111,7 @@ export const useBudgets = () => {
       const totalSpent = overviewData.reduce((sum, b) => sum + (parseFloat(b.progress?.spent) || 0), 0);
       const utilization = totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount * 100) : 0;
       
-      console.log(`📊 Analytics calculation:`);
-      console.log(`  - Overview data: ${overviewData.length} budgets`);
-      console.log(`  - Total budget amount: ${totalBudgetAmount}`);
-      console.log(`  - Total spent: ${totalSpent}`);
-      console.log(`  - Utilization: ${utilization.toFixed(1)}%`);
+      // REMOVED: Excessive analytics logging
       
       return {
         totalBudgetAmount,
@@ -115,7 +123,7 @@ export const useBudgets = () => {
         healthScore: utilization <= 80 ? 'excellent' : utilization <= 100 ? 'good' : 'poor'
       };
     }, null);
-  }, [context.overview]); // Changed dependency from budgets to overview
+  }, [context.overview]);
 
   // Basic actions
   const createBudget = async (budgetData) => {

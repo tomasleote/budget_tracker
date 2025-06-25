@@ -127,7 +127,12 @@ const TransactionFilterToolbar = ({
             <select
               value={filters.type || 'all'}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1 text-sm rounded"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-primary)',
+                color: 'var(--text-primary)'
+              }}
             >
               <option value="all">All</option>
               <option value="income">Income</option>
@@ -140,7 +145,12 @@ const TransactionFilterToolbar = ({
             <select
               value={filters.sortBy || 'date'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="px-2 py-1 text-sm rounded"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-primary)',
+                color: 'var(--text-primary)'
+              }}
             >
               <option value="date">Date</option>
               <option value="amount">Amount</option>
@@ -165,7 +175,10 @@ const TransactionFilterToolbar = ({
 
         {/* Mobile Filters Dropdown */}
         {showMobileFilters && (
-          <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 mt-2">
+          <div className="absolute top-full left-0 right-0 rounded-lg shadow-lg p-4 z-10 mt-2" style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)'
+          }}>
             <div className="space-y-3">
               {showQuickFilters && (
                 <div className="flex flex-wrap gap-2">
@@ -203,46 +216,66 @@ const TransactionFilterToolbar = ({
       {showQuickFilters && (
         <div className="flex flex-wrap gap-2 items-center">
           {/* View Mode Toggle */}
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center space-x-1 rounded-lg p-1" style={{
+            backgroundColor: 'var(--bg-secondary)'
+          }}>
             <button
               onClick={() => onViewModeChange('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow text-blue-600' : 'text-gray-600'}`}
+              className="p-2 rounded transition-all duration-200"
+              style={{
+                backgroundColor: viewMode === 'list' ? 'var(--bg-card)' : 'transparent',
+                color: viewMode === 'list' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none'
+              }}
             >
               <FontAwesomeIcon icon={faList} className="w-4 h-4" />
             </button>
             <button
               onClick={() => onViewModeChange('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow text-blue-600' : 'text-gray-600'}`}
+              className="p-2 rounded transition-all duration-200"
+              style={{
+                backgroundColor: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                boxShadow: viewMode === 'grid' ? 'var(--shadow-sm)' : 'none'
+              }}
             >
               <FontAwesomeIcon icon={faTh} className="w-4 h-4" />
             </button>
           </div>
 
-          {quickFilters.map((filter) => (
-            <Button
-              key={filter.key}
-              variant={
-                (filter.key === 'all' && (!filters.type || filters.type === 'all') && !filters.dateFrom && !filters.dateTo) ||
-                (filter.key === filters.type) ||
-                (filter.key === 'today' && filters.dateFrom === new Date().toISOString().split('T')[0] && filters.dateTo === new Date().toISOString().split('T')[0]) ||
-                (filter.key === 'week' && filters.dateFrom && filters.dateTo && filters.dateFrom !== new Date().toISOString().split('T')[0])
-                  ? 'primary' 
-                  : 'outline'
-              }
-              size="sm"
-              onClick={() => applyQuickFilter(filter.key)}
-              className={`text-xs ${
-                filter.color === 'green' ? 'text-green-600 border-green-300' :
-                filter.color === 'red' ? 'text-red-600 border-red-300' :
-                filter.color === 'blue' ? 'text-blue-600 border-blue-300' :
-                filter.color === 'purple' ? 'text-purple-600 border-purple-300' :
-                ''
-              }`}
-            >
-              {filter.icon && <FontAwesomeIcon icon={filter.icon} className="mr-1" />}
-              {filter.label}
-            </Button>
-          ))}
+          {quickFilters.map((filter) => {
+            const isActive = (
+              (filter.key === 'all' && (!filters.type || filters.type === 'all') && !filters.dateFrom && !filters.dateTo) ||
+              (filter.key === filters.type) ||
+              (filter.key === 'today' && filters.dateFrom === new Date().toISOString().split('T')[0] && filters.dateTo === new Date().toISOString().split('T')[0]) ||
+              (filter.key === 'week' && filters.dateFrom && filters.dateTo && filters.dateFrom !== new Date().toISOString().split('T')[0])
+            );
+            
+            return (
+              <Button
+                key={filter.key}
+                variant={isActive ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => applyQuickFilter(filter.key)}
+                className="text-xs"
+                style={{
+                  color: !isActive && filter.color === 'green' ? 'var(--success)' :
+                         !isActive && filter.color === 'red' ? 'var(--error)' :
+                         !isActive && filter.color === 'blue' ? 'var(--info)' :
+                         !isActive && filter.color === 'purple' ? 'var(--accent-tertiary)' :
+                         undefined,
+                  borderColor: !isActive && filter.color === 'green' ? 'var(--success-border)' :
+                               !isActive && filter.color === 'red' ? 'var(--error-border)' :
+                               !isActive && filter.color === 'blue' ? 'var(--info-border)' :
+                               !isActive && filter.color === 'purple' ? 'var(--accent-tertiary)' :
+                               undefined
+                }}
+              >
+                {filter.icon && <FontAwesomeIcon icon={filter.icon} className="mr-1" />}
+                {filter.label}
+              </Button>
+            );
+          })}
         </div>
       )}
 
@@ -251,16 +284,26 @@ const TransactionFilterToolbar = ({
         <div className="flex flex-wrap gap-2 items-center">
           {/* Type Filter Tag */}
           {filters.type && filters.type !== 'all' && (
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              filters.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style={{
+              backgroundColor: filters.type === 'income' ? 'var(--success-bg)' : 'var(--error-bg)',
+              color: filters.type === 'income' ? 'var(--success)' : 'var(--error)'
+            }}>
               {filters.type.charAt(0).toUpperCase() + filters.type.slice(1)}
               <button
                 onClick={() => {
                   const newFilters = { ...filters, type: 'all' };
                   onFiltersChange(newFilters);
                 }}
-                className="ml-1 text-xs hover:text-gray-600"
+                className="ml-1 text-xs" 
+                style={{
+                  color: 'var(--text-secondary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = 'var(--text-secondary)';
+                }}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -269,7 +312,10 @@ const TransactionFilterToolbar = ({
 
           {/* Date Range Tags */}
           {(filters.dateFrom || filters.dateTo) && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style={{
+              backgroundColor: 'var(--info-bg)',
+              color: 'var(--info)'
+            }}>
               {filters.dateFrom === filters.dateTo && filters.dateFrom === new Date().toISOString().split('T')[0] ? 'Today' :
                filters.dateFrom && filters.dateTo ? `${filters.dateFrom} to ${filters.dateTo}` :
                filters.dateFrom ? `From ${filters.dateFrom}` :
@@ -279,7 +325,16 @@ const TransactionFilterToolbar = ({
                   const newFilters = { ...filters, dateFrom: '', dateTo: '' };
                   onFiltersChange(newFilters);
                 }}
-                className="ml-1 text-xs hover:text-gray-600"
+                className="ml-1 text-xs" 
+                style={{
+                  color: 'var(--text-secondary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = 'var(--text-secondary)';
+                }}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -288,14 +343,26 @@ const TransactionFilterToolbar = ({
 
           {/* Category Filter Tag */}
           {filters.category && filters.category !== 'all' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" style={{
+              backgroundColor: 'var(--accent-tertiary-bg)',
+              color: 'var(--accent-tertiary)'
+            }}>
               {filters.category}
               <button
                 onClick={() => {
                   const newFilters = { ...filters, category: 'all' };
                   onFiltersChange(newFilters);
                 }}
-                className="ml-1 text-xs hover:text-gray-600"
+                className="ml-1 text-xs" 
+                style={{
+                  color: 'var(--text-secondary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = 'var(--text-secondary)';
+                }}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -307,7 +374,11 @@ const TransactionFilterToolbar = ({
             variant="outline"
             size="sm"
             onClick={() => onFiltersChange({ type: 'all', dateFrom: '', dateTo: '', category: 'all', search: '' })}
-            className="text-gray-600 border-gray-300 text-xs"
+            className="text-xs"
+            style={{
+              color: 'var(--text-secondary)',
+              borderColor: 'var(--border-secondary)'
+            }}
           >
             <FontAwesomeIcon icon={faTimes} className="mr-1" />
             Clear All

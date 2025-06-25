@@ -26,7 +26,7 @@ class User {
     return 'usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  // Initialize default preferences
+  // Initialize default preferences with Phase 2 additions
   initializePreferences(preferences = {}) {
     return {
       currency: 'USD',
@@ -36,11 +36,26 @@ class User {
       defaultView: 'dashboard',
       budgetAlerts: true,
       emailNotifications: true,
+      // Phase 2 additions
+      thousandsSeparator: ',',
+      colorTheme: 'default',
+      // Phase 3 additions (placeholder)
+      dashboardSections: {
+        quickStats: true,
+        balanceCard: true,
+        budgetProgress: true,
+        spendingChart: true,
+        recentTransactions: true,
+        enhancedAnalytics: true,
+        dashboardWidgets: true
+      },
+      // Phase 4 additions (placeholder)
+      categoryColors: {},
       ...preferences
     };
   }
 
-  // Initialize default settings
+  // Initialize default settings with Phase 2 additions
   initializeSettings(settings = {}) {
     return {
       autoCategories: true,
@@ -49,6 +64,12 @@ class User {
       firstDayOfWeek: 'sunday',
       decimalPlaces: 2,
       compactMode: false,
+      // Phase 2 additions
+      thousandsSeparator: ',',
+      numberFormat: {
+        decimalPlaces: 2,
+        thousandsSeparator: ','
+      },
       ...settings
     };
   }
@@ -163,17 +184,37 @@ class User {
     return this.settings[key] !== undefined ? this.settings[key] : defaultValue;
   }
 
-  // Get formatted currency
+  // Get formatted currency with user preferences
   formatCurrency(amount) {
     const currency = this.getPreference('currency', 'USD');
     const decimalPlaces = this.getSetting('decimalPlaces', 2);
+    const thousandsSeparator = this.getPreference('thousandsSeparator', ',');
     
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces
-    }).format(amount);
+    try {
+      let formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces
+      }).format(parseFloat(amount) || 0);
+      
+      // Apply thousands separator preference
+      if (thousandsSeparator !== ',') {
+        if (thousandsSeparator === '.') {
+          // European style: swap . and ,
+          formatted = formatted.replace(/,/g, 'TEMP').replace(/\./g, ',').replace(/TEMP/g, '.');
+        } else if (thousandsSeparator === ' ') {
+          // Space separator
+          formatted = formatted.replace(/,/g, ' ');
+        }
+      }
+      
+      return formatted;
+    } catch (error) {
+      // Fallback formatting
+      const symbol = currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
+      return `${symbol}${(parseFloat(amount) || 0).toFixed(decimalPlaces)}`;
+    }
   }
 
   // Get formatted date
@@ -234,7 +275,7 @@ class User {
     });
   }
 
-  // Create default user
+  // Create default user with Phase 2 preferences
   static createDefault() {
     return new User({
       name: 'Demo User',
@@ -246,7 +287,9 @@ class User {
         language: 'en',
         defaultView: 'dashboard',
         budgetAlerts: true,
-        emailNotifications: false
+        emailNotifications: false,
+        thousandsSeparator: ',',
+        colorTheme: 'default'
       }
     });
   }

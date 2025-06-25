@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useTransactionContext } from '../context/TransactionContext.jsx';
 import { useBudgetContext } from '../context/BudgetContext.jsx';
 import { useCategoryContext } from '../context/CategoryContext.jsx';
@@ -14,7 +14,9 @@ const safeExecute = (fn, fallback) => {
   try {
     return fn();
   } catch (error) {
-    console.warn('Safe execute error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Safe execute error:', error);
+    }
     return fallback;
   }
 };
@@ -23,19 +25,21 @@ const asyncSafeExecute = async (fn, fallback) => {
   try {
     return await fn();
   } catch (error) {
-    console.warn('Async safe execute error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Async safe execute error:', error);
+    }
     return fallback;
   }
 };
 
 // Basic icon constants
 const COMMON_ICONS = {
-  SUCCESS: 'success',
-  WARNING: 'warning',
-  ERROR: 'error',
-  INFO: 'info',
-  INCOME: 'income',
-  EXPENSE: 'expense'
+  SUCCESS: 'check-circle',
+  WARNING: 'exclamation-triangle',
+  ERROR: 'times-circle',
+  INFO: 'info-circle',
+  INCOME: 'arrow-up',
+  EXPENSE: 'arrow-down'
 };
 
 // Basic utility functions
@@ -126,9 +130,24 @@ const calculateFinancialHealthScore = (transactions = [], budgets = []) => {
 };
 
 /**
- * Enhanced Dashboard Controller Hook
+ * Enhanced Dashboard Controller Hook - Performance Optimized - LOGGING CLEANED
+ * 
  * Aggregates data from multiple contexts for dashboard views
  * Uses utility functions for formatting and calculations
+ * 
+ * PERFORMANCE OPTIMIZATIONS:
+ * - Uses stable primitive values and hashes instead of entire context objects in dependencies
+ * - Memoizes all computed values (summary, recentActivity, etc.) with stable dependencies
+ * - Eliminates circular dependencies between computed values
+ * - Memoizes actions and utils objects to prevent recreation
+ * - Uses hash-based change detection for complex arrays
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive debug logs in development mode
+ * - Only keep essential error logs and major operation logs
+ * - Reduced verbosity in refresh operations
+ * 
+ * This prevents unnecessary re-renders and cascade recalculations.
  */
 export const useDashboard = () => {
   // Get all required contexts
@@ -136,6 +155,40 @@ export const useDashboard = () => {
   const budgetContext = useBudgetContext();
   const categoryContext = useCategoryContext();
   const userContext = useUserContext();
+
+  // Extract stable primitive values to prevent unnecessary re-renders
+  const transactionCount = transactionContext.transactions?.length || 0;
+  const budgetCount = budgetContext.budgets?.length || 0;
+  const alertCount = budgetContext.alerts?.length || 0;
+  const overviewCount = budgetContext.overview?.length || 0;
+  const categoryCount = categoryContext.categories?.length || 0;
+  const recentTransactionCount = transactionContext.recentTransactions?.length || 0;
+
+  // Create stable hashes for complex arrays to detect real changes
+  const transactionHash = useMemo(() => {
+    const transactions = transactionContext.transactions || [];
+    return transactions.map(t => `${t.id}-${t.amount}-${t.type}-${t.category}-${t.date}`).sort().join('|');
+  }, [transactionContext.transactions]);
+
+  const budgetHash = useMemo(() => {
+    const budgets = budgetContext.budgets || [];
+    return budgets.map(b => `${b.id}-${b.budgetAmount}-${b.category}-${b.isActive}`).sort().join('|');
+  }, [budgetContext.budgets]);
+
+  const alertHash = useMemo(() => {
+    const alerts = budgetContext.alerts || [];
+    return alerts.map(a => `${a.id || a.category}-${a.type}`).sort().join('|');
+  }, [budgetContext.alerts]);
+
+  const overviewHash = useMemo(() => {
+    const overview = budgetContext.overview || [];
+    return overview.map(o => `${o.id}-${o.progress?.spent || 0}-${o.progress?.percentage || 0}`).sort().join('|');
+  }, [budgetContext.overview]);
+
+  const recentTransactionHash = useMemo(() => {
+    const recent = transactionContext.recentTransactions || [];
+    return recent.map(t => `${t.id}-${t.amount}-${t.date}`).sort().join('|');
+  }, [transactionContext.recentTransactions]);
 
   // Aggregate loading states using utilities
   const isLoading = useMemo(() => {
@@ -148,6 +201,7 @@ export const useDashboard = () => {
       );
     }, false);
   }, [
+    // Use function references directly since they should be stable
     transactionContext.isLoading,
     budgetContext.isLoading, 
     categoryContext.isLoading,
@@ -165,6 +219,7 @@ export const useDashboard = () => {
       );
     }, false);
   }, [
+    // Use function references directly since they should be stable
     transactionContext.hasError,
     budgetContext.hasError,
     categoryContext.hasError,
@@ -237,10 +292,16 @@ export const useDashboard = () => {
       budgetOverview: []
     });
   }, [
-    transactionContext.transactions,
-    budgetContext.budgets,
-    budgetContext.alerts,
-    categoryContext.categories
+    // Use stable primitive counts and hashes instead of entire objects
+    transactionCount,
+    transactionHash,
+    budgetCount,
+    budgetHash,
+    alertCount,
+    alertHash,
+    overviewCount,
+    overviewHash,
+    categoryCount
   ]);
 
   // Enhanced recent activity data using utilities
@@ -267,8 +328,9 @@ export const useDashboard = () => {
       });
     }, []);
   }, [
-    transactionContext.recentTransactions,
-    categoryContext.getCategoryById
+    // Use stable count and hash instead of entire arrays
+    recentTransactionCount,
+    recentTransactionHash
   ]);
 
   // Enhanced budget overview data using utilities
@@ -299,13 +361,21 @@ export const useDashboard = () => {
         };
       });
     }, []);
-  }, [budgetContext.overview]);
+  }, [
+    // Use stable count and hash instead of entire arrays
+    overviewCount,
+    overviewHash
+  ]);
 
   // Enhanced category breakdown data using utilities - CURRENT MONTH ONLY
   const categoryBreakdown = useMemo(() => {
     return safeExecute(() => {
       const transactions = transactionContext.transactions || [];
       const breakdown = calculateCurrentMonthSpendingByCategory(transactions, 'expense');
+      
+      // Calculate current month expenses for percentage calculations
+      const currentMonthBalance = calculateCurrentMonthBalance(transactions);
+      const totalExpenses = currentMonthBalance.expenses;
 
       return breakdown.map(category => {
         const categoryInfo = (typeof categoryContext.getCategoryById === 'function') 
@@ -318,16 +388,16 @@ export const useDashboard = () => {
           categoryName: categoryInfo?.name || category.category,
           categoryIcon: 'icon',
           categoryColor: categoryInfo?.color || '#4ECDC4',
-          percentage: summary.totalExpenses > 0 ? (category.amount / summary.totalExpenses * 100) : 0,
-          formattedPercentage: summary.totalExpenses > 0 ? 
-            formatPercentage(category.amount / summary.totalExpenses * 100) : '0%'
+          percentage: totalExpenses > 0 ? (category.amount / totalExpenses * 100) : 0,
+          formattedPercentage: totalExpenses > 0 ? 
+            formatPercentage(category.amount / totalExpenses * 100) : '0%'
         };
       });
     }, []);
   }, [
-    transactionContext.transactions,
-    categoryContext.getCategoryById,
-    summary.totalExpenses
+    // Use stable transaction hash instead of depending on summary (avoids circular dependency)
+    transactionCount,
+    transactionHash
   ]);
 
   // Enhanced quick stats for dashboard widgets using utilities
@@ -385,7 +455,7 @@ export const useDashboard = () => {
       budgetStatus: { total: 0, active: 0, alerts: 0, exceeded: 0, nearLimit: 0, hasIssues: false, icon: COMMON_ICONS.INFO },
       savingsRate: { percentage: 0, formatted: formatPercentage(0), icon: COMMON_ICONS.INFO, status: 'poor' }
     });
-  }, [summary]);
+  }, [summary]); // Now depends on stable summary
 
   // Enhanced financial health score using utilities
   const financialHealth = useMemo(() => {
@@ -411,10 +481,16 @@ export const useDashboard = () => {
       factors: {},
       recommendations: []
     });
-  }, [transactionContext.transactions, budgetContext.budgets]);
+  }, [
+    // Use stable counts and hashes instead of entire arrays
+    transactionCount,
+    transactionHash,
+    budgetCount,
+    budgetHash
+  ]);
 
-  // Simplified dashboard actions
-  const actions = {
+  // Memoized dashboard actions to prevent recreation
+  const actions = useMemo(() => ({
     addExpense: async (amount, category, description = '') => {
       return asyncSafeExecute(async () => {
         if (transactionContext.actions && transactionContext.actions.createTransaction) {
@@ -494,10 +570,16 @@ export const useDashboard = () => {
         if (userContext.actions?.clearErrors) userContext.actions.clearErrors();
       });
     }
-  };
+  }), [
+    // Actions depend on context action functions which should be stable
+    transactionContext.actions,
+    budgetContext.actions,
+    categoryContext.actions,
+    userContext.actions
+  ]);
 
-  // Simplified utility functions
-  const utils = {
+  // Memoized utility functions to prevent recreation
+  const utils = useMemo(() => ({
     formatCurrency: (amount) => formatCurrency(amount),
     formatDate: (date) => formatDate(date),
     
@@ -574,7 +656,21 @@ export const useDashboard = () => {
         return insights;
       }, []);
     }
-  };
+  }), [
+    // Utils depend on summary and financialHealth which are now stable
+    summary,
+    financialHealth,
+    transactionCount,
+    transactionHash
+  ]);
+
+  // Memoized context references for simplified access
+  const contexts = useMemo(() => ({
+    transactions: transactionContext,
+    budgets: budgetContext,
+    categories: categoryContext,
+    user: userContext
+  }), [transactionContext, budgetContext, categoryContext, userContext]);
 
   return {
     // Data
@@ -596,12 +692,7 @@ export const useDashboard = () => {
     utils,
     
     // Simplified context access
-    contexts: {
-      transactions: transactionContext,
-      budgets: budgetContext,
-      categories: categoryContext,
-      user: userContext
-    }
+    contexts
   };
 };
 

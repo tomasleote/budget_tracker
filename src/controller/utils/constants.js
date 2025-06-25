@@ -1,3 +1,53 @@
+// Color Theme Presets (Phase 4)
+export const COLOR_THEMES = {
+  DEFAULT: {
+    id: 'default',
+    name: 'Default',
+    description: 'Classic blue and gray theme',
+    primary: '#3b82f6',
+    secondary: '#10b981',
+    accent: '#8b5cf6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6'
+  },
+  OCEAN: {
+    id: 'ocean',
+    name: 'Ocean',
+    description: 'Cool blues and teals',
+    primary: '#0891b2',
+    secondary: '#06b6d4',
+    accent: '#3b82f6',
+    success: '#059669',
+    warning: '#d97706',
+    error: '#dc2626',
+    info: '#0284c7'
+  },
+  FOREST: {
+    id: 'forest',
+    name: 'Forest',
+    description: 'Natural greens and earth tones',
+    primary: '#059669',
+    secondary: '#10b981',
+    accent: '#65a30d',
+    success: '#16a34a',
+    warning: '#ca8a04',
+    error: '#dc2626',
+    info: '#0891b2'
+  }
+};
+
+// Theme Configuration
+export const THEME_CONFIG = {
+  DEFAULT_THEME: 'light',
+  AVAILABLE_THEMES: ['light', 'dark', 'auto'],
+  DEFAULT_COLOR_THEME: 'default',
+  AVAILABLE_COLOR_THEMES: Object.keys(COLOR_THEMES).map(key => COLOR_THEMES[key]),
+  STORAGE_KEY: 'budget_tracker_theme',
+  COLOR_STORAGE_KEY: 'budget_tracker_color_theme'
+};
+
 // Application Constants
 
 // Default Categories with Font Awesome icons and colors
@@ -329,27 +379,46 @@ export const COMMON_ICONS = {
   LOGIN: 'fas fa-sign-in-alt'
 };
 
-// Default User Preferences
+// Default User Preferences with Phase 2 additions
 export const DEFAULT_PREFERENCES = {
   currency: CURRENCY_CONFIG.DEFAULT,
   dateFormat: DATE_FORMATS.MEDIUM,
-  theme: APP_CONFIG.THEME.DEFAULT,
+  theme: THEME_CONFIG.DEFAULT_THEME,
   pageSize: APP_CONFIG.PAGINATION.DEFAULT_PAGE_SIZE,
+  // Phase 2 additions
+  thousandsSeparator: ',',
+  colorTheme: THEME_CONFIG.DEFAULT_COLOR_THEME,
+  decimalPlaces: 2,
+  // Notification preferences
   notifications: {
     budgetAlerts: true,
     weeklyReport: true,
     monthlyReport: true
   },
+  // Privacy preferences
   privacy: {
     analytics: false,
     crashReporting: true
   },
+  // UI preferences
   ui: {
     useIcons: true,
     iconStyle: 'fas', // Font Awesome style (fas, far, fab)
     showCategoryIcons: true,
     animateTransitions: true
-  }
+  },
+  // Phase 3 placeholder: Dashboard section preferences
+  dashboardSections: {
+    quickStats: true,
+    balanceCard: true,
+    budgetProgress: true,
+    spendingChart: true,
+    recentTransactions: true,
+    enhancedAnalytics: true,
+    dashboardWidgets: true
+  },
+  // Phase 4 placeholder: Category color overrides
+  categoryColors: {}
 };
 
 // Icon utility functions

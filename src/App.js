@@ -15,7 +15,8 @@ import {
   Dashboard,
   Transactions,
   Budget,
-  Reports
+  Reports,
+  Settings
 } from './view/pages';
 
 import './App.css';
@@ -82,6 +83,14 @@ function App() {
                   </RouteGuard>
                 } 
               />
+              <Route 
+                path="/settings" 
+                element={
+                  <RouteGuard requireAuth={true}>
+                    <Settings />
+                  </RouteGuard>
+                } 
+              />
               
               {/* Error Routes */}
               <Route path="/unauthorized" element={<UnauthorizedAccess />} />
@@ -134,6 +143,7 @@ const NotFound = () => {
               <li>• <code>/transactions</code> - Transaction management</li>
               <li>• <code>/budget</code> - Budget management</li>
               <li>• <code>/reports</code> - Financial reports</li>
+              <li>• <code>/settings</code> - Application settings</li>
             </ul>
             <p className="text-xs text-gray-500 mt-2">
               Current URL: {window.location.pathname}

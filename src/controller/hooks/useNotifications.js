@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useBudgets } from './useBudgets';
 
+/**
+ * useNotifications - LOGGING CLEANED
+ * 
+ * Hook for managing notification state and budget alerts
+ * 
+ * LOGGING CLEANUP:
+ * - Removed all excessive notification generation logs
+ * - Silent operation unless errors occur
+ * - Clean notification management without console spam
+ */
 const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -10,12 +20,10 @@ const useNotifications = () => {
   // Generate notifications from budget alerts
   const generateBudgetNotifications = useCallback(() => {
     if (!budgetOverview || budgetOverview.length === 0) {
-      console.log('📢 No budget data available for notifications');
       return [];
     }
 
     const budgetNotifications = [];
-    console.log('📢 Generating notifications from', budgetOverview.length, 'budgets');
 
     budgetOverview.forEach(budget => {
       if (budget.isExceeded) {
@@ -37,7 +45,6 @@ const useNotifications = () => {
           }
         };
         budgetNotifications.push(notification);
-        console.log('📢 Created exceeded notification for', budget.category);
       } else if (budget.isNearLimit) {
         const notification = {
           id: `budget-warning-${budget.id}`,
@@ -58,38 +65,28 @@ const useNotifications = () => {
           }
         };
         budgetNotifications.push(notification);
-        console.log('📢 Created near-limit notification for', budget.category);
       }
     });
-
-    console.log('📢 Generated', budgetNotifications.length, 'budget notifications');
     
     // Filter out dismissed notifications
     const filteredNotifications = budgetNotifications.filter(n => !dismissedNotificationIds.has(n.id));
-    console.log('📢 After filtering dismissed:', filteredNotifications.length, 'notifications');
     
     return filteredNotifications;
   }, [budgetOverview, dismissedNotificationIds]);
 
   // Update notifications when budget data changes
   useEffect(() => {
-    console.log('📢 useEffect triggered - budget data changed');
     const budgetNotifications = generateBudgetNotifications();
     
     // Get existing non-budget notifications
     const nonBudgetNotifications = notifications.filter(n => !n.type.startsWith('budget'));
-    console.log('📢 Existing non-budget notifications:', nonBudgetNotifications.length);
     
     // Only add budget notifications that don't already exist (check by ID)
     const existingBudgetIds = new Set(notifications.filter(n => n.type.startsWith('budget')).map(n => n.id));
     const newBudgetNotifications = budgetNotifications.filter(n => !existingBudgetIds.has(n.id));
     
-    console.log('📢 Existing budget notification IDs:', Array.from(existingBudgetIds));
-    console.log('📢 New budget notifications to add:', newBudgetNotifications.length);
-    
     // If there are new budget notifications, add them
     if (newBudgetNotifications.length > 0) {
-      console.log('📢 Adding', newBudgetNotifications.length, 'new notifications');
       const allNotifications = [...nonBudgetNotifications, ...notifications.filter(n => n.type.startsWith('budget')), ...newBudgetNotifications]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
@@ -101,7 +98,6 @@ const useNotifications = () => {
     const shouldUpdate = notifications.some(n => n.type.startsWith('budget') && !currentBudgetIds.has(n.id));
     
     if (shouldUpdate) {
-      console.log('📢 Removing outdated budget notifications');
       const filteredNotifications = notifications.filter(n => 
         !n.type.startsWith('budget') || currentBudgetIds.has(n.id)
       );
@@ -136,8 +132,6 @@ const useNotifications = () => {
 
   // Dismiss notification (remove it)
   const dismissNotification = useCallback((notificationId) => {
-    console.log('📢 Dismissing notification:', notificationId);
-    
     // Add to dismissed set
     setDismissedNotificationIds(prev => new Set([...prev, notificationId]));
     
@@ -149,8 +143,6 @@ const useNotifications = () => {
 
   // Dismiss all notifications
   const dismissAll = useCallback(() => {
-    console.log('📢 Dismissing all notifications');
-    
     // Add all current notification IDs to dismissed set
     const currentNotificationIds = notifications.map(n => n.id);
     setDismissedNotificationIds(prev => new Set([...prev, ...currentNotificationIds]));
@@ -177,7 +169,6 @@ const useNotifications = () => {
 
   // Clear dismissed notifications (for testing or when budget conditions change)
   const clearDismissedNotifications = useCallback(() => {
-    console.log('📢 Clearing dismissed notifications list');
     setDismissedNotificationIds(new Set());
   }, []);
 

@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import CategoryContext from '../CategoryContext.jsx';
 
-// Simple mock CategoryProvider for now
+/**
+ * CategoryProvider - Clean Mock Implementation
+ * 
+ * LOGGING CLEANUP:
+ * - Removed all debug logs that were causing performance issues
+ * - Simple mock provider with stable memoized values
+ * - No localStorage operations or excessive logging
+ */
 export const CategoryProvider = ({ children }) => {
-  const value = {
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     categories: [],
     filteredCategories: [],
     currentCategory: null,
@@ -48,7 +56,7 @@ export const CategoryProvider = ({ children }) => {
       refreshData: async () => {},
       clearErrors: () => {}
     }
-  };
+  }), []); // Empty dependency array since this is a static mock
 
   return (
     <CategoryContext.Provider value={value}>

@@ -55,17 +55,30 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-60 bg-gray-800 text-white h-full flex flex-col">
+    <div className="w-60 h-full flex flex-col transition-colors duration-300" style={{
+      backgroundColor: 'var(--sidebar-bg)',
+      borderRight: '1px solid var(--sidebar-border)'
+    }}>
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-700">
+      <div className="p-6" style={{
+        borderBottom: '1px solid var(--sidebar-border)'
+      }}>
         <div 
-          className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex items-center space-x-3 cursor-pointer transition-opacity hover:opacity-80"
           onClick={() => handleNavigation('/dashboard')}
         >
-          <FontAwesomeIcon icon={faCoins} className="text-blue-400 text-xl" />
-          <h1 className="text-xl font-bold">Budget Tracker</h1>
+          <FontAwesomeIcon 
+            icon={faCoins} 
+            className="text-xl" 
+            style={{ color: 'var(--accent-primary)' }}
+          />
+          <h1 className="text-xl font-bold" style={{
+            color: 'var(--sidebar-text-active)'
+          }}>Budget Tracker</h1>
         </div>
-        <p className="text-gray-400 text-xs mt-1">Personal Finance Manager</p>
+        <p className="text-xs mt-1" style={{
+          color: 'var(--sidebar-text-muted)'
+        }}>Personal Finance Manager</p>
       </div>
 
       {/* Navigation Menu */}
@@ -78,32 +91,60 @@ const Sidebar = () => {
               <li key={item.id}>
                 <button
                   onClick={() => handleNavigation(item.path)}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                    ${
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-lg'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    }
-                  `}
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 relative"
                   title={item.description}
+                  style={{
+                    backgroundColor: isActive 
+                      ? 'var(--sidebar-active)' 
+                      : 'transparent',
+                    color: isActive 
+                      ? 'var(--sidebar-text-active)' 
+                      : 'var(--sidebar-text)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = 'var(--sidebar-hover)';
+                      e.target.style.color = 'var(--sidebar-text-active)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = 'var(--sidebar-text)';
+                    }
+                  }}
                 >
                   <FontAwesomeIcon 
                     icon={item.icon} 
-                    className={`w-5 h-5 ${
-                      isActive ? 'text-blue-100' : 'text-gray-400'
-                    }`} 
+                    className="w-5 h-5" 
+                    style={{
+                      color: isActive 
+                        ? 'var(--sidebar-icon-active)' 
+                        : 'var(--sidebar-icon)'
+                    }}
                   />
                   <div className="flex-1 text-left">
                     <div className="font-medium">{item.label}</div>
-                    <div className={`text-xs ${
-                      isActive ? 'text-blue-100' : 'text-gray-500'
-                    }`}>
+                    <div className="text-xs" style={{
+                      color: isActive 
+                        ? 'var(--sidebar-text-active)'
+                        : 'var(--sidebar-text-muted)'
+                    }}>
                       {item.description}
                     </div>
                   </div>
                   {isActive && (
-                    <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+                    <div 
+                      className="w-2 h-2 rounded-full" 
+                      style={{ backgroundColor: 'var(--sidebar-active-indicator)' }}
+                    ></div>
+                  )}
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <div 
+                      className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full" 
+                      style={{ backgroundColor: 'var(--sidebar-active-indicator)' }}
+                    ></div>
                   )}
                 </button>
               </li>
@@ -113,26 +154,81 @@ const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4" style={{
+        borderTop: '1px solid var(--sidebar-border)'
+      }}>
         <button
-          onClick={() => console.log('Settings clicked')}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+          onClick={() => handleNavigation('/settings')}
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 relative"
           title="Application settings"
+          style={{
+            backgroundColor: isActiveRoute('/settings')
+              ? 'var(--sidebar-active)' 
+              : 'transparent',
+            color: isActiveRoute('/settings')
+              ? 'var(--sidebar-text-active)' 
+              : 'var(--sidebar-text)'
+          }}
+          onMouseEnter={(e) => {
+            if (!isActiveRoute('/settings')) {
+              e.target.style.backgroundColor = 'var(--sidebar-hover)';
+              e.target.style.color = 'var(--sidebar-text-active)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isActiveRoute('/settings')) {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = 'var(--sidebar-text)';
+            }
+          }}
         >
-          <FontAwesomeIcon icon={faCog} className="w-5 h-5 text-gray-400" />
+          <FontAwesomeIcon 
+            icon={faCog} 
+            className="w-5 h-5" 
+            style={{
+              color: isActiveRoute('/settings')
+                ? 'var(--sidebar-icon-active)' 
+                : 'var(--sidebar-icon)'
+            }}
+          />
           <div className="flex-1 text-left">
             <div className="font-medium">Settings</div>
-            <div className="text-xs text-gray-500">App preferences</div>
+            <div className="text-xs" style={{
+              color: isActiveRoute('/settings')
+                ? 'var(--sidebar-text-active)'
+                : 'var(--sidebar-text-muted)'
+            }}>
+              App preferences
+            </div>
           </div>
+          {isActiveRoute('/settings') && (
+            <div 
+              className="w-2 h-2 rounded-full" 
+              style={{ backgroundColor: 'var(--sidebar-active-indicator)' }}
+            ></div>
+          )}
+          {/* Active indicator bar */}
+          {isActiveRoute('/settings') && (
+            <div 
+              className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full" 
+              style={{ backgroundColor: 'var(--sidebar-active-indicator)' }}
+            ></div>
+          )}
         </button>
         
         {/* Version info */}
-        <div className="mt-4 pt-4 border-t border-gray-700">
-          <p className="text-xs text-gray-500 text-center">
+        <div className="mt-4 pt-4" style={{
+          borderTop: '1px solid var(--sidebar-border)'
+        }}>
+          <p className="text-xs text-center" style={{
+            color: 'var(--sidebar-text-muted)'
+          }}>
             Budget Tracker v1.0
           </p>
           {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs text-gray-600 text-center mt-1">
+            <p className="text-xs text-center mt-1" style={{
+              color: 'var(--sidebar-text-muted)'
+            }}>
               Development Mode
             </p>
           )}

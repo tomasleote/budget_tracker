@@ -36,23 +36,31 @@ const QuickStats = ({
 
   // Helper function to get trend color
   const getTrendColor = (trend, isPositiveGood = true) => {
-    if (trend === 'stable') return 'text-gray-500';
-    if (trend === 'up') return isPositiveGood ? 'text-green-600' : 'text-red-600';
-    if (trend === 'down') return isPositiveGood ? 'text-red-600' : 'text-green-600';
-    return 'text-gray-500';
+    if (trend === 'stable') return 'var(--text-tertiary)';
+    if (trend === 'up') return isPositiveGood ? 'var(--success)' : 'var(--error)';
+    if (trend === 'down') return isPositiveGood ? 'var(--error)' : 'var(--success)';
+    return 'var(--text-tertiary)';
   };
 
   if (isLoading) {
     return (
       <Card className={`animate-pulse ${className}`}>
         <div className="space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-6 rounded w-1/3" style={{
+            backgroundColor: 'var(--bg-tertiary)'
+          }}></div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="space-y-2">
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-12 rounded" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
+                <div className="h-4 rounded w-3/4" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
+                <div className="h-3 rounded w-1/2" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
               </div>
             ))}
           </div>
@@ -68,8 +76,8 @@ const QuickStats = ({
       value: quickStats.balance?.formatted || formatCurrency(0),
       subValue: quickStats.balance?.isPositive ? 'Positive' : 'Negative',
       icon: faWallet,
-      iconColor: quickStats.balance?.isPositive ? 'text-green-600' : 'text-red-600',
-      bgColor: quickStats.balance?.isPositive ? 'bg-green-100' : 'bg-red-100',
+      iconColor: quickStats.balance?.isPositive ? 'var(--success)' : 'var(--error)',
+      bgColor: quickStats.balance?.isPositive ? 'var(--success-bg)' : 'var(--error-bg)',
       trend: quickStats.balance?.trend || 'stable',
       trendIcon: getTrendIcon(quickStats.balance?.trend)
     },
@@ -79,8 +87,8 @@ const QuickStats = ({
       value: quickStats.monthlyIncome?.formatted || formatCurrency(0),
       subValue: 'This Month',
       icon: faArrowUp,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-100',
+      iconColor: 'var(--success)',
+      bgColor: 'var(--success-bg)',
       trend: quickStats.monthlyIncome?.trend || 'stable',
       trendIcon: getTrendIcon(quickStats.monthlyIncome?.trend)
     },
@@ -90,8 +98,8 @@ const QuickStats = ({
       value: quickStats.monthlyExpenses?.formatted || formatCurrency(0),
       subValue: 'This Month',
       icon: faArrowDown,
-      iconColor: 'text-red-600',
-      bgColor: 'bg-red-100',
+      iconColor: 'var(--error)',
+      bgColor: 'var(--error-bg)',
       trend: quickStats.monthlyExpenses?.trend || 'stable',
       trendIcon: getTrendIcon(quickStats.monthlyExpenses?.trend)
     },
@@ -101,10 +109,10 @@ const QuickStats = ({
       value: quickStats.savingsRate?.formatted || '0%',
       subValue: quickStats.savingsRate?.status || 'poor',
       icon: faPiggyBank,
-      iconColor: quickStats.savingsRate?.percentage >= 20 ? 'text-green-600' : 
-                 quickStats.savingsRate?.percentage >= 10 ? 'text-yellow-600' : 'text-red-600',
-      bgColor: quickStats.savingsRate?.percentage >= 20 ? 'bg-green-100' : 
-               quickStats.savingsRate?.percentage >= 10 ? 'bg-yellow-100' : 'bg-red-100',
+      iconColor: quickStats.savingsRate?.percentage >= 20 ? 'var(--success)' : 
+                 quickStats.savingsRate?.percentage >= 10 ? 'var(--warning)' : 'var(--error)',
+      bgColor: quickStats.savingsRate?.percentage >= 20 ? 'var(--success-bg)' : 
+               quickStats.savingsRate?.percentage >= 10 ? 'var(--warning-bg)' : 'var(--error-bg)',
       trend: 'stable',
       trendIcon: faEquals
     }
@@ -115,43 +123,64 @@ const QuickStats = ({
       title="Quick Stats" 
       className={className}
       headerAction={
-        <div className="text-sm text-gray-500">
+        <div className="text-sm" style={{
+          color: 'var(--text-secondary)'
+        }}>
           Financial Overview
         </div>
       }
     >
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.id} className="text-center p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
+          <div key={stat.id} className="text-center p-4 rounded-lg border transition-colors" style={{
+            borderColor: 'var(--border-primary)',
+            '&:hover': {
+              borderColor: 'var(--border-secondary)'
+            }
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.borderColor = 'var(--border-secondary)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.borderColor = 'var(--border-primary)';
+          }}>
             {/* Icon */}
-            <div className={`w-12 h-12 rounded-full ${stat.bgColor} flex items-center justify-center mx-auto mb-3`}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{
+              backgroundColor: stat.bgColor
+            }}>
               <FontAwesomeIcon 
                 icon={stat.icon} 
-                className={`text-lg ${stat.iconColor}`} 
+                className="text-lg" 
+                style={{ color: stat.iconColor }}
               />
             </div>
             
             {/* Value */}
             <div className="space-y-1">
-              <div className="text-lg font-semibold text-gray-900">
+              <div className="text-lg font-semibold" style={{
+                color: 'var(--text-primary)'
+              }}>
                 {stat.value}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm" style={{
+                color: 'var(--text-secondary)'
+              }}>
                 {stat.title}
               </div>
               <div className="flex items-center justify-center space-x-1">
-                <span className={`text-xs font-medium capitalize ${
-                  stat.id === 'savings' ? 
-                    (quickStats.savingsRate?.percentage >= 20 ? 'text-green-600' : 
-                     quickStats.savingsRate?.percentage >= 10 ? 'text-yellow-600' : 'text-red-600') :
-                    'text-gray-500'
-                }`}>
+                <span className="text-xs font-medium capitalize" style={{
+                  color: stat.id === 'savings' ? 
+                    (quickStats.savingsRate?.percentage >= 20 ? 'var(--success)' : 
+                     quickStats.savingsRate?.percentage >= 10 ? 'var(--warning)' : 'var(--error)') :
+                    'var(--text-secondary)'
+                }}>
                   {stat.subValue}
                 </span>
                 {stat.trend !== 'stable' && (
                   <FontAwesomeIcon 
                     icon={stat.trendIcon} 
-                    className={`text-xs ${getTrendColor(stat.trend, stat.id !== 'expenses')}`} 
+                    className="text-xs" 
+                    style={{ color: getTrendColor(stat.trend, stat.id !== 'expenses') }}
                   />
                 )}
               </div>
@@ -162,30 +191,37 @@ const QuickStats = ({
 
       {/* Financial Health Summary */}
       {financialHealth && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-6 pt-6" style={{
+          borderTop: '1px solid var(--border-primary)'
+        }}>
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-600">Financial Health Score:</span>
-              <span className="ml-2 text-lg font-semibold text-gray-900">
+              <span className="text-sm" style={{
+                color: 'var(--text-secondary)'
+              }}>Financial Health Score:</span>
+              <span className="ml-2 text-lg font-semibold" style={{
+                color: 'var(--text-primary)'
+              }}>
                 {financialHealth.formattedScore || '0/100'}
               </span>
-              <span className={`ml-2 text-sm font-medium ${
-                financialHealth.score >= 80 ? 'text-green-600' :
-                financialHealth.score >= 60 ? 'text-yellow-600' : 'text-red-600'
-              }`}>
+              <span className="ml-2 text-sm font-medium" style={{
+                color: financialHealth.score >= 80 ? 'var(--success)' :
+                       financialHealth.score >= 60 ? 'var(--warning)' : 'var(--error)'
+              }}>
                 Grade {financialHealth.grade || 'F'}
               </span>
             </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              financialHealth.score >= 80 ? 'bg-green-100' :
-              financialHealth.score >= 60 ? 'bg-yellow-100' : 'bg-red-100'
-            }`}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{
+              backgroundColor: financialHealth.score >= 80 ? 'var(--success-bg)' :
+                               financialHealth.score >= 60 ? 'var(--warning-bg)' : 'var(--error-bg)'
+            }}>
               <FontAwesomeIcon 
                 icon={financialHealth.statusIcon || faWallet} 
-                className={`text-sm ${
-                  financialHealth.score >= 80 ? 'text-green-600' :
-                  financialHealth.score >= 60 ? 'text-yellow-600' : 'text-red-600'
-                }`} 
+                className="text-sm" 
+                style={{
+                  color: financialHealth.score >= 80 ? 'var(--success)' :
+                         financialHealth.score >= 60 ? 'var(--warning)' : 'var(--error)'
+                }}
               />
             </div>
           </div>

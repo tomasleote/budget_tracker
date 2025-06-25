@@ -2,20 +2,28 @@ import BaseRepository from './BaseRepository.js';
 import { Transaction } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
 
+/**
+ * TransactionRepository - LOGGING CLEANED
+ * 
+ * Repository for transaction-specific database operations
+ * 
+ * LOGGING CLEANUP:
+ * - Removed excessive transaction loading logs
+ * - Only keep essential error logs and major operations
+ * - Reduced verbosity in repository operations
+ */
 class TransactionRepository extends BaseRepository {
   constructor() {
     super('Transaction', StorageService.storageKeys.TRANSACTIONS, Transaction);
   }
 
-  // Override getAll to add debugging
+  // Override getAll to add minimal debugging
   async getAll() {
     try {
       const transactions = await super.getAll();
-      console.log(`📊 TransactionRepository.getAll() returned ${transactions.length} transactions`);
-      if (transactions.length === 0) {
-        console.log('⚠️ TransactionRepository found no transactions - checking localStorage directly...');
-        const directCheck = localStorage.getItem(this.storageKey);
-        console.log(`🔍 Direct localStorage check for key '${this.storageKey}':`, directCheck ? `${JSON.parse(directCheck).length} items` : 'null');
+      // Only log in development when debugging storage issues
+      if (process.env.NODE_ENV === 'development' && transactions.length === 0) {
+        console.log('⚠️ TransactionRepository found no transactions');
       }
       return transactions;
     } catch (error) {
@@ -29,7 +37,9 @@ class TransactionRepository extends BaseRepository {
     try {
       return await this.findBy({ type });
     } catch (error) {
-      console.error('Error getting transactions by type:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting transactions by type:', error);
+      }
       return [];
     }
   }
@@ -38,7 +48,9 @@ class TransactionRepository extends BaseRepository {
     try {
       return await this.findBy({ category });
     } catch (error) {
-      console.error('Error getting transactions by category:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting transactions by category:', error);
+      }
       return [];
     }
   }
@@ -54,7 +66,9 @@ class TransactionRepository extends BaseRepository {
         return transactionDate >= start && transactionDate <= end;
       });
     } catch (error) {
-      console.error('Error getting transactions by date range:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting transactions by date range:', error);
+      }
       return [];
     }
   }
@@ -68,7 +82,9 @@ class TransactionRepository extends BaseRepository {
         return amount >= minAmount && amount <= maxAmount;
       });
     } catch (error) {
-      console.error('Error getting transactions by amount range:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting transactions by amount range:', error);
+      }
       return [];
     }
   }
@@ -79,7 +95,9 @@ class TransactionRepository extends BaseRepository {
       const sortedTransactions = this.sortData(allTransactions, 'date', 'desc');
       return sortedTransactions.slice(0, limit);
     } catch (error) {
-      console.error('Error getting recent transactions:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting recent transactions:', error);
+      }
       return [];
     }
   }
@@ -141,7 +159,9 @@ class TransactionRepository extends BaseRepository {
 
       return transactions;
     } catch (error) {
-      console.error('Error getting transactions with filters:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting transactions with filters:', error);
+      }
       return [];
     }
   }
@@ -175,7 +195,9 @@ class TransactionRepository extends BaseRepository {
 
       return totals;
     } catch (error) {
-      console.error('Error getting totals by type:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting totals by type:', error);
+      }
       return {
         income: 0,
         expense: 0,
@@ -213,7 +235,9 @@ class TransactionRepository extends BaseRepository {
       return Object.values(categoryTotals)
         .sort((a, b) => b.amount - a.amount);
     } catch (error) {
-      console.error('Error getting totals by category:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting totals by category:', error);
+      }
       return [];
     }
   }
@@ -262,7 +286,9 @@ class TransactionRepository extends BaseRepository {
 
       return Object.values(monthlyTotals);
     } catch (error) {
-      console.error('Error getting monthly totals:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting monthly totals:', error);
+      }
       return [];
     }
   }
@@ -287,7 +313,9 @@ class TransactionRepository extends BaseRepository {
         );
       });
     } catch (error) {
-      console.error('Error finding potential duplicates:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error finding potential duplicates:', error);
+      }
       return [];
     }
   }
@@ -331,7 +359,9 @@ class TransactionRepository extends BaseRepository {
         }
       };
     } catch (error) {
-      console.error('Error getting statistics:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting statistics:', error);
+      }
       return null;
     }
   }
@@ -350,7 +380,9 @@ class TransactionRepository extends BaseRepository {
           validTransactions.push(transactionData);
         } catch (error) {
           removedCount++;
-          console.warn(`Invalid transaction removed: ${transactionData.id}`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`Invalid transaction removed: ${transactionData.id}`, error);
+          }
         }
       }
 
@@ -399,7 +431,9 @@ class TransactionRepository extends BaseRepository {
 
       return csvRows.join('\n');
     } catch (error) {
-      console.error('Error exporting transactions to CSV:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error exporting transactions to CSV:', error);
+      }
       return null;
     }
   }

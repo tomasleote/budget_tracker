@@ -158,8 +158,9 @@ const BudgetList = ({
         color: 'red',
         icon: faExclamationTriangle,
         text: 'Exceeded',
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-600'
+        bgColor: 'var(--error-bg)',
+        textColor: 'var(--error)',
+        borderColor: 'var(--error-border)'
       };
     } else if (isNearLimit) {
       return {
@@ -167,8 +168,9 @@ const BudgetList = ({
         color: 'yellow',
         icon: faExclamationTriangle,
         text: 'Near Limit',
-        bgColor: 'bg-yellow-50',
-        textColor: 'text-yellow-600'
+        bgColor: 'var(--warning-bg)',
+        textColor: 'var(--warning)',
+        borderColor: 'var(--warning-border)'
       };
     } else {
       return {
@@ -176,8 +178,9 @@ const BudgetList = ({
         color: 'green',
         icon: faCheckCircle,
         text: 'On Track',
-        bgColor: 'bg-green-50',
-        textColor: 'text-green-600'
+        bgColor: 'var(--success-bg)',
+        textColor: 'var(--success)',
+        borderColor: 'var(--success-border)'
       };
     }
   };
@@ -188,19 +191,33 @@ const BudgetList = ({
       <Card className={className} title="Budget Management">
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse p-4 border border-gray-200 rounded-lg">
+            <div key={i} className="animate-pulse p-4 rounded-lg" style={{
+              border: '1px solid var(--border-primary)'
+            }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                  <div className="w-8 h-8 rounded-full" style={{
+                    backgroundColor: 'var(--bg-tertiary)'
+                  }}></div>
                   <div>
-                    <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
-                    <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    <div className="h-4 rounded w-24 mb-1" style={{
+                      backgroundColor: 'var(--bg-tertiary)'
+                    }}></div>
+                    <div className="h-3 rounded w-16" style={{
+                      backgroundColor: 'var(--bg-tertiary)'
+                    }}></div>
                   </div>
                 </div>
-                <div className="h-6 bg-gray-200 rounded w-20"></div>
+                <div className="h-6 rounded w-20" style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}></div>
               </div>
-              <div className="h-3 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-3 rounded mb-2" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
+              <div className="h-4 rounded w-3/4" style={{
+                backgroundColor: 'var(--bg-tertiary)'
+              }}></div>
             </div>
           ))}
         </div>
@@ -215,12 +232,17 @@ const BudgetList = ({
         <div className="text-center py-12">
           <FontAwesomeIcon 
             icon={faWallet} 
-            className="text-gray-400 text-5xl mb-6" 
+            className="text-5xl mb-6" 
+            style={{ color: 'var(--text-tertiary)' }}
           />
-          <h3 className="text-xl font-medium text-gray-900 mb-3">
+          <h3 className="text-xl font-medium mb-3" style={{
+            color: 'var(--text-primary)'
+          }}>
             No Budgets Created Yet
           </h3>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">
+          <p className="mb-8 max-w-md mx-auto" style={{
+            color: 'var(--text-secondary)'
+          }}>
             Create your first budget to start tracking your spending and stay on top of your financial goals.
           </p>
           <Button
@@ -269,7 +291,11 @@ const BudgetList = ({
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
               icon={faFilter}
-              className={showFilters ? 'bg-blue-50 border-blue-300 text-blue-700' : ''}
+              style={{
+                backgroundColor: showFilters ? 'var(--accent-primary)' : 'transparent',
+                borderColor: showFilters ? 'var(--accent-primary)' : 'var(--border-primary)',
+                color: showFilters ? 'var(--text-inverse)' : 'var(--text-primary)'
+              }}
             >
               Filters
             </Button>
@@ -277,16 +303,26 @@ const BudgetList = ({
 
           {/* Filter Controls */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg" style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-primary)'
+            }}>
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{
+                  color: 'var(--text-primary)'
+                }}>
                   Status
                 </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg" 
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 >
                   <option value="all">All Statuses</option>
                   <option value="exceeded">Exceeded</option>
@@ -296,13 +332,20 @@ const BudgetList = ({
 
               {/* Period Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{
+                  color: 'var(--text-primary)'
+                }}>
                   Period
                 </label>
                 <select
                   value={selectedPeriod}
                   onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 >
                   <option value="all">All Periods</option>
                   <option value="weekly">Weekly</option>
@@ -314,13 +357,20 @@ const BudgetList = ({
 
               {/* Sort Controls */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{
+                  color: 'var(--text-primary)'
+                }}>
                   Sort By
                 </label>
                 <select
                   value={sortField}
                   onChange={(e) => setSortField(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 >
                   <option value="utilizationPercentage">Usage %</option>
                   <option value="budgetAmount">Amount</option>
@@ -339,32 +389,49 @@ const BudgetList = ({
               label: 'Total Budgets', 
               value: budgets.length, 
               color: 'blue',
-              icon: faWallet 
+              icon: faWallet,
+              bgColor: 'var(--info-bg)',
+              textColor: 'var(--info)',
+              borderColor: 'var(--info-border)'
             },
             { 
               label: 'Exceeded', 
               value: budgets.filter(b => b.isOverBudget || b.utilizationPercentage > 100).length, 
               color: 'red',
-              icon: faExclamationTriangle 
+              icon: faExclamationTriangle,
+              bgColor: 'var(--error-bg)',
+              textColor: 'var(--error)',
+              borderColor: 'var(--error-border)'
             },
             { 
               label: 'Near Limit', 
               value: budgets.filter(b => (b.isNearLimit || b.utilizationPercentage >= 80) && !(b.isOverBudget || b.utilizationPercentage > 100)).length, 
               color: 'yellow',
-              icon: faExclamationTriangle 
+              icon: faExclamationTriangle,
+              bgColor: 'var(--warning-bg)',
+              textColor: 'var(--warning)',
+              borderColor: 'var(--warning-border)'
             }
           ].map((stat) => (
-            <div key={stat.label} className={`p-4 rounded-lg border bg-${stat.color}-50 border-${stat.color}-200`}>
+            <div key={stat.label} className="p-4 rounded-lg border" style={{
+              backgroundColor: stat.bgColor,
+              borderColor: stat.borderColor
+            }}>
               <div className="flex items-center space-x-2 mb-2">
                 <FontAwesomeIcon 
                   icon={stat.icon} 
-                  className={`text-${stat.color}-600 w-4 h-4`} 
+                  className="w-4 h-4" 
+                  style={{ color: stat.textColor }}
                 />
-                <span className={`text-sm font-medium text-${stat.color}-700`}>
+                <span className="text-sm font-medium" style={{
+                  color: stat.textColor
+                }}>
                   {stat.label}
                 </span>
               </div>
-              <div className={`text-2xl font-bold text-${stat.color}-600`}>
+              <div className="text-2xl font-bold" style={{
+                color: stat.textColor
+              }}>
                 {stat.value}
               </div>
             </div>
@@ -383,28 +450,48 @@ const BudgetList = ({
             return (
               <div
                 key={budget.id}
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow bg-white"
+                className="p-4 rounded-lg transition-shadow" 
+                style={{
+                  border: '1px solid var(--border-primary)',
+                  backgroundColor: 'var(--bg-card)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.boxShadow = 'var(--shadow-md)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.boxShadow = 'var(--shadow-sm)';
+                }}
               >
                 {/* Budget Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-lg ${statusInfo.bgColor}`}>
+                    <div className="p-2 rounded-lg" style={{
+                      backgroundColor: statusInfo.bgColor
+                    }}>
                       <FontAwesomeIcon 
                         icon={statusInfo.icon} 
-                        className={`w-4 h-4 ${statusInfo.textColor}`} 
+                        className="w-4 h-4" 
+                        style={{ color: statusInfo.textColor }}
                       />
                     </div>
                     
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold" style={{
+                          color: 'var(--text-primary)'
+                        }}>
                           {budget.category}
                         </h3>
-                        <span className={`px-2 py-1 text-xs rounded-full ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                        <span className="px-2 py-1 text-xs rounded-full" style={{
+                          backgroundColor: statusInfo.bgColor,
+                          color: statusInfo.textColor
+                        }}>
                           {statusInfo.text}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center space-x-4 text-sm" style={{
+                        color: 'var(--text-secondary)'
+                      }}>
                         <div className="flex items-center space-x-1">
                           <FontAwesomeIcon icon={faDollarSign} className="w-3 h-3" />
                           <span>{formatCurrency(budgetAmount)}</span>
@@ -455,7 +542,17 @@ const BudgetList = ({
                           handleDeleteClick(budget);
                         }}
                         icon={faTrash}
-                        className="text-red-600 hover:text-red-700"
+                        style={{
+                          color: 'var(--error)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = 'var(--error)';
+                          e.target.style.backgroundColor = 'var(--error-bg)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = 'var(--error)';
+                          e.target.style.backgroundColor = 'transparent';
+                        }}
                       >
                         Delete
                       </Button>
@@ -466,10 +563,14 @@ const BudgetList = ({
                 {/* Progress Section */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       Budget Progress
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm" style={{
+                      color: 'var(--text-secondary)'
+                    }}>
                       {formatPercentage(percentage)}
                     </span>
                   </div>
@@ -482,7 +583,9 @@ const BudgetList = ({
                     animated={true}
                   />
                   
-                  <div className="flex justify-between text-xs text-gray-600 mt-1">
+                  <div className="flex justify-between text-xs mt-1" style={{
+                    color: 'var(--text-secondary)'
+                  }}>
                     <span>{formatCurrency(spent)} spent</span>
                     <span>{formatCurrency(budgetAmount)} budget</span>
                   </div>
@@ -491,24 +594,36 @@ const BudgetList = ({
                 {/* Budget Details */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-gray-600 mb-1">Spent</div>
-                    <div className="font-semibold text-red-600">
+                    <div className="mb-1" style={{
+                      color: 'var(--text-secondary)'
+                    }}>Spent</div>
+                    <div className="font-semibold" style={{
+                      color: 'var(--error)'
+                    }}>
                       {formatCurrency(spent)}
                     </div>
                   </div>
                   
                   <div>
-                    <div className="text-gray-600 mb-1">
+                    <div className="mb-1" style={{
+                      color: 'var(--text-secondary)'
+                    }}>
                       {remaining >= 0 ? 'Remaining' : 'Over Budget'}
                     </div>
-                    <div className={`font-semibold ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className="font-semibold" style={{
+                      color: remaining >= 0 ? 'var(--success)' : 'var(--error)'
+                    }}>
                       {formatCurrency(Math.abs(remaining))}
                     </div>
                   </div>
                   
                   <div>
-                    <div className="text-gray-600 mb-1">Alert Threshold</div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="mb-1" style={{
+                      color: 'var(--text-secondary)'
+                    }}>Alert Threshold</div>
+                    <div className="font-semibold" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       {budget.alertThreshold || 80}%
                     </div>
                   </div>
@@ -516,9 +631,15 @@ const BudgetList = ({
 
                 {/* Description */}
                 {budget.description && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="text-xs text-gray-600 mb-1">Description</div>
-                    <div className="text-sm text-gray-700">
+                  <div className="mt-4 pt-4" style={{
+                    borderTop: '1px solid var(--border-primary)'
+                  }}>
+                    <div className="text-xs mb-1" style={{
+                      color: 'var(--text-secondary)'
+                    }}>Description</div>
+                    <div className="text-sm" style={{
+                      color: 'var(--text-primary)'
+                    }}>
                       {budget.description}
                     </div>
                   </div>
@@ -526,10 +647,17 @@ const BudgetList = ({
 
                 {/* Status Message */}
                 {statusInfo.status === 'exceeded' && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="mt-4 p-3 rounded-lg" style={{
+                    backgroundColor: statusInfo.bgColor,
+                    border: `1px solid ${statusInfo.borderColor}`
+                  }}>
                     <div className="flex items-center space-x-2">
-                      <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 w-4 h-4" />
-                      <span className="text-sm text-red-700 font-medium">
+                      <FontAwesomeIcon icon={faExclamationTriangle} className="w-4 h-4" style={{
+                        color: statusInfo.textColor
+                      }} />
+                      <span className="text-sm font-medium" style={{
+                        color: statusInfo.textColor
+                      }}>
                         Budget exceeded by {formatCurrency(Math.abs(remaining))}
                       </span>
                     </div>
@@ -537,10 +665,17 @@ const BudgetList = ({
                 )}
                 
                 {statusInfo.status === 'warning' && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="mt-4 p-3 rounded-lg" style={{
+                    backgroundColor: statusInfo.bgColor,
+                    border: `1px solid ${statusInfo.borderColor}`
+                  }}>
                     <div className="flex items-center space-x-2">
-                      <FontAwesomeIcon icon={faExclamationTriangle} className="text-yellow-500 w-4 h-4" />
-                      <span className="text-sm text-yellow-700 font-medium">
+                      <FontAwesomeIcon icon={faExclamationTriangle} className="w-4 h-4" style={{
+                        color: statusInfo.textColor
+                      }} />
+                      <span className="text-sm font-medium" style={{
+                        color: statusInfo.textColor
+                      }}>
                         {formatPercentage(percentage)} of budget used - approaching limit
                       </span>
                     </div>
@@ -556,12 +691,17 @@ const BudgetList = ({
           <div className="text-center py-8">
             <FontAwesomeIcon 
               icon={faSearch} 
-              className="text-gray-400 text-4xl mb-4" 
+              className="text-4xl mb-4" 
+              style={{ color: 'var(--text-tertiary)' }}
             />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium mb-2" style={{
+              color: 'var(--text-primary)'
+            }}>
               No Budgets Found
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="mb-4" style={{
+              color: 'var(--text-secondary)'
+            }}>
               No budgets match your current search and filter criteria.
             </p>
             <div className="space-x-3">
