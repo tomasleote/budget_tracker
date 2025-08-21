@@ -1,0 +1,394 @@
+/**
+ * Theme CSS Variables for Budget Tracker
+ * 
+ * Provides light and dark theme support with CSS custom properties.
+ * Themes can be switched by changing the data-theme attribute on the root element.
+ */
+
+/* Default Light Theme */
+:root {
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-quaternary: #e2e8f0;
+  --bg-modal: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f8fafc;
+  --bg-active: #e2e8f0;
+  
+  /* Text Colors */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --text-muted: #cbd5e1;
+  --text-inverse: #ffffff;
+  
+  /* Border Colors */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-tertiary: #94a3b8;
+  --border-focus: #3b82f6;
+  
+  /* Accent Colors */
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #2563eb;
+  --accent-secondary: #10b981;
+  --accent-secondary-hover: #059669;
+  --accent-tertiary: #8b5cf6;
+  --accent-tertiary-hover: #7c3aed;
+  
+  /* Status Colors */
+  --success: #10b981;
+  --success-bg: #d1fae5;
+  --success-border: #6ee7b7;
+  --warning: #f59e0b;
+  --warning-bg: #fef3c7;
+  --warning-border: #fbbf24;
+  --error: #ef4444;
+  --error-bg: #fee2e2;
+  --error-border: #fca5a5;
+  --info: #3b82f6;
+  --info-bg: #dbeafe;
+  --info-border: #93c5fd;
+  
+  /* Shadow Colors */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Sidebar Colors */
+  --sidebar-bg: #1f2937;
+  --sidebar-text: #d1d5db;
+  --sidebar-text-active: #ffffff;
+  --sidebar-hover: #374151;
+  --sidebar-active: #3b82f6;
+  --sidebar-border: #374151;
+  
+  /* Chart Colors */
+  --chart-primary: #3b82f6;
+  --chart-secondary: #10b981;
+  --chart-tertiary: #f59e0b;
+  --chart-quaternary: #ef4444;
+  --chart-quinary: #8b5cf6;
+}
+
+/* Dark Theme - Material Design Compliant */
+[data-theme="dark"] {
+  /* Background Colors - Material Design Elevation System */
+  --bg-primary: #121212;           /* 00dp elevation */
+  --bg-secondary: #1d1d1d;         /* 01dp elevation */
+  --bg-tertiary: #242424;          /* 02dp elevation */
+  --bg-quaternary: #2d2d2d;        /* 04dp elevation */
+  --bg-modal: #2d2d2d;             /* 08dp elevation */
+  --bg-card: #1e1e1e;              /* 01dp elevation for cards */
+  --bg-hover: #2c2c2c;             /* 03dp elevation */
+  --bg-active: #333333;            /* 06dp elevation */
+  
+  /* Text Colors - Material Design Opacity */
+  --text-primary: rgba(255, 255, 255, 0.87);     /* High emphasis */
+  --text-secondary: rgba(255, 255, 255, 0.60);   /* Medium emphasis */
+  --text-tertiary: rgba(255, 255, 255, 0.38);    /* Disabled/hint */
+  --text-muted: rgba(255, 255, 255, 0.30);       /* Dividers */
+  --text-inverse: #121212;
+  
+  /* Border Colors - Subtle in dark mode */
+  --border-primary: rgba(255, 255, 255, 0.12);
+  --border-secondary: rgba(255, 255, 255, 0.08);
+  --border-tertiary: rgba(255, 255, 255, 0.05);
+  --border-focus: #bb86fc;           /* Material Purple A200 */
+  
+  /* Accent Colors - Material Design Dark Theme Palette */
+  --accent-primary: #bb86fc;         /* Primary - Purple A200 */
+  --accent-primary-hover: #985eff;   /* Primary Variant */
+  --accent-secondary: #03dac6;       /* Secondary - Teal A200 */
+  --accent-secondary-hover: #018786;  /* Secondary Variant */
+  --accent-tertiary: #cf6679;        /* Error/Accent */
+  --accent-tertiary-hover: #b00020;  /* Error Dark */
+  
+  /* Status Colors - Material Design Dark Theme */
+  --success: #00c853;               /* Green A700 */
+  --success-bg: rgba(0, 200, 83, 0.12);
+  --success-border: rgba(0, 200, 83, 0.50);
+  --warning: #ff9800;               /* Orange 500 */
+  --warning-bg: rgba(255, 152, 0, 0.12);
+  --warning-border: rgba(255, 152, 0, 0.50);
+  --error: #cf6679;                 /* Error */
+  --error-bg: rgba(207, 102, 121, 0.12);
+  --error-border: rgba(207, 102, 121, 0.50);
+  --info: #2196f3;                  /* Blue 500 */
+  --info-bg: rgba(33, 150, 243, 0.12);
+  --info-border: rgba(33, 150, 243, 0.50);
+  
+  /* Shadow Colors - Enhanced for dark theme */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  
+  /* Sidebar Colors - Material Navigation Drawer */
+  --sidebar-bg: #1e1e1e;            /* 01dp elevation */
+  --sidebar-text: rgba(255, 255, 255, 0.60);       /* Medium emphasis */
+  --sidebar-text-active: rgba(255, 255, 255, 0.87); /* High emphasis */
+  --sidebar-text-muted: rgba(255, 255, 255, 0.38);  /* Disabled */
+  --sidebar-hover: rgba(255, 255, 255, 0.04);       /* State layer */
+  --sidebar-active: rgba(187, 134, 252, 0.12);      /* Primary state layer */
+  --sidebar-active-indicator: #bb86fc;              /* Active indicator */
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-icon: rgba(255, 255, 255, 0.60);        /* Icon opacity */
+  --sidebar-icon-active: #bb86fc;                   /* Active icon color */
+  
+  /* Chart Colors - Material Design Dark Theme */
+  --chart-primary: #bb86fc;
+  --chart-secondary: #03dac6;
+  --chart-tertiary: #ffc107;
+  --chart-quaternary: #cf6679;
+  --chart-quinary: #9c27b0;
+}
+
+/* Theme Transition Classes */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-transition-fast {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-transition-slow {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+
+/* Theme-aware utility classes */
+.bg-theme-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-theme-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-theme-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-theme-card {
+  background-color: var(--bg-card);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.text-theme-tertiary {
+  color: var(--text-tertiary);
+}
+
+.text-theme-muted {
+  color: var(--text-muted);
+}
+
+.border-theme-primary {
+  border-color: var(--border-primary);
+}
+
+.border-theme-secondary {
+  border-color: var(--border-secondary);
+}
+
+.border-theme-focus {
+  border-color: var(--border-focus);
+}
+
+/* Button theme variants */
+.btn-theme-primary {
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+  border-color: var(--accent-primary);
+}
+
+.btn-theme-primary:hover {
+  background-color: var(--accent-primary-hover);
+  border-color: var(--accent-primary-hover);
+}
+
+.btn-theme-secondary {
+  background-color: var(--accent-secondary);
+  color: var(--text-inverse);
+  border-color: var(--accent-secondary);
+}
+
+.btn-theme-secondary:hover {
+  background-color: var(--accent-secondary-hover);
+  border-color: var(--accent-secondary-hover);
+}
+
+/* Card theme styling */
+.card-theme {
+  background-color: var(--bg-card);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-theme:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Modal theme styling */
+.modal-theme {
+  background-color: var(--bg-modal);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Input theme styling */
+.input-theme {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.input-theme:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.input-theme::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Sidebar theme styling */
+.sidebar-theme {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-color: var(--sidebar-border);
+}
+
+.sidebar-theme .nav-item {
+  color: var(--sidebar-text);
+  transition: all 0.2s ease;
+}
+
+.sidebar-theme .nav-item:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text-active);
+}
+
+.sidebar-theme .nav-item.active {
+  background-color: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+  position: relative;
+}
+
+.sidebar-theme .nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background-color: var(--sidebar-active-indicator);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Enhanced sidebar icons */
+.sidebar-theme .nav-icon {
+  color: var(--sidebar-icon);
+  transition: color 0.2s ease;
+}
+
+.sidebar-theme .nav-item:hover .nav-icon {
+  color: var(--sidebar-text-active);
+}
+
+.sidebar-theme .nav-item.active .nav-icon {
+  color: var(--sidebar-icon-active);
+}
+
+/* Sidebar brand/logo styling */
+.sidebar-theme .sidebar-brand {
+  color: var(--sidebar-text-active);
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-theme .sidebar-brand .brand-icon {
+  color: var(--accent-primary);
+}
+
+.sidebar-theme .sidebar-subtitle {
+  color: var(--sidebar-text-muted);
+}
+
+/* Chart theme styling */
+.chart-theme .recharts-cartesian-grid-horizontal line,
+.chart-theme .recharts-cartesian-grid-vertical line {
+  stroke: var(--border-primary);
+}
+
+.chart-theme .recharts-text {
+  fill: var(--text-secondary);
+}
+
+.chart-theme .recharts-legend-wrapper {
+  color: var(--text-primary);
+}
+
+/* Auto theme detection */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* Apply Material Design dark theme variables when system preference is dark */
+    --bg-primary: #121212;
+    --bg-secondary: #1d1d1d;
+    --bg-tertiary: #242424;
+    --bg-quaternary: #2d2d2d;
+    --bg-modal: #2d2d2d;
+    --bg-card: #1e1e1e;
+    --bg-hover: #2c2c2c;
+    --bg-active: #333333;
+    
+    --text-primary: rgba(255, 255, 255, 0.87);
+    --text-secondary: rgba(255, 255, 255, 0.60);
+    --text-tertiary: rgba(255, 255, 255, 0.38);
+    --text-muted: rgba(255, 255, 255, 0.30);
+    --text-inverse: #121212;
+    
+    --border-primary: rgba(255, 255, 255, 0.12);
+    --border-secondary: rgba(255, 255, 255, 0.08);
+    --border-tertiary: rgba(255, 255, 255, 0.05);
+    --border-focus: #bb86fc;
+    
+    --accent-primary: #bb86fc;
+    --accent-primary-hover: #985eff;
+    --accent-secondary: #03dac6;
+    --accent-secondary-hover: #018786;
+    --accent-tertiary: #cf6679;
+    --accent-tertiary-hover: #b00020;
+    
+    --sidebar-bg: #1e1e1e;
+    --sidebar-text: rgba(255, 255, 255, 0.60);
+    --sidebar-text-active: rgba(255, 255, 255, 0.87);
+    --sidebar-text-muted: rgba(255, 255, 255, 0.38);
+    --sidebar-hover: rgba(255, 255, 255, 0.04);
+    --sidebar-active: rgba(187, 134, 252, 0.12);
+    --sidebar-active-indicator: #bb86fc;
+    --sidebar-border: rgba(255, 255, 255, 0.12);
+    --sidebar-icon: rgba(255, 255, 255, 0.60);
+    --sidebar-icon-active: #bb86fc;
+  }
+}
+
+/* Print styles (always light theme) */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}

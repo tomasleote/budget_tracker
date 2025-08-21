@@ -1,0 +1,28 @@
+// Mock TransactionRepository for testing
+export default {
+  isCategoryUsed: jest.fn().mockResolvedValue({ data: false, error: null }),
+  findAll: jest.fn(),
+  findById: jest.fn(),
+  create: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+  bulkCreate: jest.fn(),
+  bulkDelete: jest.fn(),
+  findWithCategories: jest.fn(),
+  findByIdWithCategory: jest.fn(),
+  findByCategoryId: jest.fn(),
+  findByType: jest.fn(),
+  findByDateRange: jest.fn(),
+  searchByDescription: jest.fn(),
+  getSummaryByDateRange: jest.fn(),
+  findByAmountRange: jest.fn(),
+  countByType: jest.fn(),
+  countByCategory: jest.fn(),
+  getTotalAmountByType: jest.fn(),
+  getRecent: jest.fn(),
+  findAllWithFilters: jest.fn(),
+  findDuplicate: jest.fn(),
+  findDuplicatesBatch: jest.fn(),
+  checkCategoriesUsedBatch: jest.fn(),
+  getSummaryStatistics: jest.fn()
+};

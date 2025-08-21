@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import theme system */
+@import './view/themes.css';
+
+/* Global theme application */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure theme transitions work globally */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* Override some Tailwind defaults with theme variables */
+.bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-white {
+  background-color: var(--bg-primary) !important;
+}
+
+.text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+.border-gray-200 {
+  border-color: var(--border-primary) !important;
+}
+
+.border-gray-300 {
+  border-color: var(--border-secondary) !important;
+}
