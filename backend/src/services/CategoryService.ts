@@ -1,6 +1,6 @@
 import { Category, CreateCategoryDto, UpdateCategoryDto, CategoryQuery, CategoryWithChildren } from '../types/category';
 import { logger } from '../config/logger';
-import CategoryRepository from '../repositories/CategoryRepository';
+import { getCategoryRepository, getTransactionRepository } from '../repositories/RepositoryFactory';
 import { DatabaseResult } from '../repositories/BaseRepository';
 
 class ApiError extends Error {
@@ -12,6 +12,9 @@ class ApiError extends Error {
 }
 
 export class CategoryService {
+  private categoryRepository = getCategoryRepository();
+  private transactionRepository = getTransactionRepository();
+
   /**
    * Get all categories with optional filtering
    */
@@ -38,7 +41,7 @@ export class CategoryService {
 
       const sortField = sort_by || 'created_at';
       const ascending = (sort_order || 'asc') === 'asc';
-      const result = await CategoryRepository.findAll(filters, { field: sortField, ascending });
+      const result = await this.categoryRepository.findAll(filters, { field: sortField, ascending });
       
       if (result.error) {
         throw new Error(`Failed to fetch categories: ${result.error}`);
@@ -58,7 +61,7 @@ export class CategoryService {
     try {
       // For hierarchy, we need to get all categories first and filter later
       // since the hierarchy building requires parent-child relationships
-      const result = await CategoryRepository.getCategoryHierarchy(query.type);
+      const result = await this.categoryRepository.getCategoryHierarchy(query.type);
       
       if (result.error) {
         throw new Error(`Failed to fetch category hierarchy: ${result.error}`);
@@ -108,7 +111,7 @@ export class CategoryService {
    */
   async getCategoryById(id: string): Promise<Category | null> {
     try {
-      const result = await CategoryRepository.findById(id);
+      const result = await this.categoryRepository.findById(id);
       
       if (result.error) {
         throw new Error(`Failed to fetch category: ${result.error}`);
@@ -138,7 +141,7 @@ export class CategoryService {
       validationPromises.push(parentValidationPromise);
 
       // Business Rule: Check for duplicate name within the same type
-      const duplicateCheckPromise = CategoryRepository.findByNameAndType(categoryData.name, categoryData.type);
+      const duplicateCheckPromise = this.categoryRepository.findByNameAndType(categoryData.name, categoryData.type);
       validationPromises.push(duplicateCheckPromise);
 
       // Execute validations in parallel
@@ -170,7 +173,7 @@ export class CategoryService {
         parent_id: categoryData.parent_id ?? null
       };
 
-      const result = await CategoryRepository.create(createData);
+      const result = await this.categoryRepository.create(createData);
       
       if (result.error || !result.data) {
         throw new Error(`Failed to create category: ${result.error}`);
@@ -224,7 +227,7 @@ export class CategoryService {
       let nameCheckPromise: Promise<any> = Promise.resolve({ data: null, error: null });
       if (updates.name && updates.name !== existing.name) {
         const type = updates.type || existing.type;
-        nameCheckPromise = CategoryRepository.findByNameAndType(updates.name, type);
+        nameCheckPromise = this.categoryRepository.findByNameAndType(updates.name, type);
       }
       validationPromises.push(nameCheckPromise);
 
@@ -258,7 +261,7 @@ export class CategoryService {
         throw new ApiError(`Category with name "${updates.name}" already exists for type "${updates.type || existing.type}"`, 409);
       }
 
-      const result = await CategoryRepository.update(id, updates);
+      const result = await this.categoryRepository.update(id, updates);
       
       if (result.error || !result.data) {
         throw new Error(`Failed to update category: ${result.error}`);
@@ -296,7 +299,7 @@ export class CategoryService {
 
       // OPTIMIZATION: Parallel validation execution
       const validationPromises = [
-        CategoryRepository.hasChildren(id),
+        this.categoryRepository.hasChildren(id),
         // Check if category is used in transactions
         this.checkCategoryUsage(id)
       ];
@@ -319,7 +322,7 @@ export class CategoryService {
         throw new ApiError('Cannot delete category that is used in transactions', 400);
       }
 
-      const result = await CategoryRepository.delete(id);
+      const result = await this.categoryRepository.delete(id);
       
       if (result.error) {
         throw new Error(`Failed to delete category: ${result.error}`);
@@ -334,21 +337,14 @@ export class CategoryService {
 
   /**
    * Check if category is used in transactions
-   * Uses dynamic import to avoid circular dependencies
    */
   private async checkCategoryUsage(id: string): Promise<DatabaseResult<boolean>> {
     try {
-      // For tests, assume categories are not used to avoid import issues
-      if (process.env.NODE_ENV === 'test') {
-        return { data: false, error: null };
-      }
-      
-      // Try to import TransactionRepository dynamically
-      const module = await import('../repositories/TransactionRepository');
-      return await module.default.isCategoryUsed(id);
+      // Use the injected transaction repository
+      return await this.transactionRepository.isCategoryUsed(id);
     } catch (error) {
-      // If import fails (e.g., in tests), assume category is not used
-      logger.warn('TransactionRepository not available, assuming category is not used');
+      // If check fails, assume category is not used to avoid blocking deletion
+      logger.warn('Failed to check category usage, assuming not used:', error);
       return { data: false, error: null };
     }
   }
@@ -387,7 +383,7 @@ export class CategoryService {
    */
   async getDefaultCategories(): Promise<Category[]> {
     try {
-      const result = await CategoryRepository.findDefaultCategories();
+      const result = await this.categoryRepository.findDefaultCategories();
       
       if (result.error) {
         throw new Error(`Failed to fetch default categories: ${result.error}`);
@@ -496,7 +492,7 @@ export class CategoryService {
    */
   async validateCategoriesExist(categoryIds: string[]): Promise<string[]> {
     try {
-      const result = await CategoryRepository.checkCategoriesExistBatch(categoryIds);
+      const result = await this.categoryRepository.checkCategoriesExistBatch(categoryIds);
       
       if (result.error) {
         throw new Error(`Failed to validate category existence: ${result.error}`);
@@ -513,7 +509,7 @@ export class CategoryService {
    * Clear repository cache (useful for testing)
    */
   clearCache(): void {
-    CategoryRepository.clearCache();
+    this.categoryRepository.clearCache();
   }
 }
 

@@ -4,12 +4,12 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// Import configuration and connection testing
+// Import configuration
 import './config/environment.js';
-import './config/connectionTest.js';
 
-// Import integration test to verify everything is working
-import './integration-test.js';
+// Backend connection tests disabled for localStorage-only mode
+// import './config/connectionTest.js';
+// import './integration-test.js';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

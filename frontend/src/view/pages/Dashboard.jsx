@@ -10,6 +10,7 @@ import {
 import Button from '../components/ui/Button';
 import PageWrapper from '../components/ui/PageWrapper';
 import { PageLoading } from '../components/ui/LoadingSpinner';
+import MockDataLoader from '../../components/debug/MockDataLoader.jsx';
 
 // Dashboard components
 import {
@@ -405,6 +406,13 @@ const Dashboard = () => {
               isLoading={isLoading}
             />
           </div>
+
+          {/* Development Tools - Only shown in development mode */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6">
+              <MockDataLoader />
+            </div>
+          )}
 
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faExchangeAlt,
@@ -62,6 +62,7 @@ const Transactions = () => {
     isDeletingTransaction,
     hasError,
     filters,
+    loadTransactions,
     createTransaction,
     updateTransaction,
     deleteTransaction,
@@ -78,6 +79,12 @@ const Transactions = () => {
   } = useTransactions();
 
   const { categories } = useCategories();
+
+  // Load transactions on mount
+  useEffect(() => {
+    console.log('🔄 Transactions page: Loading transactions...');
+    loadTransactions();
+  }, [loadTransactions]);
 
   // Transaction stats
   const stats = getTransactionStats();

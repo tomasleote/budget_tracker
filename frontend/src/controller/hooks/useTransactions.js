@@ -195,6 +195,7 @@ export const useTransactions = () => {
     isDeletingTransaction: transactionContext.isLoading,
     
     // Actions
+    loadTransactions: transactionContext.actions?.loadTransactions || (() => Promise.resolve([])),
     addIncome,
     addExpense,
     deleteTransaction,

@@ -9,8 +9,9 @@ import { GlobalErrorBoundary } from './view/components/ui/PageWrapper';
 import AppProvider from './controller/context/providers/AppProvider';
 import Layout from './view/components/layout/Layout';
 import RouteGuard, { UnauthorizedAccess } from './view/components/navigation/RouteGuard';
-import BackendStatus from './components/BackendStatus';
-import ApiDataDebugger from './components/debug/ApiDataDebugger';
+// Backend components removed for localStorage-only mode
+// import BackendStatus from './components/BackendStatus';
+// import ApiDataDebugger from './components/debug/ApiDataDebugger';
 
 // Import page components
 import {
@@ -102,11 +103,9 @@ function App() {
             </Routes>
           </Layout>
           
-          {/* Backend Status Component - Only shows in development */}
-          <BackendStatus />
-          
-          {/* API Data Debugger - Phase 5 Testing */}
-          <ApiDataDebugger />
+          {/* Backend components removed for localStorage-only mode */}
+          {/* <BackendStatus /> */}
+          {/* <ApiDataDebugger /> */}
         </AppProvider>
       </Router>
     </GlobalErrorBoundary>

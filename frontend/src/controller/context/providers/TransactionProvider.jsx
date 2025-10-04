@@ -339,11 +339,18 @@ export const TransactionProvider = ({ children }) => {
     setError(null);
   }, []);
 
-  // Load transactions on component mount
+  // Don't auto-load transactions on mount - load on demand when user visits Transactions page
+  // This prevents blocking the Dashboard while waiting for transaction data
+  // Transactions will be loaded when:
+  // 1. User navigates to Transactions page
+  // 2. Dashboard explicitly calls loadAllTransactionsForDashboard()
+  // 3. User performs a refresh action
+  /*
   useEffect(() => {
     console.log('🔄 Loading transactions from backend...');
     loadTransactions();
   }, [loadTransactions]);
+  */
 
   // Context value
   const value = useMemo(() => ({

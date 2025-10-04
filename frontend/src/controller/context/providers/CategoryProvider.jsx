@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { repositories } from '../../../model/repositories/RepositoryFactory.js';
+import { initializeDefaultData, isAppInitialized } from '../../../model/services/DataInitializer.js';
 
 // Create CategoryContext
 const CategoryContext = createContext();
@@ -444,10 +445,21 @@ export const CategoryProvider = ({ children }) => {
 
   // ============= Effects =============
 
-  // Load categories on component mount
+  // Initialize default categories and load on component mount
   useEffect(() => {
-    console.log('🔄 Loading categories on mount...');
-    loadCategories();
+    const initializeAndLoad = async () => {
+      // Check if app needs initialization
+      if (!isAppInitialized()) {
+        console.log('🌱 First time setup - initializing default categories...');
+        await initializeDefaultData();
+      }
+      
+      // Load categories after initialization
+      console.log('🔄 Loading categories on mount...');
+      await loadCategories();
+    };
+    
+    initializeAndLoad();
   }, []); // Empty dependency array for mount only
 
   // Recalculate stats when categories change
@@ -478,8 +490,8 @@ export const CategoryProvider = ({ children }) => {
     // Computed values
     getFilteredCategories,
     
-    // Loading and error states
-    isLoading,
+    // Loading and error states - FIXED: isLoading as boolean, not function
+    isLoading: isLoading(), // Call the function to get boolean value
     hasError,
     getError,
     
@@ -529,7 +541,7 @@ export const CategoryProvider = ({ children }) => {
     usage,
     filters,
     getFilteredCategories,
-    isLoading,
+    loadingStates, // Changed from isLoading function to loadingStates object
     hasError,
     getError,
     getCategoryById,

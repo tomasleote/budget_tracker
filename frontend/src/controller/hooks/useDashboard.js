@@ -8,6 +8,7 @@ import {
   formatDate,
   formatPercentage
 } from '../utils/index.js';
+import { faChartLine } from '@fortawesome/free-solid-svg-icons';
 
 // Safe fallback functions for missing utilities
 const safeExecute = (fn, fallback) => {
@@ -49,19 +50,18 @@ const calculateBalance = (transactions = []) => {
   return { income, expenses, balance: income - expenses };
 };
 
-// Calculate balance for current month only
-const calculateCurrentMonthBalance = (transactions = []) => {
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+// Calculate balance for last 30 days (more useful than current calendar month)
+const calculateLast30DaysBalance = (transactions = []) => {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
-  const currentMonthTransactions = transactions.filter(t => {
+  const last30DaysTransactions = transactions.filter(t => {
     const transactionDate = new Date(t.date);
-    return transactionDate.getMonth() === currentMonth && 
-           transactionDate.getFullYear() === currentYear;
+    return transactionDate >= thirtyDaysAgo && transactionDate <= now;
   });
   
-  return calculateBalance(currentMonthTransactions);
+  return calculateBalance(last30DaysTransactions);
 };
 
 const calculateSpendingByCategory = (transactions = [], type = 'expense') => {
@@ -117,7 +117,7 @@ export const useDashboard = () => {
       console.log('🔍 DEBUG - Dashboard summary calculation:');
       console.log('  - Total transactions: 0');
       console.log('  - All-time balance: {income: 0, expenses: 0, balance: 0}');
-      console.log('  - Current month balance: {income: 0, expenses: 0, balance: 0}');
+      console.log('  - Last 30 days balance: {income: 0, expenses: 0, balance: 0}');
       
       return {
         totalTransactions: 0,
@@ -132,12 +132,12 @@ export const useDashboard = () => {
     }
 
     const allTimeBalance = calculateBalance(transactions);
-    const currentMonthBalance = calculateCurrentMonthBalance(transactions);
+    const last30DaysBalance = calculateLast30DaysBalance(transactions);
     
     console.log('🔍 DEBUG - Dashboard summary calculation:');
     console.log('  - Total transactions:', transactions.length);
     console.log('  - All-time balance:', allTimeBalance);
-    console.log('  - Current month balance:', currentMonthBalance);
+    console.log('  - Last 30 days balance:', last30DaysBalance);
 
     return {
       totalTransactions: transactions.length,
@@ -145,9 +145,9 @@ export const useDashboard = () => {
       allTimeIncome: allTimeBalance.income,
       allTimeExpenses: allTimeBalance.expenses,
       currentBalance: allTimeBalance.balance,
-      currentMonthIncome: currentMonthBalance.income,
-      currentMonthExpenses: currentMonthBalance.expenses,
-      currentMonthBalance: currentMonthBalance.balance
+      currentMonthIncome: last30DaysBalance.income,
+      currentMonthExpenses: last30DaysBalance.expenses,
+      currentMonthBalance: last30DaysBalance.balance
     };
   }, [transactions, budgets]);
 
@@ -245,68 +245,118 @@ export const useDashboard = () => {
     return enrichedBreakdown;
   }, [transactions, categories, getCategoryById]);
 
-  // Quick stats for dashboard cards
+  // Quick stats for dashboard cards - FIXED: Return proper format for QuickStats component
   const quickStats = useMemo(() => {
     return safeExecute(() => {
       const stats = {
+        // Balance with formatted value
+        balance: {
+          formatted: formatCurrency(summary.currentBalance),
+          amount: summary.currentBalance,
+          isPositive: summary.currentBalance >= 0,
+          trend: 'stable'
+        },
+        // Monthly Income
+        monthlyIncome: {
+          formatted: formatCurrency(summary.currentMonthIncome),
+          amount: summary.currentMonthIncome,
+          trend: 'stable'
+        },
+        // Monthly Expenses
+        monthlyExpenses: {
+          formatted: formatCurrency(summary.currentMonthExpenses),
+          amount: summary.currentMonthExpenses,
+          trend: 'stable'
+        },
+        // Savings Rate
+        savingsRate: {
+          formatted: formatPercentage(summary.currentMonthIncome > 0 
+            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100 
+            : 0),
+          percentage: summary.currentMonthIncome > 0 
+            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100 
+            : 0,
+          status: summary.currentMonthIncome > 0 && summary.currentMonthExpenses < summary.currentMonthIncome ? 'good' : 'poor'
+        },
+        // Additional stats for other components
         totalBalance: summary.currentBalance,
-        monthlyIncome: summary.currentMonthIncome,
-        monthlyExpenses: summary.currentMonthExpenses,
         totalTransactions: summary.totalTransactions,
         totalBudgets: summary.totalBudgets,
         biggestExpenseCategory: categoryBreakdown[0] || null,
         averageTransactionAmount: summary.totalTransactions > 0 
           ? (summary.allTimeIncome + summary.allTimeExpenses) / summary.totalTransactions 
-          : 0,
-        savingsRate: summary.currentMonthIncome > 0 
-          ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100 
           : 0
       };
 
       return stats;
     }, {
+      balance: { formatted: formatCurrency(0), amount: 0, isPositive: true, trend: 'stable' },
+      monthlyIncome: { formatted: formatCurrency(0), amount: 0, trend: 'stable' },
+      monthlyExpenses: { formatted: formatCurrency(0), amount: 0, trend: 'stable' },
+      savingsRate: { formatted: formatPercentage(0), percentage: 0, status: 'poor' },
       totalBalance: 0,
-      monthlyIncome: 0,
-      monthlyExpenses: 0,
       totalTransactions: 0,
       totalBudgets: 0,
       biggestExpenseCategory: null,
-      averageTransactionAmount: 0,
-      savingsRate: 0
+      averageTransactionAmount: 0
     });
   }, [summary, categoryBreakdown]);
 
-  // Financial health indicators
+  // Financial health indicators - FIXED: Add formatted values for QuickStats
   const financialHealth = useMemo(() => {
     return safeExecute(() => {
+      // Calculate score based on multiple factors
+      let score = 0;
+      const indicators = {
+        hasPositiveBalance: summary.currentBalance > 0,
+        hasRegularIncome: summary.currentMonthIncome > 0,
+        hasControlledSpending: summary.currentMonthExpenses < summary.currentMonthIncome,
+        hasEmergencyFund: summary.currentBalance > (summary.currentMonthExpenses * 3),
+        hasBudgets: (budgets?.length || 0) > 0
+      };
+
+      // Score calculation (out of 100)
+      if (indicators.hasPositiveBalance) score += 20;
+      if (indicators.hasRegularIncome) score += 20;
+      if (indicators.hasControlledSpending) score += 30;
+      if (indicators.hasEmergencyFund) score += 20;
+      if (indicators.hasBudgets) score += 10;
+
+      // Determine grade
+      let grade = 'F';
+      if (score >= 90) grade = 'A';
+      else if (score >= 80) grade = 'B';
+      else if (score >= 70) grade = 'C';
+      else if (score >= 60) grade = 'D';
+
       const health = {
-        score: 75, // Basic calculation
-        status: summary.currentBalance > 0 ? 'good' : 'warning',
-        indicators: {
-          hasPositiveBalance: summary.currentBalance > 0,
-          hasRegularIncome: summary.currentMonthIncome > 0,
-          hasControlledSpending: summary.currentMonthExpenses < summary.currentMonthIncome,
-          hasEmergencyFund: summary.currentBalance > (summary.currentMonthExpenses * 3),
-          hasBudgets: (budgets?.length || 0) > 0
-        },
+        score,
+        formattedScore: `${score}/100`,
+        grade,
+        status: score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'warning' : 'poor',
+        statusIcon: faChartLine,
+        indicators,
         recommendations: []
       };
 
       // Add recommendations based on indicators
-      if (!health.indicators.hasPositiveBalance) {
+      if (!indicators.hasPositiveBalance) {
         health.recommendations.push('Consider reducing expenses or increasing income');
       }
-      if (!health.indicators.hasBudgets) {
+      if (!indicators.hasBudgets) {
         health.recommendations.push('Create budgets to track your spending');
       }
-      if (!health.indicators.hasEmergencyFund) {
+      if (!indicators.hasEmergencyFund) {
         health.recommendations.push('Build an emergency fund covering 3-6 months of expenses');
       }
 
       return health;
     }, {
       score: 0,
+      formattedScore: '0/100',
+      grade: 'F',
       status: 'unknown',
+      statusIcon: faChartLine,
       indicators: {},
       recommendations: []
     });
