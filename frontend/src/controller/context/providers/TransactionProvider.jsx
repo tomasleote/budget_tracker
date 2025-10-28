@@ -339,18 +339,14 @@ export const TransactionProvider = ({ children }) => {
     setError(null);
   }, []);
 
-  // Don't auto-load transactions on mount - load on demand when user visits Transactions page
-  // This prevents blocking the Dashboard while waiting for transaction data
-  // Transactions will be loaded when:
-  // 1. User navigates to Transactions page
-  // 2. Dashboard explicitly calls loadAllTransactionsForDashboard()
-  // 3. User performs a refresh action
-  /*
+  // Auto-load transactions on mount to ensure Dashboard has data on first load
+  // This ensures consistency with CategoryProvider and BudgetProvider behavior
+  // Fixed: Dashboard was showing empty data on first load because transactions
+  // weren't loaded until Dashboard's useEffect ran
   useEffect(() => {
-    console.log('🔄 Loading transactions from backend...');
+    console.log('🔄 TransactionProvider: Loading transactions on mount...');
     loadTransactions();
-  }, [loadTransactions]);
-  */
+  }, []); // Empty dependency array - only load once on mount
 
   // Context value
   const value = useMemo(() => ({
