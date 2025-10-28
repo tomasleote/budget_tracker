@@ -1,16 +1,12 @@
 import { useBudgetContext } from '../context/providers/BudgetProvider.jsx';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import { formatCurrency, formatPercentage } from '../utils/index.js';
 
 /**
- * useBudgets - LOGGING CLEANED
+ * useBudgets - FIXED FOR BUDGET PROGRESS
  * 
  * Budget controller hook for managing budget operations
- * 
- * LOGGING CLEANUP:
- * - Removed excessive analytics calculation logs
- * - Silent budget operations unless errors occur
- * - Clean budget state management without console spam
+ * Now properly calculates budget progress and overview
  */
 
 // Simple safe execute function
@@ -38,24 +34,63 @@ const asyncSafeExecute = async (fn, fallback) => {
 
 export const useBudgets = () => {
   const context = useBudgetContext();
+  
+  // Local state for overview and alerts
+  const [overview, setOverview] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(false);
 
-  // Basic budgets with formatting
+  // Load overview and alerts when budgets change
+  useEffect(() => {
+    const loadBudgetData = async () => {
+      if (!context.budgets || context.budgets.length === 0) {
+        setOverview([]);
+        setAlerts([]);
+        return;
+      }
+
+      setIsLoadingOverview(true);
+      
+      try {
+        // Dynamically import BudgetService
+        const { default: BudgetService } = await import('../../model/services/BudgetService.js');
+        
+        // Load overview and alerts
+        const [overviewData, alertsData] = await Promise.all([
+          BudgetService.getBudgetOverview(),
+          BudgetService.getBudgetAlerts()
+        ]);
+        
+        setOverview(overviewData || []);
+        setAlerts(alertsData || []);
+      } catch (error) {
+        console.error('Error loading budget overview:', error);
+        setOverview([]);
+        setAlerts([]);
+      } finally {
+        setIsLoadingOverview(false);
+      }
+    };
+
+    loadBudgetData();
+  }, [context.budgets]);
+
+  // Basic budgets with formatting - enhanced with overview data
   const budgets = useMemo(() => {
     return safeExecute(() => {
-      const overviewData = context.overview || [];
       const budgetData = context.budgets || [];
       
       return budgetData.map(budget => {
         // Find corresponding overview data for this budget
-        const overviewBudget = overviewData.find(ob => ob.id === budget.id);
+        const overviewBudget = overview.find(ob => ob.id === budget.id);
         const progress = overviewBudget?.progress || {
           spent: 0,
-          remaining: parseFloat(budget.budgetAmount) || 0,
+          remaining: parseFloat(budget.budgetAmount) || parseFloat(budget.amount) || 0,
           percentage: 0
         };
         
         const spent = parseFloat(progress.spent) || 0;
-        const budgetAmount = parseFloat(budget.budgetAmount) || 0;
+        const budgetAmount = parseFloat(budget.budgetAmount) || parseFloat(budget.amount) || 0;
         const remaining = parseFloat(progress.remaining) || (budgetAmount - spent);
         const percentage = parseFloat(progress.percentage) || 0;
         
@@ -70,18 +105,41 @@ export const useBudgets = () => {
             percentage
           },
           isOverBudget: percentage > 100,
-          isNearLimit: percentage >= 80,
+          isNearLimit: percentage >= 80 && percentage <= 100,
           utilizationPercentage: percentage,
           utilizationStatus: percentage > 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good'
         };
       });
     }, []);
-  }, [context.budgets, context.overview]);
+  }, [context.budgets, overview]);
 
-  // Basic overview
-  const overview = useMemo(() => {
+  // Basic analytics - CLEANED (no logging)
+  const analytics = useMemo(() => {
     return safeExecute(() => {
-      return (context.overview || []).map(budget => {
+      // Use overview data which has the calculated progress
+      const overviewData = overview || [];
+      if (overviewData.length === 0) return null;
+      
+      const totalBudgetAmount = overviewData.reduce((sum, b) => sum + (parseFloat(b.budgetAmount) || 0), 0);
+      const totalSpent = overviewData.reduce((sum, b) => sum + (parseFloat(b.progress?.spent) || 0), 0);
+      const utilization = totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount * 100) : 0;
+      
+      return {
+        totalBudgetAmount,
+        totalSpent,
+        budgetUtilization: utilization,
+        formattedTotalBudget: formatCurrency(totalBudgetAmount),
+        formattedTotalSpent: formatCurrency(totalSpent),
+        formattedUtilization: formatPercentage(utilization),
+        healthScore: utilization <= 80 ? 'excellent' : utilization <= 100 ? 'good' : 'poor'
+      };
+    }, null);
+  }, [overview]);
+
+  // Format overview for display
+  const formattedOverview = useMemo(() => {
+    return safeExecute(() => {
+      return (overview || []).map(budget => {
         const spent = parseFloat(budget.progress?.spent) || 0;
         const budgetAmount = parseFloat(budget.budgetAmount) || 0;
         const percentage = budgetAmount > 0 ? (spent / budgetAmount * 100) : 0;
@@ -98,32 +156,7 @@ export const useBudgets = () => {
         };
       });
     }, []);
-  }, [context.overview]);
-
-  // Basic analytics - CLEANED (no logging)
-  const analytics = useMemo(() => {
-    return safeExecute(() => {
-      // Use overview data which has the calculated progress, not budgets array
-      const overviewData = context.overview || [];
-      if (overviewData.length === 0) return null;
-      
-      const totalBudgetAmount = overviewData.reduce((sum, b) => sum + (parseFloat(b.budgetAmount) || 0), 0);
-      const totalSpent = overviewData.reduce((sum, b) => sum + (parseFloat(b.progress?.spent) || 0), 0);
-      const utilization = totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount * 100) : 0;
-      
-      // REMOVED: Excessive analytics logging
-      
-      return {
-        totalBudgetAmount,
-        totalSpent,
-        budgetUtilization: utilization,
-        formattedTotalBudget: formatCurrency(totalBudgetAmount),
-        formattedTotalSpent: formatCurrency(totalSpent),
-        formattedUtilization: formatPercentage(utilization),
-        healthScore: utilization <= 80 ? 'excellent' : utilization <= 100 ? 'good' : 'poor'
-      };
-    }, null);
-  }, [context.overview]);
+  }, [overview]);
 
   // Basic actions
   const createBudget = async (budgetData) => {
@@ -160,8 +193,9 @@ export const useBudgets = () => {
       const result = BudgetService.dismissAlert(alertId);
       
       // Reload alerts after dismissing
-      if (result.success && context.actions && context.actions.loadAlerts) {
-        await context.actions.loadAlerts();
+      if (result.success) {
+        const alertsData = await BudgetService.getBudgetAlerts();
+        setAlerts(alertsData || []);
       }
       
       return result;
@@ -181,7 +215,7 @@ export const useBudgets = () => {
   };
 
   // Basic statistics
-  const getBudgetStatistics = () => {
+  const getBudgetStatistics = useCallback(() => {
     return safeExecute(() => {
       const totalBudgets = budgets.length;
       const activeBudgets = budgets.filter(b => b.isActive).length;
@@ -205,17 +239,17 @@ export const useBudgets = () => {
       healthyBudgets: 0,
       overallUtilization: 0
     });
-  };
+  }, [budgets, analytics]);
 
   return {
     // Basic data
     budgets,
-    overview,
-    alerts: context.alerts || [],
+    overview: formattedOverview, // Use formatted overview
+    alerts: alerts || [],
     analytics,
     
     // State
-    isLoading: (typeof context.isLoading === 'function') ? context.isLoading() : false,
+    isLoading: (typeof context.isLoading === 'function') ? context.isLoading() : false || isLoadingOverview,
     hasError: (typeof context.hasError === 'function') ? context.hasError() : false,
     
     // Quick state checks
@@ -233,8 +267,24 @@ export const useBudgets = () => {
     
     // Context actions
     loadBudgets: context.actions?.loadBudgets || (() => Promise.resolve()),
-    loadOverview: context.actions?.loadOverview || (() => Promise.resolve()),
-    loadAlerts: context.actions?.loadAlerts || (() => Promise.resolve()),
+    loadOverview: async () => {
+      try {
+        const { default: BudgetService } = await import('../../model/services/BudgetService.js');
+        const overviewData = await BudgetService.getBudgetOverview();
+        setOverview(overviewData || []);
+      } catch (error) {
+        console.error('Error loading overview:', error);
+      }
+    },
+    loadAlerts: async () => {
+      try {
+        const { default: BudgetService } = await import('../../model/services/BudgetService.js');
+        const alertsData = await BudgetService.getBudgetAlerts();
+        setAlerts(alertsData || []);
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+      }
+    },
     loadAnalytics: context.actions?.loadAnalytics || (() => Promise.resolve()),
     clearErrors: context.actions?.clearErrors || (() => {}),
     
@@ -286,8 +336,8 @@ export const useBudgets = () => {
     formattedUtilization: analytics?.formattedUtilization || formatPercentage(0),
     
     // Alert helpers
-    hasAlerts: (context.alerts || []).length > 0,
-    highPriorityAlerts: (context.alerts || []).filter(a => a.severity === 'high'),
+    hasAlerts: (alerts || []).length > 0,
+    highPriorityAlerts: (alerts || []).filter(a => a.severity === 'high'),
     
     // Context access
     contexts: {
