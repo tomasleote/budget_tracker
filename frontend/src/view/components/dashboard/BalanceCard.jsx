@@ -21,7 +21,8 @@ const BalanceCard = ({
     savingsRate: 0
   },
   isLoading = false,
-  className = ''
+  className = '',
+  timePeriodLabel = null // FIX BUG #2: Accept month name to display
 }) => {
   // Helper function to format currency
   const formatCurrency = (amount) => {
@@ -70,10 +71,15 @@ const BalanceCard = ({
       title="Current Balance" 
       className={className}
       headerAction={
-        <FontAwesomeIcon 
-          icon={faWallet} 
-          className="text-gray-400" 
-        />
+        <div className="flex items-center space-x-2">
+          {timePeriodLabel && (
+            <span className="text-xs text-gray-500">{timePeriodLabel}</span>
+          )}
+          <FontAwesomeIcon 
+            icon={faWallet} 
+            className="text-gray-400" 
+          />
+        </div>
       }
     >
       <div className="space-y-6">

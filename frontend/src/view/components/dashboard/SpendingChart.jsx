@@ -16,7 +16,8 @@ const SpendingChart = ({
   summary = { totalExpenses: 0 },
   isLoading = false,
   className = '',
-  useRecharts = true // New prop to toggle between old and new chart
+  useRecharts = true, // New prop to toggle between old and new chart
+  timePeriodLabel = null // FIX BUG #2: Accept month name to display
 }) => {
   // Helper function to format currency
   const formatCurrency = (amount) => {

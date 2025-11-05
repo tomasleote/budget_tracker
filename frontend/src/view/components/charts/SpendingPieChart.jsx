@@ -16,7 +16,9 @@ const SpendingPieChart = ({
   isLoading = false,
   className = '',
   showLegend = true,
-  height = 300
+  height = 300,
+  // FIX BUG #2: Accept month name as prop to display correct time period
+  timePeriodLabel = null
 }) => {
   // Chart type state
   const [chartType, setChartType] = useState('pie'); // 'pie', 'bar', 'list'
@@ -28,11 +30,16 @@ const SpendingPieChart = ({
     { key: 'list', label: 'List View', icon: faList }
   ];
   
-  // Get current time period info
-  const getCurrentTimePeriod = () => {
+  // FIX BUG #2: Use prop if provided, otherwise calculate last full month
+  const getTimePeriodLabel = () => {
+    if (timePeriodLabel) {
+      return timePeriodLabel;
+    }
+    // Fallback: calculate last full month
     const now = new Date();
-    const currentMonth = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    return `Current Month: ${currentMonth}`;
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthName = lastMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return lastMonthName;
   };
   // Helper function to format currency
   const formatCurrency = (amount) => {
@@ -121,10 +128,10 @@ const SpendingPieChart = ({
       className={className}
       headerAction={
         <div className="flex items-center space-x-4">
-          {/* Time Period Indicator */}
+          {/* Time Period Indicator - FIX BUG #2 */}
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
-            <span>{getCurrentTimePeriod()}</span>
+            <span>{getTimePeriodLabel()}</span>
           </div>
           
           {/* Chart Type Selector */}

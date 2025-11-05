@@ -50,7 +50,7 @@ const calculateBalance = (transactions = []) => {
   return { income, expenses, balance: income - expenses };
 };
 
-// Calculate balance for last 30 days (more useful than current calendar month)
+// Calculate balance for last 30 days (rolling window)
 const calculateLast30DaysBalance = (transactions = []) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
@@ -62,6 +62,54 @@ const calculateLast30DaysBalance = (transactions = []) => {
   });
   
   return calculateBalance(last30DaysTransactions);
+};
+
+// FIX BUG #2: Calculate balance for the last FULL calendar month
+// Today = Nov 5, 2025 → Last full month = October 2025 (Oct 1 - Oct 31)
+const calculateLastFullMonthBalance = (transactions = []) => {
+  const now = new Date();
+  
+  // Get the first day of the current month
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  // Get the last full month by going back one month from current month start
+  const lastFullMonthStart = new Date(currentMonthStart);
+  lastFullMonthStart.setMonth(lastFullMonthStart.getMonth() - 1);
+  
+  // Get the last day of the last full month (one day before current month starts)
+  const lastFullMonthEnd = new Date(currentMonthStart);
+  lastFullMonthEnd.setDate(lastFullMonthEnd.getDate() - 1);
+  lastFullMonthEnd.setHours(23, 59, 59, 999);
+  
+  console.log('📅 Last Full Month Calculation:', {
+    today: now.toISOString().split('T')[0],
+    lastFullMonthStart: lastFullMonthStart.toISOString().split('T')[0],
+    lastFullMonthEnd: lastFullMonthEnd.toISOString().split('T')[0],
+    monthName: lastFullMonthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  });
+  
+  const lastFullMonthTransactions = transactions.filter(t => {
+    const transactionDate = new Date(t.date);
+    return transactionDate >= lastFullMonthStart && transactionDate <= lastFullMonthEnd;
+  });
+  
+  console.log(`  - Filtered ${lastFullMonthTransactions.length} transactions for last full month`);
+  
+  const balance = calculateBalance(lastFullMonthTransactions);
+  
+  return {
+    ...balance,
+    monthName: lastFullMonthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    startDate: lastFullMonthStart,
+    endDate: lastFullMonthEnd
+  };
+};
+
+// Helper to get last full month name for display
+const getLastFullMonthName = () => {
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return lastMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
 const calculateSpendingByCategory = (transactions = [], type = 'expense') => {
@@ -117,37 +165,65 @@ export const useDashboard = () => {
       console.log('🔍 DEBUG - Dashboard summary calculation:');
       console.log('  - Total transactions: 0');
       console.log('  - All-time balance: {income: 0, expenses: 0, balance: 0}');
-      console.log('  - Last 30 days balance: {income: 0, expenses: 0, balance: 0}');
+      console.log('  - Last full month balance: {income: 0, expenses: 0, balance: 0}');
       
       return {
         totalTransactions: 0,
         totalBudgets: budgets?.length || 0,
         allTimeIncome: 0,
         allTimeExpenses: 0,
+        allTimeBalance: 0,
         currentBalance: 0,
         currentMonthIncome: 0,
         currentMonthExpenses: 0,
-        currentMonthBalance: 0
+        currentMonthBalance: 0,
+        currentMonthName: getLastFullMonthName(),
+        // FIX BUG #2: totalIncome and totalExpenses now use last full month data
+        totalIncome: 0,
+        totalExpenses: 0,
+        formattedBalance: formatCurrency(0),
+        formattedIncome: formatCurrency(0),
+        formattedExpenses: formatCurrency(0),
+        isPositiveBalance: true,
+        savingsRate: 0
       };
     }
 
     const allTimeBalance = calculateBalance(transactions);
-    const last30DaysBalance = calculateLast30DaysBalance(transactions);
+    const lastFullMonthBalance = calculateLastFullMonthBalance(transactions);
     
     console.log('🔍 DEBUG - Dashboard summary calculation:');
     console.log('  - Total transactions:', transactions.length);
     console.log('  - All-time balance:', allTimeBalance);
-    console.log('  - Last 30 days balance:', last30DaysBalance);
+    console.log('  - Last full month balance:', lastFullMonthBalance);
+
+    // Calculate savings rate based on last full month
+    const savingsRate = lastFullMonthBalance.income > 0 
+      ? ((lastFullMonthBalance.income - lastFullMonthBalance.expenses) / lastFullMonthBalance.income) * 100 
+      : 0;
 
     return {
       totalTransactions: transactions.length,
       totalBudgets: budgets?.length || 0,
       allTimeIncome: allTimeBalance.income,
       allTimeExpenses: allTimeBalance.expenses,
-      currentBalance: allTimeBalance.balance,
-      currentMonthIncome: last30DaysBalance.income,
-      currentMonthExpenses: last30DaysBalance.expenses,
-      currentMonthBalance: last30DaysBalance.balance
+      allTimeBalance: allTimeBalance.balance,
+      // FIX BUG #2: currentBalance, totalIncome, totalExpenses now use LAST FULL MONTH
+      currentBalance: lastFullMonthBalance.balance,
+      currentMonthIncome: lastFullMonthBalance.income,
+      currentMonthExpenses: lastFullMonthBalance.expenses,
+      currentMonthBalance: lastFullMonthBalance.balance,
+      currentMonthName: lastFullMonthBalance.monthName,
+      startDate: lastFullMonthBalance.startDate, // FIX BUG #2: Export dates
+      endDate: lastFullMonthBalance.endDate, // FIX BUG #2: Export dates
+      // These are for BalanceCard widget - using last full month data
+      totalIncome: lastFullMonthBalance.income,
+      totalExpenses: lastFullMonthBalance.expenses,
+      formattedBalance: formatCurrency(lastFullMonthBalance.balance),
+      formattedIncome: formatCurrency(lastFullMonthBalance.income),
+      formattedExpenses: formatCurrency(lastFullMonthBalance.expenses),
+      isPositiveBalance: lastFullMonthBalance.balance >= 0,
+      savingsRate: savingsRate
     };
   }, [transactions, budgets]);
 
@@ -192,7 +268,7 @@ export const useDashboard = () => {
     });
   }, [transactions, getCategoryById]);
 
-  // Category breakdown analysis
+  // Category breakdown analysis - FIX BUG #2: Filter by last full month
   const categoryBreakdown = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       console.log('🔍 DEBUG - Category breakdown detailed analysis:');
@@ -207,14 +283,30 @@ export const useDashboard = () => {
     console.log('🔍 DEBUG - Category breakdown detailed analysis:');
     console.log('  - Total transactions:', transactions.length);
     console.log('  - Sample transaction:', transactions[0]);
-    console.log('  - Transaction categories:', transactions.map(t => ({
+    
+    // FIX BUG #2: Filter transactions to last full month only
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastFullMonthStart = new Date(currentMonthStart);
+    lastFullMonthStart.setMonth(lastFullMonthStart.getMonth() - 1);
+    const lastFullMonthEnd = new Date(currentMonthStart);
+    lastFullMonthEnd.setDate(lastFullMonthEnd.getDate() - 1);
+    lastFullMonthEnd.setHours(23, 59, 59, 999);
+    
+    const lastMonthTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= lastFullMonthStart && transactionDate <= lastFullMonthEnd;
+    });
+    
+    console.log(`  - Filtered to ${lastMonthTransactions.length} transactions for ${getLastFullMonthName()}`);
+    console.log('  - Transaction categories:', lastMonthTransactions.map(t => ({
       id: t.id,
       categoryId: t.categoryId,
       category_id: t.category_id,
       category: t.category
     })));
 
-    const expenseBreakdown = calculateSpendingByCategory(transactions, 'expense');
+    const expenseBreakdown = calculateSpendingByCategory(lastMonthTransactions, 'expense');
     
     const totalExpenses = expenseBreakdown.reduce((sum, item) => sum + item.amount, 0);
     console.log('  - Total expenses for breakdown:', totalExpenses);
@@ -403,6 +495,11 @@ export const useDashboard = () => {
     
     // State
     isLoading,
+    
+    // Time period info - FIX BUG #2: Expose month name and date range for widgets
+    currentMonthName: summary.currentMonthName || getLastFullMonthName(),
+    lastFullMonthStartDate: summary.startDate,
+    lastFullMonthEndDate: summary.endDate,
     
     // Functions
     actions,
