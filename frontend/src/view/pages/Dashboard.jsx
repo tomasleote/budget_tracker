@@ -74,6 +74,9 @@ const Dashboard = () => {
     quickStats,
     financialHealth,
     isLoading: isDashboardLoading,
+    currentMonthName, // FIX BUG #2: Get the current month name
+    lastFullMonthStartDate, // FIX BUG #2: Get start date
+    lastFullMonthEndDate, // FIX BUG #2: Get end date
     actions,
     utils
   } = useDashboard();
@@ -302,6 +305,7 @@ const Dashboard = () => {
               quickStats={quickStats}
               financialHealth={financialHealth}
               isLoading={isLoading}
+              timePeriodLabel={currentMonthName} // FIX BUG #2: Pass month name
             />
           </div>
 
@@ -313,6 +317,7 @@ const Dashboard = () => {
                 summary={summary} 
                 isLoading={isLoading}
                 className="h-full"
+                timePeriodLabel={currentMonthName} // FIX BUG #2: Pass month name
               />
             </div>
             
@@ -331,6 +336,7 @@ const Dashboard = () => {
                 summary={summary}
                 isLoading={isLoading}
                 className="h-full"
+                timePeriodLabel={currentMonthName} // FIX BUG #2: Pass month name
               />
             </div>
           </div>
@@ -352,10 +358,12 @@ const Dashboard = () => {
             
             {/* Analytics Charts Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-              {/* Spending Trends Chart */}
+              {/* Spending Trends Chart - FIX BUG #2: Pass last full month dates */}
               <SpendingTrendChart 
                 transactions={allTransactions}
-                dateRange={30}
+                customStartDate={lastFullMonthStartDate}
+                customEndDate={lastFullMonthEndDate}
+                timePeriodLabel={currentMonthName}
                 isLoading={isLoading}
                 chartType="line"
                 height={350}

@@ -15,7 +15,8 @@ const QuickStats = ({
   quickStats = {},
   financialHealth = {},
   isLoading = false,
-  className = ''
+  className = '',
+  timePeriodLabel = null // FIX BUG #2: Accept month name to display
 }) => {
   // Helper function to format currency
   const formatCurrency = (amount) => {
@@ -85,7 +86,7 @@ const QuickStats = ({
       id: 'income',
       title: 'Monthly Income',
       value: quickStats.monthlyIncome?.formatted || formatCurrency(0),
-      subValue: 'Last 30 Days',
+      subValue: timePeriodLabel ? timePeriodLabel.split(' ')[0] : 'Last Month', // FIX BUG #2: Show month name
       icon: faArrowUp,
       iconColor: 'var(--success)',
       bgColor: 'var(--success-bg)',
@@ -96,7 +97,7 @@ const QuickStats = ({
       id: 'expenses',
       title: 'Monthly Expenses',
       value: quickStats.monthlyExpenses?.formatted || formatCurrency(0),
-      subValue: 'Last 30 Days',
+      subValue: timePeriodLabel ? timePeriodLabel.split(' ')[0] : 'Last Month', // FIX BUG #2: Show month name
       icon: faArrowDown,
       iconColor: 'var(--error)',
       bgColor: 'var(--error-bg)',
@@ -126,7 +127,7 @@ const QuickStats = ({
         <div className="text-sm" style={{
           color: 'var(--text-secondary)'
         }}>
-          Financial Overview
+          {timePeriodLabel || 'Financial Overview'}
         </div>
       }
     >

@@ -10,7 +10,11 @@ const SpendingTrendChart = ({
   isLoading = false,
   className = '',
   chartType = 'line', // 'line' or 'area'
-  height = 300
+  height = 300,
+  // FIX BUG #2: Accept custom date range for last full month
+  customStartDate = null,
+  customEndDate = null,
+  timePeriodLabel = null
 }) => {
   // Helper function to format currency
   const formatCurrency = (amount) => {
@@ -33,6 +37,8 @@ const SpendingTrendChart = ({
     console.log('🔍 DEBUG - SpendingTrendChart processing:', {
       transactionCount: transactions?.length || 0,
       dateRange,
+      customStartDate,
+      customEndDate,
       sampleTransaction: transactions?.[0]
     });
     
@@ -41,15 +47,26 @@ const SpendingTrendChart = ({
       return [];
     }
 
-    // Get date range - STRICT last 30 days only
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - dateRange);
+    // FIX BUG #2: Use custom dates if provided, otherwise use dateRange
+    let startDate, endDate;
     
-    console.log('  - Date range (STRICT):', {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
-    });
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      endDate = new Date(customEndDate);
+      console.log('  - Using CUSTOM date range (last full month):', {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      });
+    } else {
+      // Fallback to dateRange logic
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - dateRange);
+      console.log('  - Using dateRange logic (last', dateRange, 'days):', {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      });
+    }
     
     // Filter transactions to date range - STRICT filtering by date
     const filteredTransactions = transactions.filter(t => {
@@ -103,7 +120,7 @@ const SpendingTrendChart = ({
     });
 
     return result;
-  }, [transactions, dateRange]);
+  }, [transactions, dateRange, customStartDate, customEndDate]);
 
   // Calculate trend statistics
   const trendStats = useMemo(() => {
@@ -174,6 +191,18 @@ const SpendingTrendChart = ({
     );
   }
 
+  // FIX BUG #2: Get display label for time period
+  const getTimePeriodDisplay = () => {
+    if (timePeriodLabel) {
+      return timePeriodLabel;
+    }
+    if (customStartDate && customEndDate) {
+      const start = new Date(customStartDate);
+      return start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    return `Last ${dateRange} Days`;
+  };
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -199,7 +228,7 @@ const SpendingTrendChart = ({
             <FontAwesomeIcon icon={faChartLine} className="text-blue-600" />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Spending Trends</h3>
-              <p className="text-sm text-gray-500">Last {dateRange} days</p>
+              <p className="text-sm text-gray-500">{getTimePeriodDisplay()}</p>
             </div>
           </div>
           
