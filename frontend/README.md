@@ -1,76 +1,79 @@
-# Budget Tracker Frontend
+# Budget Tracker -- Frontend
 
-A modern React 18 frontend application built with JavaScript, Tailwind CSS, and implementing MVC architecture patterns for personal finance management.
+A React 18 single-page app for personal finance management, written in plain
+JavaScript/JSX (not TypeScript) and bootstrapped with Create React App. All data is
+persisted in the browser's `localStorage`. No backend or database is required to run
+the app.
 
-## 🏗️ Architecture Overview
+## Architecture
 
-The frontend follows MVC pattern with clear separation of concerns:
+MVC-style layering with shared state held in React Context providers:
 
-- **Model Layer**: Data entities, repositories, services, and transformers
-- **View Layer**: React components, pages, and UI elements  
-- **Controller Layer**: Context providers, custom hooks, and utilities
-- **Data Layer**: API services and storage abstraction
+- **Model** (`src/model/`) -- entities, repositories (localStorage), services, transformers
+- **View** (`src/view/`) -- pages, components, and the theme class library
+- **Controller** (`src/controller/`) -- context providers, custom hooks, utilities
 
-## 🚀 Getting Started
+## Getting Started
 
-### Prerequisites
-- Node.js 16.0.0 or higher
-- npm 8.0.0 or higher
-- Backend API running on port 3001 (optional)
+**Prerequisites:** Node.js 18+ and npm 8+
 
-### Installation
 ```bash
 cd frontend
 npm install
-npm start              # Starts on http://localhost:3000
+npm start          # dev server at http://localhost:3000
 ```
 
-### Environment Setup
-```env
-# API Configuration
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_API_TIMEOUT=30000
+No `.env` file is required. The app runs in localStorage mode by default.
 
-# Feature Flags
-REACT_APP_ENABLE_MOCK_DATA=true
-REACT_APP_ENABLE_API_INTEGRATION=false
-```
+## Available Scripts
 
-## 📁 Project Structure
+| Script | Description |
+|--------|-------------|
+| `npm start` | Start the development server on port 3000 |
+| `npm run build` | Create a production build in `build/` |
+| `npm test` | Run the Create React App test runner |
 
-```
-frontend/src/
-├── model/                    # Data models, repositories, services
-├── view/                     # React components and pages
-├── controller/               # Context providers and hooks
-├── api/                      # API communication layer
-├── components/               # Standalone components
-├── config/                   # Configuration files
-└── App.js                    # Main application
-```
+## Project Structure
 
-## 🎨 Key Features
+    frontend/src/
+      model/                    Data layer
+        entities/               Domain entities (Transaction, Category, Budget, User)
+        repositories/           localStorage repositories + RepositoryFactory
+          api/                  API repositories (kept for future backend, not active)
+        services/               Business logic and data initialisation
+        transformers/           Data transformation helpers
+      view/                     Presentation layer
+        components/             Reusable UI and feature components
+        pages/                  Dashboard, Transactions, Budget, Reports, Settings
+        themes.css              Theme class library (color and surface tokens)
+      controller/               Control layer
+        context/                React Context providers (shared state)
+        hooks/                  Custom hooks (useTransactions, useDashboard, useUser, ...)
+        utils/                  Helpers, formatters, calculations, logger
+      api/                      Axios client and API services (kept, not active)
+      App.js                    Routes and providers
+      index.js                  Entry point
 
-- **MVC Architecture** - Clean separation of concerns
-- **Responsive Design** - Mobile-first with Tailwind CSS
-- **State Management** - React Context + Custom Hooks
-- **API Integration** - Axios-based services ready for backend
-- **Component Library** - Reusable UI components
-- **Mock Data** - Development mode with localStorage
-- **Error Handling** - Comprehensive error boundaries
+## Styling
 
-## 📋 Available Scripts
+- **Layout** (flex, grid, spacing, sizing): Tailwind CSS utility classes.
+- **Color and surfaces**: theme classes from `view/themes.css` (`.card-theme`,
+  `.input-theme`, `.btn-theme-primary`, ...).
 
-- `npm start` - Start development server
-- `npm run build` - Create production build
-- `npm test` - Run test suite
+Theme (light/dark) is applied once at the provider level via
+`document.documentElement[data-theme]`. No component sets it directly.
 
-## 🔧 Configuration
+## Data Source: REACT_APP_USE_API
 
-Toggle between mock data (localStorage) and API integration via environment variables.
+`RepositoryFactory` (`src/model/repositories/RepositoryFactory.js`) selects the
+data source based on the environment variable:
 
-**Current Status**: Phase 6 complete with full MVC implementation and API-ready architecture.
+- **Unset or `false` (default):** localStorage repositories. This is the only
+  supported mode today.
+- **`true`:** API repositories. Reserved for future backend integration. The backend
+  is not wired to the frontend yet, so keep this unset.
 
----
+## Roadmap
 
-**Budget Tracker Frontend** - Modern, responsive, and user-friendly interface 🎨
+- Enable the Express/Supabase backend through the existing API repositories behind
+  `REACT_APP_USE_API=true`.
