@@ -4,6 +4,8 @@
  * Allows switching between localStorage and API implementations
  */
 
+import { logger } from '../../controller/utils/logger.js';
+
 // Import localStorage repositories
 import TransactionRepository from './TransactionRepository.js';
 import CategoryRepository from './CategoryRepository.js';
@@ -57,13 +59,13 @@ class RepositoryFactory {
     }
 
     if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      console.log('Using localStorage TransactionRepository');
+      logger.debug('Using localStorage TransactionRepository');
       this._instances.transactions = new TransactionRepository();
     } else {
-      console.log('Using API TransactionRepository');
+      logger.debug('Using API TransactionRepository');
       this._instances.transactions = apiTransactionRepository;
     }
-    
+
     return this._instances.transactions;
   }
 
@@ -79,13 +81,13 @@ class RepositoryFactory {
     }
 
     if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      console.log('Using localStorage CategoryRepository');
+      logger.debug('Using localStorage CategoryRepository');
       this._instances.categories = new CategoryRepository();
     } else {
-      console.log('Using API CategoryRepository');
+      logger.debug('Using API CategoryRepository');
       this._instances.categories = apiCategoryRepository;
     }
-    
+
     return this._instances.categories;
   }
 
@@ -101,13 +103,13 @@ class RepositoryFactory {
     }
 
     if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      console.log('Using localStorage BudgetRepository');
+      logger.debug('Using localStorage BudgetRepository');
       this._instances.budgets = new BudgetRepository();
     } else {
-      console.log('Using API BudgetRepository');
+      logger.debug('Using API BudgetRepository');
       this._instances.budgets = apiBudgetRepository;
     }
-    
+
     return this._instances.budgets;
   }
 
@@ -123,7 +125,7 @@ class RepositoryFactory {
     }
 
     // User repository is always localStorage for now
-    console.log('Using localStorage UserRepository');
+    logger.debug('Using localStorage UserRepository');
     this._instances.users = new UserRepository();
     return this._instances.users;
   }
@@ -176,15 +178,15 @@ class RepositoryFactory {
     const handleOnline = () => {
       // Clear instances when going online to switch to API repositories
       if (this.isApiEnabled()) {
-        console.log('🌐 Going online - switching to API repositories');
+        logger.debug('Going online - switching to API repositories');
         this.clearInstances();
       }
       callback(true);
     };
-    
+
     const handleOffline = () => {
       // Clear instances when going offline to switch to localStorage
-      console.log('📴 Going offline - switching to localStorage repositories');
+      logger.debug('Going offline - switching to localStorage repositories');
       this.clearInstances();
       callback(false);
     };
@@ -206,15 +208,15 @@ const repositories = {
   get transactions() {
     return RepositoryFactory.createTransactionRepository();
   },
-  
+
   get categories() {
     return RepositoryFactory.createCategoryRepository();
   },
-  
+
   get budgets() {
     return RepositoryFactory.createBudgetRepository();
   },
-  
+
   get users() {
     return RepositoryFactory.createUserRepository();
   }

@@ -15,7 +15,7 @@ class BackendConnectionTester {
    */
   static async testHealth() {
     try {
-      console.log('🔍 Testing backend health...');
+      console.log('Testing backend health...');
       
       const response = await fetch(config.api.healthEndpoint, {
         method: 'GET',
@@ -31,7 +31,7 @@ class BackendConnectionTester {
 
       const data = await response.json();
       
-      console.log('✅ Backend health check passed:', data);
+      console.log('Backend health check passed:', data);
       
       return {
         success: true,
@@ -40,7 +40,7 @@ class BackendConnectionTester {
         message: 'Backend is healthy and responding',
       };
     } catch (error) {
-      console.error('❌ Backend health check failed:', error);
+      console.error('Backend health check failed:', error);
       
       return {
         success: false,
@@ -67,7 +67,7 @@ class BackendConnectionTester {
       results.health = await this.testHealth();
 
       // Test categories endpoint
-      console.log('🔍 Testing categories endpoint...');
+      console.log('Testing categories endpoint...');
       try {
         const categoriesResponse = await fetch(`${config.api.baseUrl}/categories`, {
           method: 'GET',
@@ -85,7 +85,7 @@ class BackendConnectionTester {
             count: categoriesData.data?.length || 0,
             message: 'Categories endpoint is working',
           };
-          console.log('✅ Categories endpoint test passed');
+          console.log('Categories endpoint test passed');
         } else {
           throw new Error(`HTTP ${categoriesResponse.status}`);
         }
@@ -95,11 +95,11 @@ class BackendConnectionTester {
           error: error.message,
           message: 'Categories endpoint failed',
         };
-        console.error('❌ Categories endpoint test failed:', error);
+        console.error('Categories endpoint test failed:', error);
       }
 
       // Test transactions endpoint
-      console.log('🔍 Testing transactions endpoint...');
+      console.log('Testing transactions endpoint...');
       try {
         const transactionsResponse = await fetch(`${config.api.baseUrl}/transactions`, {
           method: 'GET',
@@ -117,7 +117,7 @@ class BackendConnectionTester {
             count: transactionsData.data?.transactions?.length || 0,
             message: 'Transactions endpoint is working',
           };
-          console.log('✅ Transactions endpoint test passed');
+          console.log('Transactions endpoint test passed');
         } else {
           throw new Error(`HTTP ${transactionsResponse.status}`);
         }
@@ -127,11 +127,11 @@ class BackendConnectionTester {
           error: error.message,
           message: 'Transactions endpoint failed',
         };
-        console.error('❌ Transactions endpoint test failed:', error);
+        console.error('Transactions endpoint test failed:', error);
       }
 
       // Test budgets endpoint
-      console.log('🔍 Testing budgets endpoint...');
+      console.log('Testing budgets endpoint...');
       try {
         const budgetsResponse = await fetch(`${config.api.baseUrl}/budgets`, {
           method: 'GET',
@@ -149,7 +149,7 @@ class BackendConnectionTester {
             count: budgetsData.data?.budgets?.length || 0,
             message: 'Budgets endpoint is working',
           };
-          console.log('✅ Budgets endpoint test passed');
+          console.log('Budgets endpoint test passed');
         } else {
           throw new Error(`HTTP ${budgetsResponse.status}`);
         }
@@ -159,12 +159,12 @@ class BackendConnectionTester {
           error: error.message,
           message: 'Budgets endpoint failed',
         };
-        console.error('❌ Budgets endpoint test failed:', error);
+        console.error('Budgets endpoint test failed:', error);
       }
 
       return results;
     } catch (error) {
-      console.error('❌ API endpoints test failed:', error);
+      console.error('API endpoints test failed:', error);
       return results;
     }
   }
@@ -174,7 +174,7 @@ class BackendConnectionTester {
    * @returns {Promise<Object>} Complete test results
    */
   static async runFullTest() {
-    console.group('🚀 Backend Connection Test');
+    console.group('Backend Connection Test');
     
     const startTime = Date.now();
     
@@ -203,12 +203,12 @@ class BackendConnectionTester {
       },
     };
     
-    console.log('📊 Test Summary:', summary);
-    
+    console.log('Test Summary:', summary);
+
     if (overallSuccess) {
-      console.log('✅ All backend tests passed! Frontend can connect to backend.');
+      console.log('All backend tests passed. Frontend can connect to backend.');
     } else {
-      console.warn('⚠️ Some backend tests failed. Check backend server status.');
+      console.warn('Some backend tests failed. Check backend server status.');
     }
     
     console.groupEnd();
@@ -224,7 +224,7 @@ class BackendConnectionTester {
     try {
       // Import RepositoryFactory
       import('../model/repositories/RepositoryFactory.js').then(({ RepositoryFactory }) => {
-        console.group('🏭 Repository Factory Test');
+        console.group('Repository Factory Test');
         
         const factoryConfig = RepositoryFactory.getConfiguration();
         console.log('Factory Configuration:', factoryConfig);
@@ -261,11 +261,11 @@ class BackendConnectionTester {
         
         return repositoryTest;
       }).catch(error => {
-        console.error('❌ Repository Factory test failed:', error);
+        console.error('Repository Factory test failed:', error);
         return { success: false, error: error.message };
       });
     } catch (error) {
-      console.error('❌ Repository Factory test failed:', error);
+      console.error('Repository Factory test failed:', error);
       return { success: false, error: error.message };
     }
   }

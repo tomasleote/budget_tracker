@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faSearch,
   faFilter,
   faSort,
@@ -30,7 +30,7 @@ import Card from '../ui/Card';
 import { useTransactions } from '../../../controller/hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../controller/utils/formatters';
 
-const TransactionList = ({ 
+const TransactionList = ({
   transactions = [],
   showFilters = true,
   showSearch = true,
@@ -58,10 +58,8 @@ const TransactionList = ({
     isDeletingTransaction
   } = useTransactions();
 
-  // Use the passed transactions prop instead of loading from hook
   const transactionsToUse = transactions;
 
-  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     type: 'all',
@@ -74,7 +72,6 @@ const TransactionList = ({
   const [selectedTransactions, setSelectedTransactions] = useState(new Set());
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Sync internal filters with parent filters
   useEffect(() => {
     if (parentFilters && Object.keys(parentFilters).length > 0) {
       setFilters(prev => ({
@@ -87,7 +84,6 @@ const TransactionList = ({
     }
   }, [parentFilters]);
 
-  // Get category icon
   const getCategoryIcon = (categoryName) => {
     const iconMap = {
       'food & dining': faUtensils,
@@ -114,40 +110,34 @@ const TransactionList = ({
     };
 
     const category = (categoryName || '').toLowerCase();
-    return Object.keys(iconMap).find(key => category.includes(key)) 
+    return Object.keys(iconMap).find(key => category.includes(key))
       ? iconMap[Object.keys(iconMap).find(key => category.includes(key))]
       : faQuestionCircle;
   };
 
-  // Filtered and sorted transactions with duplicate removal
   const filteredTransactions = useMemo(() => {
     let result = transactionsToUse;
 
-    // Remove duplicates first (safety measure)
-    result = result.filter((transaction, index, arr) => 
+    result = result.filter((transaction, index, arr) =>
       arr.findIndex(t => t.id === transaction.id) === index
     );
 
-    // Apply search
     if (searchTerm) {
-      result = result.filter(t => 
+      result = result.filter(t =>
         t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.amount.toString().includes(searchTerm)
       );
     }
 
-    // Apply type filter
     if (filters.type !== 'all') {
       result = result.filter(t => t.type === filters.type);
     }
 
-    // Apply category filter
     if (filters.category !== 'all') {
       result = result.filter(t => t.category === filters.category);
     }
 
-    // Apply date range filter
     if (filters.dateFrom) {
       result = result.filter(t => new Date(t.date) >= new Date(filters.dateFrom));
     }
@@ -155,10 +145,9 @@ const TransactionList = ({
       result = result.filter(t => new Date(t.date) <= new Date(filters.dateTo));
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (filters.sortBy) {
         case 'amount':
           aValue = parseFloat(a.amount);
@@ -186,7 +175,6 @@ const TransactionList = ({
       return 0;
     });
 
-    // Apply limit if specified
     if (maxItems) {
       result = result.slice(0, maxItems);
     }
@@ -194,26 +182,21 @@ const TransactionList = ({
     return result;
   }, [transactionsToUse, searchTerm, filters, maxItems]);
 
-  // Get unique categories for filter dropdown
   const uniqueCategories = useMemo(() => {
     const categories = [...new Set(transactionsToUse.map(t => t.category))];
     return categories.filter(Boolean).sort();
   }, [transactionsToUse]);
 
-  // Handle filter changes
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-    // Notify parent component about filter changes
     onFiltersChange(newFilters);
   };
 
-  // Handle search
   const handleSearch = (value) => {
     setSearchTerm(value);
   };
 
-  // Handle selection
   const handleSelectTransaction = (transactionId) => {
     const newSelected = new Set(selectedTransactions);
     if (newSelected.has(transactionId)) {
@@ -224,7 +207,6 @@ const TransactionList = ({
     setSelectedTransactions(newSelected);
   };
 
-  // Handle select all
   const handleSelectAll = () => {
     if (selectedTransactions.size === filteredTransactions.length) {
       setSelectedTransactions(new Set());
@@ -233,22 +215,17 @@ const TransactionList = ({
     }
   };
 
-  // Handle delete
   const handleDelete = async (transactionId) => {
     await onTransactionDelete(transactionId);
   };
 
-  // Handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedTransactions.size === 0) return;
-    
-    // Pass the selected transaction IDs to the parent component
     const transactionIds = Array.from(selectedTransactions);
     await onBulkDelete(transactionIds);
     setSelectedTransactions(new Set());
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilters({
       type: 'all',
@@ -261,30 +238,19 @@ const TransactionList = ({
     setSearchTerm('');
   };
 
-  // Loading state
   if (isLoadingTransactions) {
     return (
       <Card className={className}>
         <div className="animate-pulse space-y-4">
-          <div className="h-6 rounded w-1/3" style={{
-            backgroundColor: 'var(--bg-tertiary)'
-          }}></div>
+          <div className="h-6 rounded w-1/3 bg-theme-tertiary"></div>
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full" style={{
-                backgroundColor: 'var(--bg-tertiary)'
-              }}></div>
+              <div className="w-10 h-10 rounded-full bg-theme-tertiary"></div>
               <div className="flex-1 space-y-1">
-                <div className="h-4 rounded w-3/4" style={{
-                  backgroundColor: 'var(--bg-tertiary)'
-                }}></div>
-                <div className="h-3 rounded w-1/2" style={{
-                  backgroundColor: 'var(--bg-tertiary)'
-                }}></div>
+                <div className="h-4 rounded w-3/4 bg-theme-tertiary"></div>
+                <div className="h-3 rounded w-1/2 bg-theme-tertiary"></div>
               </div>
-              <div className="h-4 rounded w-16" style={{
-                backgroundColor: 'var(--bg-tertiary)'
-              }}></div>
+              <div className="h-4 rounded w-16 bg-theme-tertiary"></div>
             </div>
           ))}
         </div>
@@ -293,18 +259,13 @@ const TransactionList = ({
   }
 
   return (
-    <Card 
+    <Card
       className={className}
       title={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold" style={{
-              color: 'var(--text-primary)'
-            }}>Transactions</h3>
-            <span className="px-2 py-1 rounded text-sm" style={{
-              backgroundColor: 'var(--bg-secondary)',
-              color: 'var(--text-secondary)'
-            }}>
+            <h3 className="text-lg font-semibold text-theme-primary">Transactions</h3>
+            <span className="px-2 py-1 rounded text-sm bg-theme-secondary text-theme-secondary">
               {filteredTransactions.length}
             </span>
           </div>
@@ -342,27 +303,17 @@ const TransactionList = ({
 
           {/* Advanced Filters */}
           {showFilters && showAdvancedFilters && (
-            <div className="rounded-lg p-4 space-y-4" style={{
-              backgroundColor: 'var(--bg-secondary)',
-              border: '1px solid var(--border-primary)'
-            }}>
+            <div className="rounded-lg p-4 space-y-4 bg-theme-secondary border border-theme-primary">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Type Filter */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{
-                    color: 'var(--text-primary)'
-                  }}>
+                  <label className="block text-sm font-medium mb-1 text-theme-primary">
                     Type
                   </label>
                   <select
                     value={filters.type}
                     onChange={(e) => handleFilterChange('type', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg"
-                    style={{
-                      backgroundColor: 'var(--bg-primary)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
-                    }}
+                    className="input-theme w-full px-3 py-2 rounded-lg border"
                   >
                     <option value="all">All Types</option>
                     <option value="income">Income</option>
@@ -372,20 +323,13 @@ const TransactionList = ({
 
                 {/* Category Filter */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{
-                    color: 'var(--text-primary)'
-                  }}>
+                  <label className="block text-sm font-medium mb-1 text-theme-primary">
                     Category
                   </label>
                   <select
                     value={filters.category}
                     onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg"
-                    style={{
-                      backgroundColor: 'var(--bg-primary)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
-                    }}
+                    className="input-theme w-full px-3 py-2 rounded-lg border"
                   >
                     <option value="all">All Categories</option>
                     {uniqueCategories.map(category => (
@@ -398,41 +342,27 @@ const TransactionList = ({
 
                 {/* Date From */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{
-                    color: 'var(--text-primary)'
-                  }}>
+                  <label className="block text-sm font-medium mb-1 text-theme-primary">
                     From Date
                   </label>
                   <input
                     type="date"
                     value={filters.dateFrom}
                     onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg"
-                    style={{
-                      backgroundColor: 'var(--bg-primary)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
-                    }}
+                    className="input-theme w-full px-3 py-2 rounded-lg border"
                   />
                 </div>
 
                 {/* Date To */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{
-                    color: 'var(--text-primary)'
-                  }}>
+                  <label className="block text-sm font-medium mb-1 text-theme-primary">
                     To Date
                   </label>
                   <input
                     type="date"
                     value={filters.dateTo}
                     onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg"
-                    style={{
-                      backgroundColor: 'var(--bg-primary)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)'
-                    }}
+                    className="input-theme w-full px-3 py-2 rounded-lg border"
                   />
                 </div>
               </div>
@@ -441,20 +371,13 @@ const TransactionList = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{
-                      color: 'var(--text-primary)'
-                    }}>
+                    <label className="block text-sm font-medium mb-1 text-theme-primary">
                       Sort By
                     </label>
                     <select
                       value={filters.sortBy}
                       onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                      className="px-3 py-2 rounded-lg"
-                      style={{
-                        backgroundColor: 'var(--bg-primary)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)'
-                      }}
+                      className="input-theme px-3 py-2 rounded-lg border"
                     >
                       <option value="date">Date</option>
                       <option value="amount">Amount</option>
@@ -463,27 +386,20 @@ const TransactionList = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{
-                      color: 'var(--text-primary)'
-                    }}>
+                    <label className="block text-sm font-medium mb-1 text-theme-primary">
                       Order
                     </label>
                     <select
                       value={filters.sortOrder}
                       onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                      className="px-3 py-2 rounded-lg"
-                      style={{
-                        backgroundColor: 'var(--bg-primary)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)'
-                      }}
+                      className="input-theme px-3 py-2 rounded-lg border"
                     >
                       <option value="desc">Descending</option>
                       <option value="asc">Ascending</option>
                     </select>
                   </div>
                 </div>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -504,9 +420,7 @@ const TransactionList = ({
           border: '1px solid var(--info-border)'
         }}>
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{
-              color: 'var(--info)'
-            }}>
+            <span className="text-sm" style={{ color: 'var(--info)' }}>
               {selectedTransactions.size} transaction(s) selected
             </span>
             <div className="flex items-center space-x-2">
@@ -534,22 +448,17 @@ const TransactionList = ({
       {/* Transaction List */}
       {filteredTransactions.length === 0 ? (
         <div className="text-center py-8">
-          <FontAwesomeIcon 
-            icon={faInfoCircle} 
-            className="text-3xl mb-4" 
-            style={{ color: 'var(--text-tertiary)' }}
+          <FontAwesomeIcon
+            icon={faInfoCircle}
+            className="text-3xl mb-4 text-theme-tertiary"
           />
-          <h3 className="text-lg font-medium mb-2" style={{
-            color: 'var(--text-primary)'
-          }}>
-            {searchTerm || Object.values(filters).some(f => f !== 'all' && f !== 'date' && f !== 'desc' && f !== '') 
-              ? 'No transactions found' 
+          <h3 className="text-lg font-medium mb-2 text-theme-primary">
+            {searchTerm || Object.values(filters).some(f => f !== 'all' && f !== 'date' && f !== 'desc' && f !== '')
+              ? 'No transactions found'
               : 'No transactions yet'
             }
           </h3>
-          <p className="mb-4" style={{
-            color: 'var(--text-secondary)'
-          }}>
+          <p className="mb-4 text-theme-secondary">
             {searchTerm || Object.values(filters).some(f => f !== 'all' && f !== 'date' && f !== 'desc' && f !== '')
               ? 'Try adjusting your search or filters'
               : 'Start by adding your first transaction'
@@ -560,56 +469,35 @@ const TransactionList = ({
         <div className="space-y-3">
           {/* Select All Header */}
           {showActions && (
-            <div className="flex items-center space-x-3 py-2" style={{
-              borderBottom: '1px solid var(--border-primary)'
-            }}>
+            <div className="flex items-center space-x-3 py-2 border-b border-theme-primary">
               <input
                 type="checkbox"
                 checked={selectedTransactions.size === filteredTransactions.length && filteredTransactions.length > 0}
                 onChange={handleSelectAll}
                 className="w-4 h-4 rounded"
-                style={{
-                  accentColor: 'var(--accent-primary)'
-                }}
+                style={{ accentColor: 'var(--accent-primary)' }}
               />
-              <span className="text-sm font-medium" style={{
-                color: 'var(--text-primary)'
-              }}>
+              <span className="text-sm font-medium text-theme-primary">
                 Select All
               </span>
             </div>
           )}
 
           {/* Transaction Items - Scrollable Container */}
-          <div className="max-h-96 overflow-y-auto rounded-lg" style={{
-            border: '1px solid var(--border-primary)'
-          }}>
+          <div className="max-h-96 overflow-y-auto rounded-lg border border-theme-primary">
             <div className="space-y-0">
               {filteredTransactions.map((transaction, index) => {
                 const isIncome = transaction.type === 'income';
                 const categoryIcon = getCategoryIcon(transaction.category);
                 const isSelected = selectedTransactions.has(transaction.id);
-                
+
                 return (
-                  <div 
+                  <div
                     key={transaction.id}
-                    className="flex items-center space-x-3 p-4 transition-colors cursor-pointer"
-                    style={{
-                      borderBottom: index !== filteredTransactions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
-                      backgroundColor: isSelected 
-                        ? 'var(--info-bg)' 
-                        : 'var(--bg-card)'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'var(--bg-card)';
-                      }
-                    }}
+                    className={`flex items-center space-x-3 p-4 transition-colors cursor-pointer ${
+                      index !== filteredTransactions.length - 1 ? 'border-b border-theme-secondary' : ''
+                    } ${isSelected ? '' : 'bg-theme-card hover-bg-theme'}`}
+                    style={isSelected ? { backgroundColor: 'var(--info-bg)' } : undefined}
                   >
                     {/* Selection Checkbox */}
                     {showActions && (
@@ -620,19 +508,20 @@ const TransactionList = ({
                           e.stopPropagation();
                           handleSelectTransaction(transaction.id);
                         }}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 rounded"
+                        style={{ accentColor: 'var(--accent-primary)' }}
                       />
                     )}
 
                     {/* Transaction Icon */}
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isIncome 
-                        ? 'bg-green-100 text-green-600' 
+                      isIncome
+                        ? 'bg-green-100 text-green-600'
                         : 'bg-red-100 text-red-600'
                     }`}>
-                      <FontAwesomeIcon 
-                        icon={categoryIcon} 
-                        className="text-lg" 
+                      <FontAwesomeIcon
+                        icon={categoryIcon}
+                        className="text-lg"
                       />
                     </div>
 
@@ -640,10 +529,10 @@ const TransactionList = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                          <div className="text-sm font-medium text-theme-primary truncate">
                             {transaction.description}
                           </div>
-                          <div className="text-xs text-gray-500 flex items-center space-x-2">
+                          <div className="text-xs text-theme-secondary flex items-center space-x-2">
                             <FontAwesomeIcon icon={faTag} className="w-3 h-3" />
                             <span>{transaction.category}</span>
                             <span>•</span>
@@ -651,7 +540,7 @@ const TransactionList = ({
                             <span>{formatDate(transaction.date)}</span>
                           </div>
                         </div>
-                        
+
                         {/* Amount */}
                         <div className="text-right ml-4 flex-shrink-0">
                           <div className={`text-sm font-semibold ${
@@ -659,10 +548,10 @@ const TransactionList = ({
                           }`}>
                             {isIncome ? '+' : '-'}{formatCurrency(Math.abs(transaction.amount))}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            <FontAwesomeIcon 
-                              icon={isIncome ? faArrowUp : faArrowDown} 
-                              className="mr-1" 
+                          <div className="text-xs text-theme-secondary">
+                            <FontAwesomeIcon
+                              icon={isIncome ? faArrowUp : faArrowDown}
+                              className="mr-1"
                             />
                             {isIncome ? 'Income' : 'Expense'}
                           </div>
@@ -680,7 +569,7 @@ const TransactionList = ({
                             e.stopPropagation();
                             onTransactionSelect(transaction);
                           }}
-                          className="text-gray-400 hover:text-blue-600"
+                          className="text-theme-secondary hover:text-theme-accent"
                         >
                           <FontAwesomeIcon icon={faEye} />
                         </Button>
@@ -692,7 +581,7 @@ const TransactionList = ({
                             e.stopPropagation();
                             onTransactionEdit(transaction);
                           }}
-                          className="text-gray-400 hover:text-yellow-600"
+                          className="text-theme-secondary hover:text-yellow-600"
                         >
                           <FontAwesomeIcon icon={faEdit} />
                         </Button>
@@ -703,7 +592,7 @@ const TransactionList = ({
                             e.stopPropagation();
                             handleDelete(transaction.id);
                           }}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-theme-secondary hover:text-red-600"
                           disabled={isDeletingTransaction}
                         >
                           {isDeletingTransaction ? (
@@ -722,7 +611,7 @@ const TransactionList = ({
 
           {/* Transaction Count Info */}
           {filteredTransactions.length > 10 && (
-            <div className="text-center py-2 text-sm text-gray-500 bg-gray-50 rounded-lg">
+            <div className="text-center py-2 text-sm text-theme-secondary bg-theme-secondary rounded-lg">
               Showing {filteredTransactions.length} transactions • Scroll to see more
             </div>
           )}

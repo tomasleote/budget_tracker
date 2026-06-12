@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { repositories } from '../../../model/repositories/RepositoryFactory.js';
+import { logger } from '../../utils/logger.js';
 
 // Create TransactionContext
 const TransactionContext = createContext();
 
 /**
- * TransactionProvider - Real API Implementation
- * Connects to backend database through repository pattern
+ * TransactionProvider
+ * Loads/persists transactions through the repository layer (localStorage today).
  */
 export const TransactionProvider = ({ children }) => {
   // State management
@@ -43,15 +44,12 @@ export const TransactionProvider = ({ children }) => {
   // Get repository instance
   const transactionRepository = useMemo(() => repositories.transactions, []);
 
-  // Load transactions from API/database
+  // Load transactions from the repository
   const loadTransactions = useCallback(async (queryParams = {}) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('🔄 Loading transactions from backend...');
-      console.log('🔍 DEBUG - Query params:', queryParams);
-      
       // Use current pagination state or defaults
       const currentPagination = {
         page: queryParams.page || pagination.page,
@@ -59,29 +57,14 @@ export const TransactionProvider = ({ children }) => {
         include_category: true,
         ...queryParams
       };
-      
-      console.log('🔍 DEBUG - Final pagination params:', currentPagination);
-      
+
       const result = await transactionRepository.getAll(currentPagination);
-      
-      // DEBUG: Log the exact response structure with detailed inspection
-      console.log('🔍 DEBUG - Raw result from repository:', result);
-      console.log('🔍 DEBUG - result type:', typeof result);
-      console.log('🔍 DEBUG - result is array:', Array.isArray(result));
-      console.log('🔍 DEBUG - result keys:', result ? Object.keys(result) : 'null/undefined');
-      
-      if (result) {
-        console.log('🔍 DEBUG - result.data:', result.data);
-        console.log('🔍 DEBUG - result.transactions:', result.transactions);
-        console.log('🔍 DEBUG - result.pagination:', result.pagination);
-      }
-      
-      // Handle the response from the interceptor
+
+      // Handle both array and paginated object response shapes
       if (result && (result.data || Array.isArray(result))) {
-        // Extract transactions array - handle both formats
         let transactionsData;
         let paginationData = null;
-        
+
         if (Array.isArray(result)) {
           transactionsData = result;
         } else if (result.data && Array.isArray(result.data)) {
@@ -93,29 +76,25 @@ export const TransactionProvider = ({ children }) => {
         } else {
           transactionsData = [];
         }
-        
-        console.log('🔍 DEBUG - Extracted transactions:', transactionsData);
+
         setTransactions(transactionsData);
-        console.log('✅ Transactions loaded:', transactionsData.length, 'transactions');
-        
+        logger.debug('Transactions loaded:', transactionsData.length);
+
         // Update pagination if provided
         if (paginationData) {
-          console.log('🔍 DEBUG - Updating pagination:', paginationData);
           setPagination(prev => ({
             ...prev,
             ...paginationData
           }));
         }
-        
+
         // Calculate summary
         await calculateSummary(transactionsData);
-        
       } else {
-        console.log('❌ DEBUG - Invalid response structure:', result);
         throw new Error('Failed to load transactions - invalid response format');
       }
     } catch (err) {
-      console.error('❌ Failed to load transactions:', err);
+      logger.error('Failed to load transactions:', err);
       setError(err.message || 'Failed to load transactions');
       setTransactions([]);
     } finally {
@@ -125,15 +104,12 @@ export const TransactionProvider = ({ children }) => {
 
   // Special function for loading ALL transactions for dashboard analytics
   const loadAllTransactionsForDashboard = useCallback(async () => {
-    console.log('🔍 DASHBOARD API CALL: Loading transactions for analytics charts...');
-    console.log('🔍 API CALL: GET /transactions with limit=1000 for dashboard analytics');
-    
     try {
       const result = await transactionRepository.getAll({
         limit: 1000, // Get many transactions for analytics
         include_category: true
       });
-      
+
       // Handle response format
       let transactionsData = [];
       if (Array.isArray(result)) {
@@ -143,11 +119,11 @@ export const TransactionProvider = ({ children }) => {
       } else if (result?.data && Array.isArray(result.data)) {
         transactionsData = result.data;
       }
-      
-      console.log('✅ Dashboard analytics loaded:', transactionsData.length, 'transactions');
+
+      logger.debug('Dashboard analytics loaded:', transactionsData.length);
       return transactionsData;
     } catch (err) {
-      console.error('❌ Failed to load dashboard analytics:', err);
+      logger.error('Failed to load dashboard analytics:', err);
       return [];
     }
   }, [transactionRepository]);
@@ -158,11 +134,11 @@ export const TransactionProvider = ({ children }) => {
       const income = transactionsData
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      
+
       const expenses = transactionsData
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-      
+
       const summary = {
         totalTransactions: transactionsData.length,
         totalIncome: income,
@@ -172,10 +148,10 @@ export const TransactionProvider = ({ children }) => {
         largestIncome: Math.max(...transactionsData.filter(t => t.type === 'income').map(t => parseFloat(t.amount) || 0), 0),
         largestExpense: Math.max(...transactionsData.filter(t => t.type === 'expense').map(t => parseFloat(t.amount) || 0), 0)
       };
-      
+
       setSummary(summary);
     } catch (err) {
-      console.error('❌ Failed to calculate transaction summary:', err);
+      logger.error('Failed to calculate transaction summary:', err);
     }
   }, [transactions]);
 
@@ -183,37 +159,36 @@ export const TransactionProvider = ({ children }) => {
   const createTransaction = useCallback(async (transactionData) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('🔄 Creating transaction:', transactionData.description);
       const result = await transactionRepository.create({
         ...transactionData,
         date: transactionData.date || new Date().toISOString(),
         amount: parseFloat(transactionData.amount)
       });
-      
+
       // Handle response format consistently
       if (result && (result.success !== false)) {
         const newTransaction = result.data || result;
-        
+
         // Add to local state
         setTransactions(prev => [newTransaction, ...prev]);
-        console.log('✅ Transaction created:', newTransaction.description || newTransaction.id);
-        
+        logger.debug('Transaction created:', newTransaction.description || newTransaction.id);
+
         // Recalculate summary
         calculateSummary();
-        
+
         // Dispatch event for other components
-        window.dispatchEvent(new CustomEvent('transactionCreated', { 
-          detail: newTransaction 
+        window.dispatchEvent(new CustomEvent('transactionCreated', {
+          detail: newTransaction
         }));
-        
+
         return { success: true, data: newTransaction };
       } else {
         throw new Error(result?.error || 'Failed to create transaction');
       }
     } catch (err) {
-      console.error('❌ Failed to create transaction:', err);
+      logger.error('Failed to create transaction:', err);
       setError(err.message || 'Failed to create transaction');
       return { success: false, error: err.message };
     } finally {
@@ -225,38 +200,37 @@ export const TransactionProvider = ({ children }) => {
   const updateTransaction = useCallback(async (transactionId, updates) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('🔄 Updating transaction:', transactionId);
       const result = await transactionRepository.update(transactionId, {
         ...updates,
         amount: parseFloat(updates.amount)
       });
-      
+
       // Handle response format consistently
       if (result && (result.success !== false)) {
         const updatedTransaction = result.data || result;
-        
+
         // Update local state
-        setTransactions(prev => 
+        setTransactions(prev =>
           prev.map(t => t.id === transactionId ? updatedTransaction : t)
         );
-        console.log('✅ Transaction updated:', updatedTransaction.description || updatedTransaction.id);
-        
+        logger.debug('Transaction updated:', updatedTransaction.description || updatedTransaction.id);
+
         // Recalculate summary
         calculateSummary();
-        
+
         // Dispatch event for other components
-        window.dispatchEvent(new CustomEvent('transactionUpdated', { 
-          detail: updatedTransaction 
+        window.dispatchEvent(new CustomEvent('transactionUpdated', {
+          detail: updatedTransaction
         }));
-        
+
         return { success: true, data: updatedTransaction };
       } else {
         throw new Error(result?.error || 'Failed to update transaction');
       }
     } catch (err) {
-      console.error('❌ Failed to update transaction:', err);
+      logger.error('Failed to update transaction:', err);
       setError(err.message || 'Failed to update transaction');
       return { success: false, error: err.message };
     } finally {
@@ -268,31 +242,30 @@ export const TransactionProvider = ({ children }) => {
   const deleteTransaction = useCallback(async (transactionId) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      console.log('🔄 Deleting transaction:', transactionId);
       const result = await transactionRepository.delete(transactionId);
-      
+
       // Handle response format consistently
       if (result && (result.success !== false)) {
         // Remove from local state
         setTransactions(prev => prev.filter(t => t.id !== transactionId));
-        console.log('✅ Transaction deleted');
-        
+        logger.debug('Transaction deleted:', transactionId);
+
         // Recalculate summary
         calculateSummary();
-        
+
         // Dispatch event for other components
-        window.dispatchEvent(new CustomEvent('transactionDeleted', { 
-          detail: { id: transactionId } 
+        window.dispatchEvent(new CustomEvent('transactionDeleted', {
+          detail: { id: transactionId }
         }));
-        
+
         return { success: true };
       } else {
         throw new Error(result?.error || 'Failed to delete transaction');
       }
     } catch (err) {
-      console.error('❌ Failed to delete transaction:', err);
+      logger.error('Failed to delete transaction:', err);
       setError(err.message || 'Failed to delete transaction');
       return { success: false, error: err.message };
     } finally {
@@ -339,12 +312,8 @@ export const TransactionProvider = ({ children }) => {
     setError(null);
   }, []);
 
-  // Auto-load transactions on mount to ensure Dashboard has data on first load
-  // This ensures consistency with CategoryProvider and BudgetProvider behavior
-  // Fixed: Dashboard was showing empty data on first load because transactions
-  // weren't loaded until Dashboard's useEffect ran
+  // Auto-load transactions on mount so the Dashboard has data on first load.
   useEffect(() => {
-    console.log('🔄 TransactionProvider: Loading transactions on mount...');
     loadTransactions();
   }, []); // Empty dependency array - only load once on mount
 
@@ -357,12 +326,12 @@ export const TransactionProvider = ({ children }) => {
     summary,
     filters,
     pagination,
-    
+
     // Status functions
     isLoading: loading,
     hasError,
     getError,
-    
+
     // Actions
     actions: {
       loadTransactions,

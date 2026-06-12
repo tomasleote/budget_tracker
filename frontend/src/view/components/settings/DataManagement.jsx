@@ -9,6 +9,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
+import { useUser } from '../../../controller/hooks/useUser';
+import storageService from '../../../model/services/StorageService';
 
 /**
  * DataManagement Component
@@ -23,6 +25,8 @@ import Modal from '../ui/Modal';
  * Phase 2 Implementation: Data Safety
  */
 const DataManagement = () => {
+  const { resetPreferences } = useUser();
+
   // State for modals and operations
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -47,18 +51,14 @@ const DataManagement = () => {
   const handleDeleteAllData = async () => {
     setIsDeleting(true);
     try {
-      // TODO: Implement actual data deletion logic
-      console.log('Deleting all user data...');
-      
-      // Simulate deletion process
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      setSuccessMessage('All data has been permanently deleted');
+      await storageService.clearAllData();
+
+      setSuccessMessage('All data has been permanently deleted. Reloading…');
       setShowSuccess(true);
       setShowDeleteModal(false);
       setConfirmText('');
-      setTimeout(() => setShowSuccess(false), 5000);
-      
+      // Reload so the app re-seeds defaults and contexts reset cleanly.
+      setTimeout(() => window.location.reload(), 1200);
     } catch (error) {
       console.error('Delete error:', error);
     } finally {
@@ -70,12 +70,8 @@ const DataManagement = () => {
   const handleResetToDefaults = async () => {
     setIsResetting(true);
     try {
-      // TODO: Implement actual reset logic
-      console.log('Resetting all settings to defaults...');
-      
-      // Simulate reset process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await resetPreferences();
+
       setSuccessMessage('All settings have been reset to defaults');
       setShowSuccess(true);
       setShowResetModal(false);

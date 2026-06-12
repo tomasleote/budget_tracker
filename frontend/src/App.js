@@ -9,9 +9,6 @@ import { GlobalErrorBoundary } from './view/components/ui/PageWrapper';
 import AppProvider from './controller/context/providers/AppProvider';
 import Layout from './view/components/layout/Layout';
 import RouteGuard, { UnauthorizedAccess } from './view/components/navigation/RouteGuard';
-// Backend components removed for localStorage-only mode
-// import BackendStatus from './components/BackendStatus';
-// import ApiDataDebugger from './components/debug/ApiDataDebugger';
 
 // Import page components
 import {
@@ -102,10 +99,6 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
-          
-          {/* Backend components removed for localStorage-only mode */}
-          {/* <BackendStatus /> */}
-          {/* <ApiDataDebugger /> */}
         </AppProvider>
       </Router>
     </GlobalErrorBoundary>

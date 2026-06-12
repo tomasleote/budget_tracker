@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faSearch,
   faFilter,
   faSort,
@@ -16,7 +16,7 @@ import {
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-const TransactionFilterToolbar = ({ 
+const TransactionFilterToolbar = ({
   onFiltersChange = () => {},
   onSearchChange = () => {},
   filters = {},
@@ -33,19 +33,16 @@ const TransactionFilterToolbar = ({
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Handle search change
   const handleSearchChange = (value) => {
     setSearchTerm(value);
     onSearchChange(value);
   };
 
-  // Handle filter change
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     onFiltersChange(newFilters);
   };
 
-  // Quick filter options
   const quickFilters = [
     { key: 'all', label: 'All', icon: null },
     { key: 'income', label: 'Income', icon: faArrowUp, color: 'green' },
@@ -54,20 +51,17 @@ const TransactionFilterToolbar = ({
     { key: 'week', label: 'Week', icon: faCalendarAlt, color: 'purple' }
   ];
 
-  // Sort options
   const sortOptions = [
     { key: 'date', label: 'Date', icon: faCalendarAlt },
     { key: 'amount', label: 'Amount', icon: faDollarSign },
     { key: 'category', label: 'Category', icon: faTag }
   ];
 
-  // Active filters count
   const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
     if (key === 'search' || key === 'sortBy' || key === 'sortOrder') return false;
     return value && value !== 'all' && value !== '';
   }).length;
 
-  // Apply quick filter
   const applyQuickFilter = (filterKey) => {
     const today = new Date();
     const newFilters = { ...filters };
@@ -75,21 +69,17 @@ const TransactionFilterToolbar = ({
     switch (filterKey) {
       case 'income':
         newFilters.type = 'income';
-        // Keep existing date filters
         break;
       case 'expense':
         newFilters.type = 'expense';
-        // Keep existing date filters
         break;
       case 'today':
-        // Keep existing type filter
         newFilters.dateFrom = today.toISOString().split('T')[0];
         newFilters.dateTo = today.toISOString().split('T')[0];
         break;
       case 'week':
         const weekStart = new Date(today);
         weekStart.setDate(today.getDate() - 7);
-        // Keep existing type filter
         newFilters.dateFrom = weekStart.toISOString().split('T')[0];
         newFilters.dateTo = today.toISOString().split('T')[0];
         break;
@@ -127,12 +117,7 @@ const TransactionFilterToolbar = ({
             <select
               value={filters.type || 'all'}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="px-2 py-1 text-sm rounded"
-              style={{
-                backgroundColor: 'var(--bg-primary)',
-                border: '1px solid var(--border-primary)',
-                color: 'var(--text-primary)'
-              }}
+              className="input-theme border px-2 py-1 text-sm rounded"
             >
               <option value="all">All</option>
               <option value="income">Income</option>
@@ -145,12 +130,7 @@ const TransactionFilterToolbar = ({
             <select
               value={filters.sortBy || 'date'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-              className="px-2 py-1 text-sm rounded"
-              style={{
-                backgroundColor: 'var(--bg-primary)',
-                border: '1px solid var(--border-primary)',
-                color: 'var(--text-primary)'
-              }}
+              className="input-theme border px-2 py-1 text-sm rounded"
             >
               <option value="date">Date</option>
               <option value="amount">Amount</option>
@@ -175,10 +155,7 @@ const TransactionFilterToolbar = ({
 
         {/* Mobile Filters Dropdown */}
         {showMobileFilters && (
-          <div className="absolute top-full left-0 right-0 rounded-lg shadow-lg p-4 z-10 mt-2" style={{
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-primary)'
-          }}>
+          <div className="absolute top-full left-0 right-0 card-theme border rounded-lg shadow-lg p-4 z-10 mt-2">
             <div className="space-y-3">
               {showQuickFilters && (
                 <div className="flex flex-wrap gap-2">
@@ -190,7 +167,7 @@ const TransactionFilterToolbar = ({
                         (filter.key === filters.type) ||
                         (filter.key === 'today' && filters.dateFrom === new Date().toISOString().split('T')[0]) ||
                         (filter.key === 'week' && filters.dateFrom)
-                          ? 'primary' 
+                          ? 'primary'
                           : 'outline'
                       }
                       size="sm"
@@ -216,28 +193,24 @@ const TransactionFilterToolbar = ({
       {showQuickFilters && (
         <div className="flex flex-wrap gap-2 items-center">
           {/* View Mode Toggle */}
-          <div className="flex items-center space-x-1 rounded-lg p-1" style={{
-            backgroundColor: 'var(--bg-secondary)'
-          }}>
+          <div className="flex items-center space-x-1 rounded-lg p-1 bg-theme-secondary">
             <button
               onClick={() => onViewModeChange('list')}
-              className="p-2 rounded transition-all duration-200"
-              style={{
-                backgroundColor: viewMode === 'list' ? 'var(--bg-card)' : 'transparent',
-                color: viewMode === 'list' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none'
-              }}
+              className={`p-2 rounded transition-all duration-200 ${
+                viewMode === 'list'
+                  ? 'bg-theme-card text-theme-accent shadow-sm'
+                  : 'bg-transparent text-theme-secondary'
+              }`}
             >
               <FontAwesomeIcon icon={faList} className="w-4 h-4" />
             </button>
             <button
               onClick={() => onViewModeChange('grid')}
-              className="p-2 rounded transition-all duration-200"
-              style={{
-                backgroundColor: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent',
-                color: viewMode === 'grid' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                boxShadow: viewMode === 'grid' ? 'var(--shadow-sm)' : 'none'
-              }}
+              className={`p-2 rounded transition-all duration-200 ${
+                viewMode === 'grid'
+                  ? 'bg-theme-card text-theme-accent shadow-sm'
+                  : 'bg-transparent text-theme-secondary'
+              }`}
             >
               <FontAwesomeIcon icon={faTh} className="w-4 h-4" />
             </button>
@@ -250,7 +223,7 @@ const TransactionFilterToolbar = ({
               (filter.key === 'today' && filters.dateFrom === new Date().toISOString().split('T')[0] && filters.dateTo === new Date().toISOString().split('T')[0]) ||
               (filter.key === 'week' && filters.dateFrom && filters.dateTo && filters.dateFrom !== new Date().toISOString().split('T')[0])
             );
-            
+
             return (
               <Button
                 key={filter.key}
@@ -258,18 +231,16 @@ const TransactionFilterToolbar = ({
                 size="sm"
                 onClick={() => applyQuickFilter(filter.key)}
                 className="text-xs"
-                style={{
-                  color: !isActive && filter.color === 'green' ? 'var(--success)' :
-                         !isActive && filter.color === 'red' ? 'var(--error)' :
-                         !isActive && filter.color === 'blue' ? 'var(--info)' :
-                         !isActive && filter.color === 'purple' ? 'var(--accent-tertiary)' :
-                         undefined,
-                  borderColor: !isActive && filter.color === 'green' ? 'var(--success-border)' :
-                               !isActive && filter.color === 'red' ? 'var(--error-border)' :
-                               !isActive && filter.color === 'blue' ? 'var(--info-border)' :
-                               !isActive && filter.color === 'purple' ? 'var(--accent-tertiary)' :
-                               undefined
-                }}
+                style={!isActive && filter.color ? {
+                  color: filter.color === 'green' ? 'var(--success)' :
+                         filter.color === 'red' ? 'var(--error)' :
+                         filter.color === 'blue' ? 'var(--info)' :
+                         filter.color === 'purple' ? 'var(--accent-tertiary)' : undefined,
+                  borderColor: filter.color === 'green' ? 'var(--success-border)' :
+                               filter.color === 'red' ? 'var(--error-border)' :
+                               filter.color === 'blue' ? 'var(--info-border)' :
+                               filter.color === 'purple' ? 'var(--accent-tertiary)' : undefined
+                } : undefined}
               >
                 {filter.icon && <FontAwesomeIcon icon={filter.icon} className="mr-1" />}
                 {filter.label}
@@ -290,20 +261,8 @@ const TransactionFilterToolbar = ({
             }}>
               {filters.type.charAt(0).toUpperCase() + filters.type.slice(1)}
               <button
-                onClick={() => {
-                  const newFilters = { ...filters, type: 'all' };
-                  onFiltersChange(newFilters);
-                }}
-                className="ml-1 text-xs" 
-                style={{
-                  color: 'var(--text-secondary)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = 'var(--text-primary)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = 'var(--text-secondary)';
-                }}
+                onClick={() => onFiltersChange({ ...filters, type: 'all' })}
+                className="ml-1 text-xs text-theme-secondary"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -321,20 +280,8 @@ const TransactionFilterToolbar = ({
                filters.dateFrom ? `From ${filters.dateFrom}` :
                `To ${filters.dateTo}`}
               <button
-                onClick={() => {
-                  const newFilters = { ...filters, dateFrom: '', dateTo: '' };
-                  onFiltersChange(newFilters);
-                }}
-                className="ml-1 text-xs" 
-                style={{
-                  color: 'var(--text-secondary)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = 'var(--text-primary)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = 'var(--text-secondary)';
-                }}
+                onClick={() => onFiltersChange({ ...filters, dateFrom: '', dateTo: '' })}
+                className="ml-1 text-xs text-theme-secondary"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -349,20 +296,8 @@ const TransactionFilterToolbar = ({
             }}>
               {filters.category}
               <button
-                onClick={() => {
-                  const newFilters = { ...filters, category: 'all' };
-                  onFiltersChange(newFilters);
-                }}
-                className="ml-1 text-xs" 
-                style={{
-                  color: 'var(--text-secondary)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = 'var(--text-primary)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = 'var(--text-secondary)';
-                }}
+                onClick={() => onFiltersChange({ ...filters, category: 'all' })}
+                className="ml-1 text-xs text-theme-secondary"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -374,11 +309,7 @@ const TransactionFilterToolbar = ({
             variant="outline"
             size="sm"
             onClick={() => onFiltersChange({ type: 'all', dateFrom: '', dateTo: '', category: 'all', search: '' })}
-            className="text-xs"
-            style={{
-              color: 'var(--text-secondary)',
-              borderColor: 'var(--border-secondary)'
-            }}
+            className="text-xs text-theme-secondary border-theme-secondary"
           >
             <FontAwesomeIcon icon={faTimes} className="mr-1" />
             Clear All

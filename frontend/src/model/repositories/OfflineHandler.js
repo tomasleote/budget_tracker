@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 /**
  * Offline Mode Handler
  * Manages offline functionality and data synchronization
@@ -23,7 +24,7 @@ class OfflineHandler {
    * Handle online event
    */
   handleOnline() {
-    console.log('🌐 Connection restored');
+    logger.debug('🌐 Connection restored');
     this.isOnline = true;
     this.notifyListeners(true);
     this.processPendingOperations();
@@ -33,7 +34,7 @@ class OfflineHandler {
    * Handle offline event
    */
   handleOffline() {
-    console.log('📵 Connection lost - switching to offline mode');
+    logger.debug('📵 Connection lost - switching to offline mode');
     this.isOnline = false;
     this.notifyListeners(false);
   }
@@ -70,7 +71,7 @@ class OfflineHandler {
     this.pendingOperations.push(queuedOp);
     this.savePendingOperations();
     
-    console.log('📋 Operation queued for sync:', queuedOp);
+    logger.debug('📋 Operation queued for sync:', queuedOp);
     return queuedOp.id;
   }
 
@@ -83,7 +84,7 @@ class OfflineHandler {
       const stored = localStorage.getItem('budget_tracker_pending_operations');
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Error loading pending operations:', error);
+      logger.error('Error loading pending operations:', error);
       return [];
     }
   }
@@ -98,7 +99,7 @@ class OfflineHandler {
         JSON.stringify(this.pendingOperations)
       );
     } catch (error) {
-      console.error('Error saving pending operations:', error);
+      logger.error('Error saving pending operations:', error);
     }
   }
 
@@ -107,11 +108,11 @@ class OfflineHandler {
    */
   async processPendingOperations() {
     if (this.pendingOperations.length === 0) {
-      console.log('✅ No pending operations to sync');
+      logger.debug('✅ No pending operations to sync');
       return;
     }
 
-    console.log(`🔄 Processing ${this.pendingOperations.length} pending operations...`);
+    logger.debug(`🔄 Processing ${this.pendingOperations.length} pending operations...`);
     
     const results = {
       successful: 0,
@@ -126,7 +127,7 @@ class OfflineHandler {
         this.removePendingOperation(operation.id);
         results.successful++;
       } catch (error) {
-        console.error('Failed to process operation:', operation, error);
+        logger.error('Failed to process operation:', operation, error);
         results.failed++;
         results.errors.push({
           operation,
@@ -135,7 +136,7 @@ class OfflineHandler {
       }
     }
 
-    console.log('📊 Sync complete:', results);
+    logger.debug('📊 Sync complete:', results);
     
     // Notify about sync completion
     if (results.failed > 0) {
@@ -288,7 +289,7 @@ class OfflineHandler {
             }
             
             // If offline, queue the operation
-            console.log(`📵 Offline: Queueing ${prop} operation for ${entityType}`);
+            logger.debug(`📵 Offline: Queueing ${prop} operation for ${entityType}`);
             
             const operationData = {
               type: 'repository',

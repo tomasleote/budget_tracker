@@ -67,14 +67,10 @@ const generateDescription = (category, type) => {
  * @returns {Object} - Generated mock data
  */
 export const generateMockData = (months = 4) => {
-  console.log(`🎭 Generating ${months} months of mock financial data...`);
-  
   const transactions = [];
   const budgets = [];
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - months);
-  
-  console.log(`📅 Data generation period: ${startDate.toISOString()} to ${new Date().toISOString()}`);
   
   // Generate transactions for each month INCLUDING current month
   let transactionIdCounter = 0; // Add counter for unique IDs
@@ -98,7 +94,6 @@ export const generateMockData = (months = 4) => {
     }
     
     const daysInPeriod = Math.ceil((monthEnd - monthStart) / (1000 * 60 * 60 * 24));
-    console.log(`📅 Processing month ${monthOffset + 1}/${totalMonthsToGenerate}: ${monthStart.toLocaleDateString()} to ${monthEnd.toLocaleDateString()} (${daysInPeriod} days)`);
     
     let monthTransactionCount = 0;
     
@@ -144,7 +139,6 @@ export const generateMockData = (months = 4) => {
       }
     });
     
-    console.log(`✅ Month ${monthOffset + 1} complete: ${monthTransactionCount} transactions generated`);
   }
   
   // Generate budgets for major expense categories
@@ -179,8 +173,6 @@ export const generateMockData = (months = 4) => {
       
       const currentMonthSpent = currentMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
       
-      console.log(`🎯 Creating budget for ${category}: ${budgetAmount} budget, ${currentMonthSpent} spent this month from ${currentMonthTransactions.length} transactions`);
-      
       budgets.push({
         id: `budget-${category.toLowerCase().replace(' ', '-')}-${Date.now()}`,
         category: category,
@@ -200,9 +192,6 @@ export const generateMockData = (months = 4) => {
   // Sort transactions by date (newest first)
   transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
   
-  console.log(`📋 Transaction generation complete: ${transactions.length} transactions generated`);
-  console.log(`🎯 Budget generation complete: ${budgets.length} budgets generated`);
-  
   // Calculate summary statistics
   const totalIncome = transactions
     .filter(t => t.type === 'income')
@@ -221,8 +210,6 @@ export const generateMockData = (months = 4) => {
     avgMonthlyExpenses: Math.round(totalExpenses / months),
     savingsRate: totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0
   };
-  
-  console.log('📊 Mock Data Generated:', summary);
   
   return {
     transactions,
@@ -245,7 +232,6 @@ export const generateMockData = (months = 4) => {
  */
 export const loadMockDataToStorage = async (months = 4) => {
   // Clear old data first
-  console.log('🧼 Clearing old mock data...');
   clearMockData();
   
   // Small delay to ensure data is cleared
@@ -254,10 +240,6 @@ export const loadMockDataToStorage = async (months = 4) => {
   const mockData = generateMockData(months);
   
   try {
-    console.log('📋 About to save mock data:');
-    console.log(`- ${mockData.transactions.length} transactions`);
-    console.log(`- ${mockData.budgets.length} budgets`);
-    
     // Save transactions first
     localStorage.setItem('budget_tracker_transactions', JSON.stringify(mockData.transactions));
     
@@ -273,14 +255,7 @@ export const loadMockDataToStorage = async (months = 4) => {
     // Verify data was saved
     const savedTransactions = JSON.parse(localStorage.getItem('budget_tracker_transactions') || '[]');
     const savedBudgets = JSON.parse(localStorage.getItem('budget_tracker_budgets') || '[]');
-    console.log(`✅ Verified: ${savedTransactions.length} transactions saved to localStorage`);
-    console.log(`✅ Verified: ${savedBudgets.length} budgets saved to localStorage`);
-    
-    // Debug: Log first few transactions to verify structure
-    if (savedTransactions.length > 0) {
-      console.log('🔍 Sample saved transactions:', savedTransactions.slice(0, 3));
-    }
-    
+
     if (savedTransactions.length === 0) {
       throw new Error('Transaction data was not saved properly!');
     }
@@ -289,13 +264,9 @@ export const loadMockDataToStorage = async (months = 4) => {
       throw new Error('Budget data was not saved properly!');
     }
     
-    console.log('✅ Mock data loaded to localStorage!');
-    console.log(`📈 Generated ${mockData.transactions.length} transactions`);
-    console.log(`🎯 Generated ${mockData.budgets.length} budgets`);
-    
     return mockData;
   } catch (error) {
-    console.error('❌ Error loading mock data:', error);
+    console.error('Error loading mock data:', error);
     throw error;
   }
 };
@@ -320,22 +291,18 @@ export const clearMockData = () => {
     
     keysToRemove.forEach(key => {
       if (localStorage.getItem(key)) {
-        console.log(`🗞️ Removing: ${key}`);
         localStorage.removeItem(key);
       }
     });
-    
+
     // Also check for any other budget_tracker keys that might exist
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('budget_tracker_')) {
-        console.log(`🗞️ Removing additional key: ${key}`);
         localStorage.removeItem(key);
       }
     });
-    
-    console.log('🗑️ Mock data cleared from localStorage');
   } catch (error) {
-    console.error('❌ Error clearing mock data:', error);
+    console.error('Error clearing mock data:', error);
     throw error;
   }
 };

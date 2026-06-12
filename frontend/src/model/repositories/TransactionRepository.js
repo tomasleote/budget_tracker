@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 import BaseRepository from './BaseRepository.js';
 import { Transaction } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
@@ -23,11 +24,11 @@ class TransactionRepository extends BaseRepository {
       const transactions = await super.getAll();
       // Only log in development when debugging storage issues
       if (process.env.NODE_ENV === 'development' && transactions.length === 0) {
-        console.log('⚠️ TransactionRepository found no transactions');
+        logger.debug('⚠️ TransactionRepository found no transactions');
       }
       return transactions;
     } catch (error) {
-      console.error('Error in TransactionRepository.getAll():', error);
+      logger.error('Error in TransactionRepository.getAll():', error);
       return [];
     }
   }
@@ -38,7 +39,7 @@ class TransactionRepository extends BaseRepository {
       return await this.findBy({ type });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting transactions by type:', error);
+        logger.error('Error getting transactions by type:', error);
       }
       return [];
     }
@@ -49,7 +50,7 @@ class TransactionRepository extends BaseRepository {
       return await this.findBy({ category });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting transactions by category:', error);
+        logger.error('Error getting transactions by category:', error);
       }
       return [];
     }
@@ -67,7 +68,7 @@ class TransactionRepository extends BaseRepository {
       });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting transactions by date range:', error);
+        logger.error('Error getting transactions by date range:', error);
       }
       return [];
     }
@@ -83,7 +84,7 @@ class TransactionRepository extends BaseRepository {
       });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting transactions by amount range:', error);
+        logger.error('Error getting transactions by amount range:', error);
       }
       return [];
     }
@@ -96,7 +97,7 @@ class TransactionRepository extends BaseRepository {
       return sortedTransactions.slice(0, limit);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting recent transactions:', error);
+        logger.error('Error getting recent transactions:', error);
       }
       return [];
     }
@@ -160,7 +161,7 @@ class TransactionRepository extends BaseRepository {
       return transactions;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting transactions with filters:', error);
+        logger.error('Error getting transactions with filters:', error);
       }
       return [];
     }
@@ -196,7 +197,7 @@ class TransactionRepository extends BaseRepository {
       return totals;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting totals by type:', error);
+        logger.error('Error getting totals by type:', error);
       }
       return {
         income: 0,
@@ -236,7 +237,7 @@ class TransactionRepository extends BaseRepository {
         .sort((a, b) => b.amount - a.amount);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting totals by category:', error);
+        logger.error('Error getting totals by category:', error);
       }
       return [];
     }
@@ -287,7 +288,7 @@ class TransactionRepository extends BaseRepository {
       return Object.values(monthlyTotals);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting monthly totals:', error);
+        logger.error('Error getting monthly totals:', error);
       }
       return [];
     }
@@ -314,7 +315,7 @@ class TransactionRepository extends BaseRepository {
       });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error finding potential duplicates:', error);
+        logger.error('Error finding potential duplicates:', error);
       }
       return [];
     }
@@ -360,7 +361,7 @@ class TransactionRepository extends BaseRepository {
       };
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error getting statistics:', error);
+        logger.error('Error getting statistics:', error);
       }
       return null;
     }
@@ -381,7 +382,7 @@ class TransactionRepository extends BaseRepository {
         } catch (error) {
           removedCount++;
           if (process.env.NODE_ENV === 'development') {
-            console.warn(`Invalid transaction removed: ${transactionData.id}`, error);
+            logger.warn(`Invalid transaction removed: ${transactionData.id}`, error);
           }
         }
       }
@@ -396,7 +397,7 @@ class TransactionRepository extends BaseRepository {
         removed: removedCount
       };
     } catch (error) {
-      console.error('Error removing invalid transactions:', error);
+      logger.error('Error removing invalid transactions:', error);
       return {
         success: false,
         error: error.message
@@ -432,7 +433,7 @@ class TransactionRepository extends BaseRepository {
       return csvRows.join('\n');
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error exporting transactions to CSV:', error);
+        logger.error('Error exporting transactions to CSV:', error);
       }
       return null;
     }

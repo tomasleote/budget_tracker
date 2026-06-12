@@ -14,3 +14,6 @@ export * from './calculations.js';
 
 // Helper utilities
 export * from './helpers.js';
+
+// Gated logger
+export * from './logger.js';

@@ -225,7 +225,7 @@ const TransactionForm = ({
       className={className}
       title={
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faExchangeAlt} className="text-blue-600" />
+          <FontAwesomeIcon icon={faExchangeAlt} className="text-theme-accent" />
           <span>{isEditing ? 'Edit Transaction' : 'Add New Transaction'}</span>
         </div>
       }
@@ -243,7 +243,7 @@ const TransactionForm = ({
 
         {/* Transaction Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-theme-primary mb-3">
             Transaction Type <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -253,7 +253,7 @@ const TransactionForm = ({
               className={`p-4 rounded-lg border-2 transition-colors ${
                 formData.type === 'income'
                   ? 'border-green-500 bg-green-50 text-green-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  : 'border-theme-primary bg-theme-primary text-theme-secondary'
               }`}
             >
               <div className="text-center">
@@ -273,7 +273,7 @@ const TransactionForm = ({
               className={`p-4 rounded-lg border-2 transition-colors ${
                 formData.type === 'expense'
                   ? 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  : 'border-theme-primary bg-theme-primary text-theme-secondary'
               }`}
             >
               <div className="text-center">
@@ -318,19 +318,19 @@ const TransactionForm = ({
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-theme-primary mb-2">
             Category <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <FontAwesomeIcon 
               icon={faTag} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary w-4 h-4"
             />
             <select
               value={formData.categoryId} // Changed from 'category' to 'categoryId'
               onChange={(e) => handleInputChange('categoryId', e.target.value)} // Changed field name
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                errors.categoryId ? 'border-red-500' : 'border-gray-300' // Changed error field
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg input-theme ${
+                errors.categoryId ? 'input-error' : ''
               }`}
               required
             >
@@ -360,7 +360,7 @@ const TransactionForm = ({
         />
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-theme-primary">
           <Button
             type="button"
             variant="outline"

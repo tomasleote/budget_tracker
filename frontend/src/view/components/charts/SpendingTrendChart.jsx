@@ -34,38 +34,21 @@ const SpendingTrendChart = ({
 
   // Process transaction data for trend chart
   const chartData = useMemo(() => {
-    console.log('🔍 DEBUG - SpendingTrendChart processing:', {
-      transactionCount: transactions?.length || 0,
-      dateRange,
-      customStartDate,
-      customEndDate,
-      sampleTransaction: transactions?.[0]
-    });
-    
     if (!transactions || transactions.length === 0) {
-      console.log('  - No transactions provided to chart');
       return [];
     }
 
     // FIX BUG #2: Use custom dates if provided, otherwise use dateRange
     let startDate, endDate;
-    
+
     if (customStartDate && customEndDate) {
       startDate = new Date(customStartDate);
       endDate = new Date(customEndDate);
-      console.log('  - Using CUSTOM date range (last full month):', {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0]
-      });
     } else {
       // Fallback to dateRange logic
       endDate = new Date();
       startDate = new Date();
       startDate.setDate(endDate.getDate() - dateRange);
-      console.log('  - Using dateRange logic (last', dateRange, 'days):', {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0]
-      });
     }
     
     // Filter transactions to date range - STRICT filtering by date

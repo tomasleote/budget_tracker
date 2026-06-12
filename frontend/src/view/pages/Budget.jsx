@@ -170,18 +170,15 @@ const Budget = () => {
   const handleCompleteReset = async () => {
     if (process.env.NODE_ENV === 'development') {
       try {
-        console.log('🧼 Performing complete reset...');
-        
         // Clear all localStorage data
         clearMockData();
-        
+
         // Wait a bit
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log('✅ Complete reset done! Refreshing page...');
+
         window.location.reload();
       } catch (error) {
-        console.error('❌ Error during reset:', error);
+        console.error('Error during reset:', error);
         alert('Error during reset. Check console for details.');
       }
     }
@@ -191,28 +188,23 @@ const Budget = () => {
   const handleRegenerateMockData = async () => {
     if (process.env.NODE_ENV === 'development') {
       try {
-        console.log('🔄 Regenerating mock data with fixed budget dates...');
-        
         // First clear everything
         clearMockData();
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Generate new data
         await loadMockDataToStorage(4);
-        
+
         // Trigger custom events to refresh all providers
-        console.log('🔄 Triggering data refresh events...');
         window.dispatchEvent(new CustomEvent('refreshTransactions'));
         window.dispatchEvent(new CustomEvent('refreshBudgets'));
-        
-        console.log('✅ Mock data regenerated! Data should refresh automatically.');
-        
+
         // Force reload the current page data
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       } catch (error) {
-        console.error('❌ Error regenerating mock data:', error);
+        console.error('Error regenerating mock data:', error);
         alert('Error regenerating mock data. Check console for details.');
       }
     }
@@ -226,23 +218,19 @@ const Budget = () => {
   ];
 
   return (
-    <div className="min-h-screen transition-colors duration-300" style={{
-      backgroundColor: 'var(--bg-primary)'
-    }}>
+    <div className="min-h-screen bg-theme-primary transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
-                <FontAwesomeIcon 
-                  icon={faWallet} 
-                  className="text-xl" 
+                <FontAwesomeIcon
+                  icon={faWallet}
+                  className="text-xl"
                   style={{ color: 'var(--accent-primary)' }}
                 />
-                <h1 className="text-2xl lg:text-3xl font-bold" style={{
-                  color: 'var(--text-primary)'
-                }}>
+                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">
                   Budget Management
                 </h1>
                 {hasAlerts && (
@@ -254,9 +242,7 @@ const Budget = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm lg:text-base" style={{
-                color: 'var(--text-secondary)'
-              }}>
+              <p className="text-sm lg:text-base text-theme-secondary">
                 Create and track budgets to stay on top of your spending
               </p>
             </div>
@@ -420,12 +406,12 @@ const Budget = () => {
                 }}
                 onMouseEnter={(e) => {
                   if (viewMode !== mode.key) {
-                    e.target.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (viewMode !== mode.key) {
-                    e.target.style.color = 'var(--text-secondary)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
                   }
                 }}
               >

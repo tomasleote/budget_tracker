@@ -5,6 +5,7 @@
  */
 
 import { repositories } from '../repositories/RepositoryFactory.js';
+import { logger } from '../../controller/utils/logger.js';
 
 // Default expense categories
 const DEFAULT_EXPENSE_CATEGORIES = [
@@ -196,47 +197,45 @@ const DEFAULT_INCOME_CATEGORIES = [
  */
 export const initializeDefaultData = async () => {
   try {
-    console.log('🔄 Checking if default data needs to be initialized...');
-    
     // Check if categories already exist
     const categoryRepo = repositories.categories;
     const existingCategories = await categoryRepo.getAll();
-    
+
     if (existingCategories && existingCategories.length > 0) {
-      console.log('✅ Categories already exist. Skipping initialization.');
+      logger.debug('Categories already exist. Skipping initialization.');
       return true;
     }
-    
-    console.log('🌱 Seeding default categories...');
-    
+
+    logger.debug('Seeding default categories...');
+
     // Create all default categories
     const allDefaultCategories = [
       ...DEFAULT_EXPENSE_CATEGORIES,
       ...DEFAULT_INCOME_CATEGORIES
     ];
-    
+
     let successCount = 0;
     let failCount = 0;
-    
+
     for (const categoryData of allDefaultCategories) {
       try {
         await categoryRepo.create(categoryData);
         successCount++;
       } catch (error) {
-        console.error(`❌ Failed to create category ${categoryData.name}:`, error);
+        logger.error(`Failed to create category ${categoryData.name}:`, error);
         failCount++;
       }
     }
-    
-    console.log(`✅ Default data initialization complete: ${successCount} categories created, ${failCount} failed`);
-    
+
+    logger.debug(`Default data initialization complete: ${successCount} created, ${failCount} failed`);
+
     // Mark initialization as complete in localStorage
     localStorage.setItem('budget_tracker_initialized', 'true');
     localStorage.setItem('budget_tracker_init_date', new Date().toISOString());
-    
+
     return failCount === 0;
   } catch (error) {
-    console.error('❌ Failed to initialize default data:', error);
+    logger.error('Failed to initialize default data:', error);
     return false;
   }
 };
@@ -255,38 +254,38 @@ export const isAppInitialized = () => {
  */
 export const resetAllData = async () => {
   try {
-    console.log('🔄 Resetting all data...');
-    
+    logger.debug('Resetting all data...');
+
     // Clear all repositories
     const categoryRepo = repositories.categories;
     const transactionRepo = repositories.transactions;
     const budgetRepo = repositories.budgets;
-    
+
     const allCategories = await categoryRepo.getAll();
     const allTransactions = await transactionRepo.getAll();
     const allBudgets = await budgetRepo.getAll();
-    
+
     // Delete all items
     for (const category of allCategories) {
       await categoryRepo.delete(category.id);
     }
-    
+
     for (const transaction of allTransactions) {
       await transactionRepo.delete(transaction.id);
     }
-    
+
     for (const budget of allBudgets) {
       await budgetRepo.delete(budget.id);
     }
-    
+
     // Clear initialization flags
     localStorage.removeItem('budget_tracker_initialized');
     localStorage.removeItem('budget_tracker_init_date');
-    
-    console.log('✅ All data reset successfully');
+
+    logger.debug('All data reset successfully');
     return true;
   } catch (error) {
-    console.error('❌ Failed to reset data:', error);
+    logger.error('Failed to reset data:', error);
     return false;
   }
 };

@@ -218,15 +218,10 @@ export const useTransactions = () => {
       );
     },
     
-    // Filter helpers
-    filterByCategory: () => {},
-    filterByType: () => {},
-    filterByDateRange: () => {},
-    setFilter: () => {},
-    setFilters: () => {},
-    resetFilters: () => {},
-    sortTransactions: () => {},
-    
+    // NOTE: view-level filtering lives in the Transactions page (localFilters) and
+    // TransactionFilterToolbar. The hook intentionally exposes no filter setters
+    // rather than no-op stubs that silently do nothing.
+
     // Computed values
     totalIncome: summary.income,
     totalExpenses: summary.expenses,

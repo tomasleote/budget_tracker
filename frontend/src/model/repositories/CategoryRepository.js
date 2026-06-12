@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 import BaseRepository from './BaseRepository.js';
 import { Category } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
@@ -12,7 +13,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ type });
     } catch (error) {
-      console.error('Error getting categories by type:', error);
+      logger.error('Error getting categories by type:', error);
       return [];
     }
   }
@@ -21,7 +22,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.getByType('income');
     } catch (error) {
-      console.error('Error getting income categories:', error);
+      logger.error('Error getting income categories:', error);
       return [];
     }
   }
@@ -30,7 +31,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.getByType('expense');
     } catch (error) {
-      console.error('Error getting expense categories:', error);
+      logger.error('Error getting expense categories:', error);
       return [];
     }
   }
@@ -39,7 +40,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ isActive: true });
     } catch (error) {
-      console.error('Error getting active categories:', error);
+      logger.error('Error getting active categories:', error);
       return [];
     }
   }
@@ -48,7 +49,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ isActive: false });
     } catch (error) {
-      console.error('Error getting inactive categories:', error);
+      logger.error('Error getting inactive categories:', error);
       return [];
     }
   }
@@ -57,7 +58,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ isDefault: true });
     } catch (error) {
-      console.error('Error getting default categories:', error);
+      logger.error('Error getting default categories:', error);
       return [];
     }
   }
@@ -66,7 +67,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ isDefault: false });
     } catch (error) {
-      console.error('Error getting custom categories:', error);
+      logger.error('Error getting custom categories:', error);
       return [];
     }
   }
@@ -76,7 +77,7 @@ class CategoryRepository extends BaseRepository {
       const allCategories = await this.getAll();
       return allCategories.filter(category => category.parentId === null);
     } catch (error) {
-      console.error('Error getting parent categories:', error);
+      logger.error('Error getting parent categories:', error);
       return [];
     }
   }
@@ -85,7 +86,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.findBy({ parentId });
     } catch (error) {
-      console.error('Error getting subcategories:', error);
+      logger.error('Error getting subcategories:', error);
       return [];
     }
   }
@@ -95,7 +96,7 @@ class CategoryRepository extends BaseRepository {
     try {
       return await this.update(categoryId, { isActive: true });
     } catch (error) {
-      console.error('Error activating category:', error);
+      logger.error('Error activating category:', error);
       return {
         success: false,
         error: error.message
@@ -116,7 +117,7 @@ class CategoryRepository extends BaseRepository {
 
       return await this.update(categoryId, { isActive: false });
     } catch (error) {
-      console.error('Error deactivating category:', error);
+      logger.error('Error deactivating category:', error);
       return {
         success: false,
         error: error.message
@@ -133,7 +134,7 @@ class CategoryRepository extends BaseRepository {
 
       return await this.update(categoryId, { color });
     } catch (error) {
-      console.error('Error updating category color:', error);
+      logger.error('Error updating category color:', error);
       return {
         success: false,
         error: error.message
@@ -149,7 +150,7 @@ class CategoryRepository extends BaseRepository {
 
       return await this.update(categoryId, { icon: icon.trim() });
     } catch (error) {
-      console.error('Error updating category icon:', error);
+      logger.error('Error updating category icon:', error);
       return {
         success: false,
         error: error.message
@@ -224,7 +225,7 @@ class CategoryRepository extends BaseRepository {
 
       return categories;
     } catch (error) {
-      console.error('Error getting categories with filters:', error);
+      logger.error('Error getting categories with filters:', error);
       return [];
     }
   }
@@ -273,7 +274,7 @@ class CategoryRepository extends BaseRepository {
 
       return stats;
     } catch (error) {
-      console.error('Error getting category stats:', error);
+      logger.error('Error getting category stats:', error);
       return {
         total: 0,
         active: 0,
@@ -303,7 +304,7 @@ class CategoryRepository extends BaseRepository {
         .map(([color, count]) => ({ color, count }))
         .sort((a, b) => b.count - a.count);
     } catch (error) {
-      console.error('Error getting color distribution:', error);
+      logger.error('Error getting color distribution:', error);
       return [];
     }
   }
@@ -323,7 +324,7 @@ class CategoryRepository extends BaseRepository {
         .map(([icon, count]) => ({ icon, count }))
         .sort((a, b) => b.count - a.count);
     } catch (error) {
-      console.error('Error getting icon distribution:', error);
+      logger.error('Error getting icon distribution:', error);
       return [];
     }
   }
@@ -347,7 +348,7 @@ class CategoryRepository extends BaseRepository {
 
       return hierarchy;
     } catch (error) {
-      console.error('Error getting category hierarchy:', error);
+      logger.error('Error getting category hierarchy:', error);
       return [];
     }
   }
@@ -370,7 +371,7 @@ class CategoryRepository extends BaseRepository {
 
       return await this.update(categoryId, { parentId: newParentId });
     } catch (error) {
-      console.error('Error moving category to parent:', error);
+      logger.error('Error moving category to parent:', error);
       return {
         success: false,
         error: error.message
@@ -403,7 +404,7 @@ class CategoryRepository extends BaseRepository {
         errors: results.results.filter(r => !r.success)
       };
     } catch (error) {
-      console.error('Error initializing default categories:', error);
+      logger.error('Error initializing default categories:', error);
       return {
         success: false,
         error: error.message
@@ -424,7 +425,7 @@ class CategoryRepository extends BaseRepository {
       // Re-create default categories
       return await this.initializeDefaultCategories();
     } catch (error) {
-      console.error('Error resetting default categories:', error);
+      logger.error('Error resetting default categories:', error);
       return {
         success: false,
         error: error.message
@@ -442,7 +443,7 @@ class CategoryRepository extends BaseRepository {
         !category.isDefault && !usedCategoryNames.has(category.name)
       );
     } catch (error) {
-      console.error('Error finding unused categories:', error);
+      logger.error('Error finding unused categories:', error);
       return [];
     }
   }
@@ -478,7 +479,7 @@ class CategoryRepository extends BaseRepository {
         errors
       };
     } catch (error) {
-      console.error('Error validating category hierarchy:', error);
+      logger.error('Error validating category hierarchy:', error);
       return {
         total: 0,
         valid: 0,
@@ -499,7 +500,7 @@ class CategoryRepository extends BaseRepository {
         searchTerm.includes(category.name.toLowerCase())
       ).slice(0, 5); // Limit to 5 suggestions
     } catch (error) {
-      console.error('Error suggesting similar categories:', error);
+      logger.error('Error suggesting similar categories:', error);
       return [];
     }
   }
@@ -534,7 +535,7 @@ class CategoryRepository extends BaseRepository {
 
       return csvRows.join('\n');
     } catch (error) {
-      console.error('Error exporting categories to CSV:', error);
+      logger.error('Error exporting categories to CSV:', error);
       return null;
     }
   }

@@ -26,10 +26,9 @@ export const setupRequestInterceptor = (axiosInstance) => {
       
       // Log request in development
       if (process.env.NODE_ENV === 'development') {
-        console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
           params: config.params,
           data: config.data,
-          headers: config.headers,
         });
       }
       
@@ -57,16 +56,15 @@ export const setupResponseInterceptor = (axiosInstance) => {
       
       // Log response in development
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        console.log(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
           status: response.status,
           duration: `${duration}ms`,
-          data: response.data,
         });
       }
-      
+
       // Add performance warning for slow requests
       if (duration > 5000) {
-        console.warn(`⚠️ Slow API request detected: ${response.config.url} took ${duration}ms`);
+        console.warn(`Slow API request: ${response.config.url} took ${duration}ms`);
       }
       
       // Handle different response formats
@@ -101,10 +99,9 @@ export const setupResponseInterceptor = (axiosInstance) => {
       
       // Log error in development
       if (process.env.NODE_ENV === 'development') {
-        console.error(`❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}`, {
+        console.error(`API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}`, {
           status: error.response?.status,
           message: error.message,
-          data: error.response?.data,
         });
       }
       
@@ -131,7 +128,7 @@ export const setupResponseInterceptor = (axiosInstance) => {
         // Calculate delay with exponential backoff
         const delay = calculateRetryDelay(originalRequest._retryCount);
         
-        console.log(`🔄 Retrying request ${originalRequest.url} (attempt ${originalRequest._retryCount}/${API_CONFIG.RETRY.MAX_RETRIES}) after ${delay}ms`);
+        console.log(`Retrying request ${originalRequest.url} (attempt ${originalRequest._retryCount}/${API_CONFIG.RETRY.MAX_RETRIES}) after ${delay}ms`);
         
         return new Promise(resolve => {
           setTimeout(() => {

@@ -228,6 +228,58 @@
   border-color: var(--accent-secondary-hover);
 }
 
+.btn-theme-outline {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.btn-theme-outline:hover {
+  background-color: var(--bg-hover);
+}
+
+.btn-theme-ghost {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+.btn-theme-ghost:hover {
+  background-color: var(--bg-hover);
+}
+
+.btn-theme-danger {
+  background-color: var(--error);
+  color: var(--text-inverse);
+  border-color: var(--error);
+}
+
+.btn-theme-danger:hover {
+  background-color: var(--accent-tertiary-hover);
+  border-color: var(--accent-tertiary-hover);
+}
+
+.btn-theme-warning {
+  background-color: var(--warning);
+  color: var(--text-inverse);
+  border-color: var(--warning);
+}
+
+.btn-theme-warning:hover {
+  filter: brightness(0.95);
+}
+
+.btn-theme-success {
+  background-color: var(--success);
+  color: var(--text-inverse);
+  border-color: var(--success);
+}
+
+.btn-theme-success:hover {
+  background-color: var(--accent-secondary-hover);
+  border-color: var(--accent-secondary-hover);
+}
+
 /* Card theme styling */
 .card-theme {
   background-color: var(--bg-card);
@@ -257,11 +309,42 @@
 
 .input-theme:focus {
   border-color: var(--border-focus);
+  outline: none;
   box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
 }
 
 .input-theme::placeholder {
   color: var(--text-tertiary);
+}
+
+.input-theme:disabled,
+.input-theme.input-disabled {
+  background-color: var(--bg-tertiary);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-theme.input-error {
+  border-color: var(--error);
+}
+
+.input-theme.input-error:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.1);
+}
+
+/* Status text helpers */
+.text-theme-error {
+  color: var(--error);
+}
+
+.text-theme-accent {
+  color: var(--accent-primary);
+}
+
+/* Hover surface helper (for nav/menu rows outside the sidebar) */
+.hover-bg-theme:hover {
+  background-color: var(--bg-hover);
 }
 
 /* Sidebar theme styling */
@@ -310,6 +393,20 @@
 
 .sidebar-theme .nav-item.active .nav-icon {
   color: var(--sidebar-icon-active);
+}
+
+/* Sidebar nav item secondary description text */
+.sidebar-theme .nav-item .nav-desc {
+  color: var(--sidebar-text-muted);
+}
+
+.sidebar-theme .nav-item.active .nav-desc {
+  color: var(--sidebar-text-active);
+}
+
+/* Sidebar dividers (brand has its own border-bottom rule below) */
+.sidebar-theme .sidebar-divider-t {
+  border-top: 1px solid var(--sidebar-border);
 }
 
 /* Sidebar brand/logo styling */

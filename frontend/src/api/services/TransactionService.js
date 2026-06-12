@@ -59,9 +59,7 @@ class TransactionService extends BaseApiService {
     );
 
     const response = await this.getAll(queryParams);
-    
-    console.log('🔍 DEBUG - TransactionService raw response:', response);
-    
+
     // Transform response based on the format returned by interceptor
     if (response && typeof response === 'object') {
       if (Array.isArray(response)) {
@@ -88,7 +86,6 @@ class TransactionService extends BaseApiService {
       }
     }
     
-    console.log('❌ DEBUG - TransactionService: Unknown response format:', response);
     return { data: [], pagination: { page: 1, limit: 0, total: 0 } };
   }
 

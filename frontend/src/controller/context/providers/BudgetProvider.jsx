@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { repositories } from '../../../model/repositories/RepositoryFactory.js';
 
@@ -64,7 +65,7 @@ export const BudgetProvider = ({ children }) => {
         throw new Error('Failed to load budgets - invalid response format');
       }
     } catch (err) {
-      console.error('Failed to load budgets:', err);
+      logger.error('Failed to load budgets:', err);
       setError(err.message || 'Failed to load budgets');
       setBudgets([]);
     } finally {
@@ -89,7 +90,7 @@ export const BudgetProvider = ({ children }) => {
       
       setBudgetSummary(summary);
     } catch (err) {
-      console.error('Failed to calculate budget summary:', err);
+      logger.error('Failed to calculate budget summary:', err);
     }
   }, [budgets]);
 
@@ -110,7 +111,7 @@ export const BudgetProvider = ({ children }) => {
       
       setBudgetAlerts(alerts);
     } catch (err) {
-      console.error('Failed to load budget alerts:', err);
+      logger.error('Failed to load budget alerts:', err);
     }
   }, [budgets]);
 
@@ -141,7 +142,7 @@ export const BudgetProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to create budget');
       }
     } catch (err) {
-      console.error('Failed to create budget:', err);
+      logger.error('Failed to create budget:', err);
       setError(err.message || 'Failed to create budget');
       return { success: false, error: err.message };
     } finally {
@@ -172,7 +173,7 @@ export const BudgetProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to update budget');
       }
     } catch (err) {
-      console.error('Failed to update budget:', err);
+      logger.error('Failed to update budget:', err);
       setError(err.message || 'Failed to update budget');
       return { success: false, error: err.message };
     } finally {
@@ -202,7 +203,7 @@ export const BudgetProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to delete budget');
       }
     } catch (err) {
-      console.error('Failed to delete budget:', err);
+      logger.error('Failed to delete budget:', err);
       setError(err.message || 'Failed to delete budget');
       return { success: false, error: err.message };
     } finally {

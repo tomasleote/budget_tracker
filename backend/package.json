@@ -43,7 +43,7 @@
     "supabase",
     "postgresql"
   ],
-  "author": "Your Name",
+  "author": "Tomas Leote",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",

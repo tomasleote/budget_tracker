@@ -38,20 +38,20 @@ const ProgressBar = ({
       {(showLabel || showPercentage) && (
         <div className="flex justify-between items-center mb-2">
           {showLabel && (
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-theme-primary">
               {label}
             </span>
           )}
           {showPercentage && (
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-theme-secondary">
               {Math.round(percentage)}%
             </span>
           )}
         </div>
       )}
-      
+
       {/* Progress Bar Container */}
-      <div className={`w-full bg-gray-200 rounded-full overflow-hidden ${sizes[size]}`}>
+      <div className={`w-full bg-theme-tertiary rounded-full overflow-hidden ${sizes[size]}`}>
         {/* Progress Bar Fill */}
         <div
           className={`
@@ -66,7 +66,7 @@ const ProgressBar = ({
       
       {/* Value Display */}
       {value !== undefined && max !== undefined && !showPercentage && (
-        <div className="flex justify-between text-xs text-gray-600 mt-1">
+        <div className="flex justify-between text-xs text-theme-secondary mt-1">
           <span>{value}</span>
           <span>{max}</span>
         </div>

@@ -75,61 +75,36 @@ const GlobalErrorBoundary = ({
       level="page"
       onError={handleGlobalError}
       fallback={({ error, onRetry, onReload, onGoHome }) => (
-        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <div className="min-h-screen flex items-center justify-center bg-theme-secondary">
           <div className="max-w-lg w-full mx-4 text-center">
-            <div className="rounded-lg p-8" style={{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-lg)' }}>
+            <div className="card-theme border rounded-lg p-8">
               <div className="text-6xl mb-6">💥</div>
-              <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-2xl font-bold mb-4 text-theme-primary">
                 Application Error
               </h1>
-              <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
+              <p className="mb-6 text-theme-secondary">
                 The application encountered a critical error. We apologize for the inconvenience.
               </p>
               <div className="space-y-3">
                 <button
                   onClick={onRetry}
-                  className="w-full py-2 px-4 rounded-lg transition-colors"
-                  style={{
-                    backgroundColor: 'var(--accent-primary)',
-                    color: 'var(--text-inverse)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'var(--accent-primary-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'var(--accent-primary)';
-                  }}
+                  className="btn-theme-primary w-full py-2 px-4 rounded-lg border transition-colors"
                 >
                   Try Again
                 </button>
                 <button
                   onClick={onReload}
-                  className="w-full py-2 px-4 rounded-lg transition-colors"
-                  style={{
-                    backgroundColor: 'var(--bg-tertiary)',
-                    color: 'var(--text-primary)',
-                    borderWidth: '1px',
-                    borderColor: 'var(--border-primary)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'var(--bg-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'var(--bg-tertiary)';
-                  }}
+                  className="btn-theme-outline w-full py-2 px-4 rounded-lg border transition-colors"
                 >
                   Reload Application
                 </button>
               </div>
               {process.env.NODE_ENV === 'development' && (
                 <details className="mt-6 text-left">
-                  <summary className="cursor-pointer text-sm hover:opacity-80" style={{ color: 'var(--text-tertiary)' }}>
+                  <summary className="cursor-pointer text-sm hover:opacity-80 text-theme-tertiary">
                     Error Details (Development)
                   </summary>
-                  <pre className="mt-2 p-3 rounded text-xs overflow-auto" style={{
-                    backgroundColor: 'var(--bg-tertiary)',
-                    color: 'var(--text-primary)'
-                  }}>
+                  <pre className="mt-2 p-3 rounded text-xs overflow-auto bg-theme-tertiary text-theme-primary">
                     {error?.toString()}
                   </pre>
                 </details>

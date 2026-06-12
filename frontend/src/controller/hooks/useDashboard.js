@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useTransactionContext } from '../context/providers/TransactionProvider.jsx';
 import { useBudgetContext } from '../context/providers/BudgetProvider.jsx';
 import { useCategoryContext } from '../context/providers/CategoryProvider.jsx';
@@ -8,6 +8,7 @@ import {
   formatDate,
   formatPercentage
 } from '../utils/index.js';
+import { logger } from '../utils/logger.js';
 import { faChartLine } from '@fortawesome/free-solid-svg-icons';
 
 // Safe fallback functions for missing utilities
@@ -15,9 +16,7 @@ const safeExecute = (fn, fallback) => {
   try {
     return fn();
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Safe execute error:', error);
-    }
+    logger.warn('Safe execute error:', error);
     return fallback;
   }
 };
@@ -26,9 +25,7 @@ const asyncSafeExecute = async (fn, fallback) => {
   try {
     return await fn();
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Async safe execute error:', error);
-    }
+    logger.warn('Async safe execute error:', error);
     return fallback;
   }
 };
@@ -55,12 +52,12 @@ const calculateLast30DaysBalance = (transactions = []) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   const last30DaysTransactions = transactions.filter(t => {
     const transactionDate = new Date(t.date);
     return transactionDate >= thirtyDaysAgo && transactionDate <= now;
   });
-  
+
   return calculateBalance(last30DaysTransactions);
 };
 
@@ -68,35 +65,26 @@ const calculateLast30DaysBalance = (transactions = []) => {
 // Today = Nov 5, 2025 → Last full month = October 2025 (Oct 1 - Oct 31)
 const calculateLastFullMonthBalance = (transactions = []) => {
   const now = new Date();
-  
+
   // Get the first day of the current month
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  
+
   // Get the last full month by going back one month from current month start
   const lastFullMonthStart = new Date(currentMonthStart);
   lastFullMonthStart.setMonth(lastFullMonthStart.getMonth() - 1);
-  
+
   // Get the last day of the last full month (one day before current month starts)
   const lastFullMonthEnd = new Date(currentMonthStart);
   lastFullMonthEnd.setDate(lastFullMonthEnd.getDate() - 1);
   lastFullMonthEnd.setHours(23, 59, 59, 999);
-  
-  console.log('📅 Last Full Month Calculation:', {
-    today: now.toISOString().split('T')[0],
-    lastFullMonthStart: lastFullMonthStart.toISOString().split('T')[0],
-    lastFullMonthEnd: lastFullMonthEnd.toISOString().split('T')[0],
-    monthName: lastFullMonthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  });
-  
+
   const lastFullMonthTransactions = transactions.filter(t => {
     const transactionDate = new Date(t.date);
     return transactionDate >= lastFullMonthStart && transactionDate <= lastFullMonthEnd;
   });
-  
-  console.log(`  - Filtered ${lastFullMonthTransactions.length} transactions for last full month`);
-  
+
   const balance = calculateBalance(lastFullMonthTransactions);
-  
+
   return {
     ...balance,
     monthName: lastFullMonthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
@@ -114,37 +102,28 @@ const getLastFullMonthName = () => {
 
 const calculateSpendingByCategory = (transactions = [], type = 'expense') => {
   const categoryMap = {};
-  console.log('🔍 DEBUG - calculateSpendingByCategory input:', { transactionCount: transactions.length, type });
-  
+
   transactions
     .filter(t => t.type === type)
     .forEach(t => {
       // Try different ways to get category identifier
       const category = t.category?.name || t.category?.id || t.categoryId || t.category_id || t.category || 'Other';
-      
-      console.log(`  - Transaction ${t.id}: category = '${category}', raw category data:`, {
-        't.category': t.category,
-        't.categoryId': t.categoryId,
-        't.category_id': t.category_id,
-        'extracted': category
-      });
-      
+
       if (!categoryMap[category]) {
         categoryMap[category] = { amount: 0, count: 0 };
       }
       categoryMap[category].amount += (t.amount || 0);
       categoryMap[category].count += 1;
     });
-  
+
   const result = Object.entries(categoryMap)
-    .map(([category, data]) => ({ 
-      category, 
-      amount: data.amount, 
-      transactionCount: data.count 
+    .map(([category, data]) => ({
+      category,
+      amount: data.amount,
+      transactionCount: data.count
     }))
     .sort((a, b) => b.amount - a.amount);
-    
-  console.log('  - Final category breakdown result:', result);
+
   return result;
 };
 
@@ -162,11 +141,6 @@ export const useDashboard = () => {
   // Calculate financial summary
   const summary = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      console.log('🔍 DEBUG - Dashboard summary calculation:');
-      console.log('  - Total transactions: 0');
-      console.log('  - All-time balance: {income: 0, expenses: 0, balance: 0}');
-      console.log('  - Last full month balance: {income: 0, expenses: 0, balance: 0}');
-      
       return {
         totalTransactions: 0,
         totalBudgets: budgets?.length || 0,
@@ -191,15 +165,10 @@ export const useDashboard = () => {
 
     const allTimeBalance = calculateBalance(transactions);
     const lastFullMonthBalance = calculateLastFullMonthBalance(transactions);
-    
-    console.log('🔍 DEBUG - Dashboard summary calculation:');
-    console.log('  - Total transactions:', transactions.length);
-    console.log('  - All-time balance:', allTimeBalance);
-    console.log('  - Last full month balance:', lastFullMonthBalance);
 
     // Calculate savings rate based on last full month
-    const savingsRate = lastFullMonthBalance.income > 0 
-      ? ((lastFullMonthBalance.income - lastFullMonthBalance.expenses) / lastFullMonthBalance.income) * 100 
+    const savingsRate = lastFullMonthBalance.income > 0
+      ? ((lastFullMonthBalance.income - lastFullMonthBalance.expenses) / lastFullMonthBalance.income) * 100
       : 0;
 
     return {
@@ -230,15 +199,8 @@ export const useDashboard = () => {
   // Recent activity calculation - Recent 5 transactions
   const recentActivity = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      console.log('🔍 DEBUG - Recent activity processing:');
-      console.log('  - Recent transactions count: 0');
-      console.log('  - Sample recent transaction: undefined');
       return [];
     }
-
-    console.log('🔍 DEBUG - Recent activity processing:');
-    console.log('  - Recent transactions count:', transactions.length);
-    console.log('  - Sample recent transaction:', transactions[0]);
 
     // Sort by date descending and take first 5
     const sortedTransactions = [...transactions]
@@ -248,21 +210,14 @@ export const useDashboard = () => {
     // Enrich with category information
     return sortedTransactions.map(transaction => {
       const categoryInfo = getCategoryById ? getCategoryById(transaction.categoryId || transaction.category_id) : null;
-      
-      console.log(`  - Processing recent transaction ${transaction.id}:`, {
-        categoryId: transaction.categoryId,
-        category_id: transaction.category_id,
-        category: transaction.category,
-        foundCategory: categoryInfo
-      });
-      
+
       return {
         ...transaction,
-        categoryInfo: categoryInfo || { 
-          id: transaction.categoryId || transaction.category_id || 'unknown', 
-          name: 'Other', 
-          icon: 'circle', 
-          color: '#6B7280' 
+        categoryInfo: categoryInfo || {
+          id: transaction.categoryId || transaction.category_id || 'unknown',
+          name: 'Other',
+          icon: 'circle',
+          color: '#6B7280'
         }
       };
     });
@@ -271,19 +226,9 @@ export const useDashboard = () => {
   // Category breakdown analysis - FIX BUG #2: Filter by last full month
   const categoryBreakdown = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      console.log('🔍 DEBUG - Category breakdown detailed analysis:');
-      console.log('  - Total transactions: 0');
-      console.log('  - Sample transaction: undefined');
-      console.log('  - Transaction categories: []');
-      console.log('  - Total expenses for breakdown: 0');
-      console.log('  - Category breakdown data: []');
       return [];
     }
 
-    console.log('🔍 DEBUG - Category breakdown detailed analysis:');
-    console.log('  - Total transactions:', transactions.length);
-    console.log('  - Sample transaction:', transactions[0]);
-    
     // FIX BUG #2: Filter transactions to last full month only
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -292,44 +237,26 @@ export const useDashboard = () => {
     const lastFullMonthEnd = new Date(currentMonthStart);
     lastFullMonthEnd.setDate(lastFullMonthEnd.getDate() - 1);
     lastFullMonthEnd.setHours(23, 59, 59, 999);
-    
+
     const lastMonthTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
       return transactionDate >= lastFullMonthStart && transactionDate <= lastFullMonthEnd;
     });
-    
-    console.log(`  - Filtered to ${lastMonthTransactions.length} transactions for ${getLastFullMonthName()}`);
-    console.log('  - Transaction categories:', lastMonthTransactions.map(t => ({
-      id: t.id,
-      categoryId: t.categoryId,
-      category_id: t.category_id,
-      category: t.category
-    })));
 
     const expenseBreakdown = calculateSpendingByCategory(lastMonthTransactions, 'expense');
-    
-    const totalExpenses = expenseBreakdown.reduce((sum, item) => sum + item.amount, 0);
-    console.log('  - Total expenses for breakdown:', totalExpenses);
-    console.log('  - Category breakdown data:', expenseBreakdown);
-    
+
     // Map category IDs to category objects with full information
     const enrichedBreakdown = expenseBreakdown.map(item => {
       // Try to find the category by ID first, then by name
       const categoryInfo = getCategoryById ? getCategoryById(item.category) : null;
-      
-      console.log(`  - Processing category '${item.category}':`, {
-        categoryInfo,
-        originalCategory: item,
-        getCategoryById: typeof getCategoryById
-      });
-      
+
       return {
         ...item,
-        categoryInfo: categoryInfo || { 
-          id: item.category, 
-          name: item.category, 
-          icon: 'circle', 
-          color: '#6B7280' 
+        categoryInfo: categoryInfo || {
+          id: item.category,
+          name: item.category,
+          icon: 'circle',
+          color: '#6B7280'
         }
       };
     });
@@ -362,11 +289,11 @@ export const useDashboard = () => {
         },
         // Savings Rate
         savingsRate: {
-          formatted: formatPercentage(summary.currentMonthIncome > 0 
-            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100 
+          formatted: formatPercentage(summary.currentMonthIncome > 0
+            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100
             : 0),
-          percentage: summary.currentMonthIncome > 0 
-            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100 
+          percentage: summary.currentMonthIncome > 0
+            ? ((summary.currentMonthIncome - summary.currentMonthExpenses) / summary.currentMonthIncome) * 100
             : 0,
           status: summary.currentMonthIncome > 0 && summary.currentMonthExpenses < summary.currentMonthIncome ? 'good' : 'poor'
         },
@@ -375,8 +302,8 @@ export const useDashboard = () => {
         totalTransactions: summary.totalTransactions,
         totalBudgets: summary.totalBudgets,
         biggestExpenseCategory: categoryBreakdown[0] || null,
-        averageTransactionAmount: summary.totalTransactions > 0 
-          ? (summary.allTimeIncome + summary.allTimeExpenses) / summary.totalTransactions 
+        averageTransactionAmount: summary.totalTransactions > 0
+          ? (summary.allTimeIncome + summary.allTimeExpenses) / summary.totalTransactions
           : 0
       };
 
@@ -492,15 +419,15 @@ export const useDashboard = () => {
     recentActivity,
     quickStats,
     financialHealth,
-    
+
     // State
     isLoading,
-    
+
     // Time period info - FIX BUG #2: Expose month name and date range for widgets
     currentMonthName: summary.currentMonthName || getLastFullMonthName(),
     lastFullMonthStartDate: summary.startDate,
     lastFullMonthEndDate: summary.endDate,
-    
+
     // Functions
     actions,
     utils

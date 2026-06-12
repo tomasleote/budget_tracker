@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 import StorageService from '../services/StorageService.js';
 import ValidationService from '../services/ValidationService.js';
 
@@ -56,7 +57,7 @@ class BaseRepository {
       return this.storageService.getItem(this.storageKey, []);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error getting all ${this.entityName}:`, error);
+        logger.error(`Error getting all ${this.entityName}:`, error);
       }
       return [];
     }
@@ -68,7 +69,7 @@ class BaseRepository {
       return allData.find(item => item.id === id) || null;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error getting ${this.entityName} by ID:`, error);
+        logger.error(`Error getting ${this.entityName} by ID:`, error);
       }
       return null;
     }
@@ -211,7 +212,7 @@ class BaseRepository {
       });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error finding ${this.entityName} by criteria:`, error);
+        logger.error(`Error finding ${this.entityName} by criteria:`, error);
       }
       return [];
     }
@@ -223,7 +224,7 @@ class BaseRepository {
       return results.length > 0 ? results[0] : null;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error finding one ${this.entityName}:`, error);
+        logger.error(`Error finding one ${this.entityName}:`, error);
       }
       return null;
     }
@@ -254,7 +255,7 @@ class BaseRepository {
       };
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error getting paginated ${this.entityName}:`, error);
+        logger.error(`Error getting paginated ${this.entityName}:`, error);
       }
       return {
         data: [],
@@ -351,7 +352,7 @@ class BaseRepository {
       };
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error backing up ${this.entityName}:`, error);
+        logger.error(`Error backing up ${this.entityName}:`, error);
       }
       return null;
     }
@@ -408,7 +409,7 @@ class BaseRepository {
       return results;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error validating ${this.entityName} data:`, error);
+        logger.error(`Error validating ${this.entityName} data:`, error);
       }
       return {
         total: 0,
@@ -441,7 +442,7 @@ class BaseRepository {
       });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error searching ${this.entityName}:`, error);
+        logger.error(`Error searching ${this.entityName}:`, error);
       }
       return [];
     }

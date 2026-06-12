@@ -1,30 +1,22 @@
 // Export all services
 
-export { default as TransactionService } from './TransactionService.js';
 export { default as BudgetService } from './BudgetService.js';
-export { default as CalculationService } from './CalculationService.js';
 export { default as StorageService } from './StorageService.js';
 export { default as ValidationService } from './ValidationService.js';
 
 // Create service instances for easy importing
-import TransactionService from './TransactionService.js';
 import BudgetService from './BudgetService.js';
-import CalculationService from './CalculationService.js';
 import StorageService from './StorageService.js';
 import ValidationService from './ValidationService.js';
 
 // Export service instances
-export const transactionService = TransactionService;
 export const budgetService = BudgetService;
-export const calculationService = CalculationService;
 export const storageService = StorageService;
 export const validationService = ValidationService;
 
 // Export service registry for dependency injection
 export const serviceRegistry = {
-  transaction: TransactionService,
   budget: BudgetService,
-  calculation: CalculationService,
   storage: StorageService,
   validation: ValidationService
 };
@@ -66,16 +58,12 @@ export const checkServiceHealth = async () => {
 
 export default {
   // Services
-  TransactionService,
   BudgetService,
-  CalculationService,
   StorageService,
   ValidationService,
-  
+
   // Instances
-  transactionService,
   budgetService,
-  calculationService,
   storageService,
   validationService,
   

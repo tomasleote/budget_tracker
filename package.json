@@ -13,6 +13,6 @@
   "description": "Budget Tracker - Personal Finance Management Application",
   "workspaces": ["frontend", "backend"],
   "keywords": ["budget", "finance", "tracker", "react", "nodejs"],
-  "author": "Your Name",
+  "author": "Tomas Leote",
   "license": "MIT"
 }

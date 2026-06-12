@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { repositories } from '../../../model/repositories/RepositoryFactory.js';
 import { initializeDefaultData, isAppInitialized } from '../../../model/services/DataInitializer.js';
@@ -52,7 +53,7 @@ export const CategoryProvider = ({ children }) => {
     setErrors(prev => ({ ...prev, load: null }));
     
     try {
-      console.log('🔄 Loading categories from backend...');
+      logger.debug('🔄 Loading categories from backend...');
       const result = await categoryRepository.getAll(queryParams);
       
       // Handle the response from the interceptor consistently
@@ -73,7 +74,7 @@ export const CategoryProvider = ({ children }) => {
         }
         
         setCategories(categoriesData);
-        console.log('✅ Categories loaded:', categoriesData.length, 'categories');
+        logger.debug('✅ Categories loaded:', categoriesData.length, 'categories');
         
         // Calculate stats
         calculateStats(categoriesData);
@@ -83,7 +84,7 @@ export const CategoryProvider = ({ children }) => {
         throw new Error('Failed to load categories - invalid response format');
       }
     } catch (err) {
-      console.error('❌ Failed to load categories:', err);
+      logger.error('❌ Failed to load categories:', err);
       const errorMessage = err.message || 'Failed to load categories';
       setErrors(prev => ({ ...prev, load: errorMessage }));
       setCategories([]); // Fallback to empty array
@@ -105,7 +106,7 @@ export const CategoryProvider = ({ children }) => {
       
       setStats(stats);
     } catch (err) {
-      console.error('❌ Failed to calculate category stats:', err);
+      logger.error('❌ Failed to calculate category stats:', err);
     }
   }, [categories]);
 
@@ -127,7 +128,7 @@ export const CategoryProvider = ({ children }) => {
       setUsage(usageData);
       return usageData;
     } catch (err) {
-      console.error('❌ Failed to load usage:', err);
+      logger.error('❌ Failed to load usage:', err);
       return {};
     } finally {
       setLoadingStates(prev => ({ ...prev, stats: false }));
@@ -148,7 +149,7 @@ export const CategoryProvider = ({ children }) => {
     setErrors(prev => ({ ...prev, create: null }));
     
     try {
-      console.log('🔄 Creating category:', categoryData.name);
+      logger.debug('🔄 Creating category:', categoryData.name);
       const result = await categoryRepository.create({
         ...categoryData,
         isActive: categoryData.isActive !== false // Default to active
@@ -160,7 +161,7 @@ export const CategoryProvider = ({ children }) => {
         
         // Add to local state
         setCategories(prev => [newCategory, ...prev]);
-        console.log('✅ Category created:', newCategory.name || newCategory.id);
+        logger.debug('✅ Category created:', newCategory.name || newCategory.id);
         
         // Recalculate stats
         calculateStats();
@@ -175,7 +176,7 @@ export const CategoryProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to create category');
       }
     } catch (err) {
-      console.error('❌ Failed to create category:', err);
+      logger.error('❌ Failed to create category:', err);
       const errorMessage = err.message || 'Failed to create category';
       setErrors(prev => ({ ...prev, create: errorMessage }));
       return { success: false, error: errorMessage };
@@ -190,7 +191,7 @@ export const CategoryProvider = ({ children }) => {
     setErrors(prev => ({ ...prev, update: null }));
     
     try {
-      console.log('🔄 Updating category:', categoryId);
+      logger.debug('🔄 Updating category:', categoryId);
       const result = await categoryRepository.update(categoryId, updates);
       
       // Handle response format consistently
@@ -201,7 +202,7 @@ export const CategoryProvider = ({ children }) => {
         setCategories(prev => 
           prev.map(c => c.id === categoryId ? updatedCategory : c)
         );
-        console.log('✅ Category updated:', updatedCategory.name || updatedCategory.id);
+        logger.debug('✅ Category updated:', updatedCategory.name || updatedCategory.id);
         
         // Recalculate stats
         calculateStats();
@@ -216,7 +217,7 @@ export const CategoryProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to update category');
       }
     } catch (err) {
-      console.error('❌ Failed to update category:', err);
+      logger.error('❌ Failed to update category:', err);
       const errorMessage = err.message || 'Failed to update category';
       setErrors(prev => ({ ...prev, update: errorMessage }));
       return { success: false, error: errorMessage };
@@ -231,14 +232,14 @@ export const CategoryProvider = ({ children }) => {
     setErrors(prev => ({ ...prev, delete: null }));
     
     try {
-      console.log('🔄 Deleting category:', categoryId);
+      logger.debug('🔄 Deleting category:', categoryId);
       const result = await categoryRepository.delete(categoryId);
       
       // Handle response format consistently
       if (result && (result.success !== false)) {
         // Remove from local state
         setCategories(prev => prev.filter(c => c.id !== categoryId));
-        console.log('✅ Category deleted');
+        logger.debug('✅ Category deleted');
         
         // Recalculate stats
         calculateStats();
@@ -253,7 +254,7 @@ export const CategoryProvider = ({ children }) => {
         throw new Error(result?.error || 'Failed to delete category');
       }
     } catch (err) {
-      console.error('❌ Failed to delete category:', err);
+      logger.error('❌ Failed to delete category:', err);
       const errorMessage = err.message || 'Failed to delete category';
       setErrors(prev => ({ ...prev, delete: errorMessage }));
       return { success: false, error: errorMessage };
@@ -316,7 +317,7 @@ export const CategoryProvider = ({ children }) => {
   const initializeDefaultCategories = useCallback(async () => {
     if (categories.length === 0) {
       // Load default categories from backend
-      console.log('🔄 Initializing default categories...');
+      logger.debug('🔄 Initializing default categories...');
       await loadCategories();
     }
     return categories;
@@ -450,12 +451,12 @@ export const CategoryProvider = ({ children }) => {
     const initializeAndLoad = async () => {
       // Check if app needs initialization
       if (!isAppInitialized()) {
-        console.log('🌱 First time setup - initializing default categories...');
+        logger.debug('🌱 First time setup - initializing default categories...');
         await initializeDefaultData();
       }
       
       // Load categories after initialization
-      console.log('🔄 Loading categories on mount...');
+      logger.debug('🔄 Loading categories on mount...');
       await loadCategories();
     };
     

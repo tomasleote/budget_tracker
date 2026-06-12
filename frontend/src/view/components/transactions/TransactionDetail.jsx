@@ -77,14 +77,14 @@ const TransactionDetail = ({
     return (
       <Card className={className}>
         <div className="text-center py-8">
-          <FontAwesomeIcon 
-            icon={faInfoCircle} 
-            className="text-gray-400 text-3xl mb-4" 
+          <FontAwesomeIcon
+            icon={faInfoCircle}
+            className="text-theme-tertiary text-3xl mb-4"
           />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-theme-primary mb-2">
             No Transaction Selected
           </h3>
-          <p className="text-gray-500">
+          <p className="text-theme-secondary">
             Select a transaction to view its details
           </p>
         </div>
@@ -113,10 +113,10 @@ const TransactionDetail = ({
               />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-theme-primary">
                 Transaction Details
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-theme-secondary">
                 {isIncome ? 'Income' : 'Expense'} • {formatRelativeTime(transaction.date)}
               </p>
             </div>
@@ -125,7 +125,7 @@ const TransactionDetail = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-theme-secondary"
           >
             <FontAwesomeIcon icon={faTimes} />
           </Button>
@@ -134,13 +134,13 @@ const TransactionDetail = ({
     >
       <div className="space-y-6">
         {/* Amount Display */}
-        <div className="text-center py-6 bg-gray-50 rounded-lg">
+        <div className="text-center py-6 bg-theme-secondary rounded-lg">
           <div className={`text-3xl font-bold mb-2 ${
             isIncome ? 'text-green-600' : 'text-red-600'
           }`}>
             {isIncome ? '+' : '-'}{formatCurrency(amount)}
           </div>
-          <div className="flex items-center justify-center space-x-2 text-gray-500">
+          <div className="flex items-center justify-center space-x-2 text-theme-secondary">
             <FontAwesomeIcon 
               icon={isIncome ? faArrowUp : faArrowDown} 
               className={isIncome ? 'text-green-600' : 'text-red-600'} 
@@ -155,22 +155,22 @@ const TransactionDetail = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Description */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-              <FontAwesomeIcon icon={faFileText} className="text-gray-400" />
+            <div className="flex items-center space-x-2 text-sm font-medium text-theme-primary">
+              <FontAwesomeIcon icon={faFileText} className="text-theme-secondary" />
               <span>Description</span>
             </div>
-            <div className="text-gray-900 bg-white border border-gray-200 rounded-lg p-3">
+            <div className="text-theme-primary bg-theme-primary border border-theme-primary rounded-lg p-3">
               {transaction.description || 'No description provided'}
             </div>
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-              <FontAwesomeIcon icon={faTag} className="text-gray-400" />
+            <div className="flex items-center space-x-2 text-sm font-medium text-theme-primary">
+              <FontAwesomeIcon icon={faTag} className="text-theme-secondary" />
               <span>Category</span>
             </div>
-            <div className="flex items-center space-x-3 bg-white border border-gray-200 rounded-lg p-3">
+            <div className="flex items-center space-x-3 bg-theme-primary border border-theme-primary rounded-lg p-3">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 isIncome 
                   ? 'bg-green-100 text-green-600' 
@@ -181,34 +181,34 @@ const TransactionDetail = ({
                   className="text-sm" 
                 />
               </div>
-              <span className="text-gray-900">{transaction.category}</span>
+              <span className="text-theme-primary">{transaction.category}</span>
             </div>
           </div>
 
           {/* Date */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-              <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+            <div className="flex items-center space-x-2 text-sm font-medium text-theme-primary">
+              <FontAwesomeIcon icon={faCalendarAlt} className="text-theme-secondary" />
               <span>Date</span>
             </div>
-            <div className="text-gray-900 bg-white border border-gray-200 rounded-lg p-3">
+            <div className="text-theme-primary bg-theme-primary border border-theme-primary rounded-lg p-3">
               {formatDate(transaction.date)}
             </div>
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-              <FontAwesomeIcon icon={faDollarSign} className="text-gray-400" />
+            <div className="flex items-center space-x-2 text-sm font-medium text-theme-primary">
+              <FontAwesomeIcon icon={faDollarSign} className="text-theme-secondary" />
               <span>Amount</span>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-3">
+            <div className="bg-theme-primary border border-theme-primary rounded-lg p-3">
               <div className={`text-lg font-semibold ${
                 isIncome ? 'text-green-600' : 'text-red-600'
               }`}>
                 {formatCurrency(amount)}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-theme-secondary mt-1">
                 {isIncome ? 'Money received' : 'Money spent'}
               </div>
             </div>
@@ -216,16 +216,16 @@ const TransactionDetail = ({
         </div>
 
         {/* Metadata */}
-        <div className="border-t border-gray-200 pt-6">
-          <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-4">
-            <FontAwesomeIcon icon={faHistory} className="text-gray-400" />
+        <div className="border-t border-theme-primary pt-6">
+          <div className="flex items-center space-x-2 text-sm font-medium text-theme-primary mb-4">
+            <FontAwesomeIcon icon={faHistory} className="text-theme-secondary" />
             <span>Transaction History</span>
           </div>
           <div className="space-y-3">
             {/* Created */}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Created:</span>
-              <span className="text-gray-900">
+              <span className="text-theme-secondary">Created:</span>
+              <span className="text-theme-primary">
                 {transaction.createdAt ? formatDate(transaction.createdAt) : 'Unknown'}
               </span>
             </div>
@@ -233,8 +233,8 @@ const TransactionDetail = ({
             {/* Last Updated */}
             {transaction.updatedAt && transaction.updatedAt !== transaction.createdAt && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Last updated:</span>
-                <span className="text-gray-900">
+                <span className="text-theme-secondary">Last updated:</span>
+                <span className="text-theme-primary">
                   {formatDate(transaction.updatedAt)}
                 </span>
               </div>
@@ -242,7 +242,7 @@ const TransactionDetail = ({
             
             {/* Transaction ID */}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Transaction ID:</span>
+              <span className="text-theme-secondary">Transaction ID:</span>
               <span className="text-gray-900 font-mono text-xs">
                 {transaction.id}
               </span>
@@ -251,11 +251,11 @@ const TransactionDetail = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-end space-x-3 pt-6 border-t border-theme-primary">
           <Button
             variant="outline"
             onClick={() => onEdit(transaction)}
-            className="text-gray-600 border-gray-300 hover:text-blue-600 hover:border-blue-300"
+            className=""
           >
             <FontAwesomeIcon icon={faEdit} className="mr-2" />
             Edit Transaction

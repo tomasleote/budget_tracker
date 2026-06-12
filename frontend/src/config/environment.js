@@ -116,12 +116,12 @@ export const configHelpers = {
   logConfig: () => {
     if (!config.development.isDevelopment) return;
 
-    console.group('🔧 Frontend Configuration');
-    console.log('API Mode:', config.api.enabled ? '✅ Enabled' : '❌ Disabled (using localStorage)');
+    console.group('Frontend Configuration');
+    console.log('API Mode:', config.api.enabled ? 'Enabled' : 'Disabled (using localStorage)');
     console.log('API URL:', config.api.baseUrl);
-    console.log('Debug Mode:', config.development.isDebug ? '✅ Enabled' : '❌ Disabled');
-    console.log('Offline Support:', config.offline.enabled ? '✅ Enabled' : '❌ Disabled');
-    console.log('Caching:', config.cache.enabled ? '✅ Enabled' : '❌ Disabled');
+    console.log('Debug Mode:', config.development.isDebug ? 'Enabled' : 'Disabled');
+    console.log('Offline Support:', config.offline.enabled ? 'Enabled' : 'Disabled');
+    console.log('Caching:', config.cache.enabled ? 'Enabled' : 'Disabled');
     console.groupEnd();
   },
 
@@ -171,9 +171,9 @@ if (config.development.isDevelopment && config.development.isDebug) {
   
   const validation = configHelpers.validateConfig();
   if (!validation.valid) {
-    console.error('❌ Configuration Issues:', validation.issues);
+    console.error('Configuration Issues:', validation.issues);
   }
   if (validation.warnings.length > 0) {
-    console.warn('⚠️ Configuration Warnings:', validation.warnings);
+    console.warn('Configuration Warnings:', validation.warnings);
   }
 }

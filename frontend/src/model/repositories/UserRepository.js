@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 import BaseRepository from './BaseRepository.js';
 import { User } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
@@ -13,7 +14,7 @@ class UserRepository extends BaseRepository {
       const userData = this.storageService.getItem(this.storageKey, null);
       return userData;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      logger.error('Error getting current user:', error);
       return null;
     }
   }
@@ -93,7 +94,7 @@ class UserRepository extends BaseRepository {
       const user = await this.getCurrentUser();
       return user ? user.preferences : {};
     } catch (error) {
-      console.error('Error getting user preferences:', error);
+      logger.error('Error getting user preferences:', error);
       return {};
     }
   }
@@ -162,7 +163,7 @@ class UserRepository extends BaseRepository {
 
       return user.preferences[key] !== undefined ? user.preferences[key] : defaultValue;
     } catch (error) {
-      console.error('Error getting user preference:', error);
+      logger.error('Error getting user preference:', error);
       return defaultValue;
     }
   }
@@ -173,7 +174,7 @@ class UserRepository extends BaseRepository {
       const user = await this.getCurrentUser();
       return user ? user.settings : {};
     } catch (error) {
-      console.error('Error getting user settings:', error);
+      logger.error('Error getting user settings:', error);
       return {};
     }
   }
@@ -242,7 +243,7 @@ class UserRepository extends BaseRepository {
 
       return user.settings[key] !== undefined ? user.settings[key] : defaultValue;
     } catch (error) {
-      console.error('Error getting user setting:', error);
+      logger.error('Error getting user setting:', error);
       return defaultValue;
     }
   }
@@ -413,7 +414,7 @@ class UserRepository extends BaseRepository {
       const userEntity = User.fromJSON(user);
       return userEntity.formatCurrency(amount);
     } catch (error) {
-      console.error('Error formatting currency:', error);
+      logger.error('Error formatting currency:', error);
       return `$${amount}`;
     }
   }
@@ -429,7 +430,7 @@ class UserRepository extends BaseRepository {
       const userEntity = User.fromJSON(user);
       return userEntity.formatDate(date);
     } catch (error) {
-      console.error('Error formatting date:', error);
+      logger.error('Error formatting date:', error);
       return new Date(date).toLocaleDateString();
     }
   }
@@ -448,7 +449,7 @@ class UserRepository extends BaseRepository {
         version: '1.0.0'
       };
     } catch (error) {
-      console.error('Error exporting user data:', error);
+      logger.error('Error exporting user data:', error);
       return null;
     }
   }
@@ -478,7 +479,7 @@ class UserRepository extends BaseRepository {
         storageKey: this.storageKey
       };
     } catch (error) {
-      console.error('Error backing up user:', error);
+      logger.error('Error backing up user:', error);
       return null;
     }
   }

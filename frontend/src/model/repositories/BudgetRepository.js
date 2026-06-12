@@ -1,3 +1,4 @@
+import { logger } from '../../controller/utils/logger.js';
 import BaseRepository from './BaseRepository.js';
 import { Budget } from '../entities/index.js';
 import StorageService from '../services/StorageService.js';
@@ -62,7 +63,7 @@ class BudgetRepository extends BaseRepository {
       
       return currentBudgets;
     } catch (error) {
-      console.error('Error getting current budgets:', error);
+      logger.error('Error getting current budgets:', error);
       return [];
     }
   }
@@ -88,7 +89,7 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.update(budgetId, { isActive: true });
     } catch (error) {
-      console.error('Error activating budget:', error);
+      logger.error('Error activating budget:', error);
       return {
         success: false,
         error: error.message
@@ -100,7 +101,7 @@ class BudgetRepository extends BaseRepository {
     try {
       return await this.update(budgetId, { isActive: false });
     } catch (error) {
-      console.error('Error deactivating budget:', error);
+      logger.error('Error deactivating budget:', error);
       return {
         success: false,
         error: error.message
@@ -114,7 +115,7 @@ class BudgetRepository extends BaseRepository {
         spent: parseFloat(newSpentAmount) || 0 
       });
     } catch (error) {
-      console.error('Error updating spent amount:', error);
+      logger.error('Error updating spent amount:', error);
       return {
         success: false,
         error: error.message
@@ -132,7 +133,7 @@ class BudgetRepository extends BaseRepository {
       const newSpentAmount = (parseFloat(budget.spent) || 0) + (parseFloat(additionalAmount) || 0);
       return await this.updateSpentAmount(budgetId, newSpentAmount);
     } catch (error) {
-      console.error('Error adding to spent amount:', error);
+      logger.error('Error adding to spent amount:', error);
       return {
         success: false,
         error: error.message
@@ -150,7 +151,7 @@ class BudgetRepository extends BaseRepository {
       const newSpentAmount = Math.max(0, (parseFloat(budget.spent) || 0) - (parseFloat(subtractAmount) || 0));
       return await this.updateSpentAmount(budgetId, newSpentAmount);
     } catch (error) {
-      console.error('Error subtracting from spent amount:', error);
+      logger.error('Error subtracting from spent amount:', error);
       return {
         success: false,
         error: error.message
@@ -461,7 +462,7 @@ class BudgetRepository extends BaseRepository {
         total: budgets.length
       };
     } catch (error) {
-      console.error('Error archiving expired budgets:', error);
+      logger.error('Error archiving expired budgets:', error);
       return {
         success: false,
         error: error.message,

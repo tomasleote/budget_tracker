@@ -4,7 +4,6 @@ export { default as Card } from './Card';
 export { default as Input } from './Input';
 export { default as Modal } from './Modal';
 export { default as ProgressBar } from './ProgressBar';
-export { default as DeveloperPanel } from './DeveloperPanel';
 export { default as ExportPanel } from './ExportPanel';
 export { default as AdvancedFilters } from './AdvancedFilters';
 export { default as NotificationDropdown } from './NotificationDropdown';

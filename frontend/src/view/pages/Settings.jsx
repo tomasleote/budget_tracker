@@ -74,7 +74,7 @@ const Settings = () => {
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Show or hide dashboard sections</p>
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
-                    Coming in Phase 3
+                    Coming soon
                   </div>
                 </div>
                 
@@ -84,7 +84,7 @@ const Settings = () => {
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Customize dashboard layout</p>
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
-                    Coming in Phase 3
+                    Coming soon
                   </div>
                 </div>
               </div>
@@ -106,7 +106,7 @@ const Settings = () => {
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Choose from preset color themes</p>
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
-                    Coming in Phase 4
+                    Coming soon
                   </div>
                 </div>
                 
@@ -116,7 +116,7 @@ const Settings = () => {
                     <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Customize category colors</p>
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
-                    Coming in Phase 4
+                    Coming soon
                   </div>
                 </div>
               </div>
@@ -200,36 +200,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Phase 2 Development Notice */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-6 rounded-lg p-4" style={{ backgroundColor: 'var(--success-bg)', borderWidth: '1px', borderColor: 'var(--success-border)' }}>
-              <div className="flex items-start space-x-3">
-                <FontAwesomeIcon 
-                  icon={faCog} 
-                  className="mt-0.5" 
-                  style={{ color: 'var(--success)' }}
-                />
-                <div>
-                  <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                    Settings Page - Phase 2 Complete ✅
-                  </h4>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                    Core settings functionality is now implemented:
-                  </p>
-                  <ul className="text-sm mt-2 space-y-1" style={{ color: 'var(--text-secondary)' }}>
-                    <li>✅ Theme system (Light/Dark/Auto)</li>
-                    <li>✅ Currency selection with live preview</li>
-                    <li>✅ Number format preferences</li>
-                    <li>✅ Data export and management</li>
-                    <li>✅ Settings persistence</li>
-                  </ul>
-                  <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-                    <strong>Next:</strong> Phase 3 - Dashboard customization, Phase 4 - Color themes
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </PageWrapper>

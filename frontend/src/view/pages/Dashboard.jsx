@@ -10,8 +10,6 @@ import {
 import Button from '../components/ui/Button';
 import PageWrapper from '../components/ui/PageWrapper';
 import { PageLoading } from '../components/ui/LoadingSpinner';
-import MockDataLoader from '../../components/debug/MockDataLoader.jsx';
-
 // Dashboard components
 import {
   BalanceCard,
@@ -107,18 +105,13 @@ const Dashboard = () => {
   const currentDataHash = `${summary.totalTransactions}-${summary.totalBudgets}-${summary.currentBalance}-${recentActivity.length}`;
 
   // Optimized timestamp update function
-  const updateTimestamp = useCallback((reason = 'data_change') => {
-    // Only log in development mode and not too frequently
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🕒 Updating timestamp: ${reason}`);
-    }
+  const updateTimestamp = useCallback(() => {
     setLastUpdated(new Date());
   }, []);
 
   // Load all transactions for dashboard analytics on mount
   useEffect(() => {
     const loadDashboardData = async () => {
-      console.log('🔍 DASHBOARD API CALL: Loading transactions for analytics charts...');
       await loadAllTransactionsForDashboard();
     };
     
@@ -130,17 +123,14 @@ const Dashboard = () => {
     // Initial load - set timestamp once
     if (!hasInitialized.current && !isLoading) {
       hasInitialized.current = true;
-      updateTimestamp('initial_load');
+      updateTimestamp();
       lastDataHash.current = currentDataHash;
       return;
     }
 
     // Data change detection - only update if data actually changed
     if (hasInitialized.current && lastDataHash.current !== currentDataHash) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`📊 Data changed: ${lastDataHash.current} → ${currentDataHash}`);
-      }
-      updateTimestamp('data_change');
+      updateTimestamp();
       lastDataHash.current = currentDataHash;
     }
   }, [
@@ -152,10 +142,8 @@ const Dashboard = () => {
   // Manual refresh function for better control - OPTIMIZED
   const handleRefreshDashboard = useCallback(async () => {
     try {
-      console.log('🔄 Manual dashboard refresh triggered...');
-      
       // Update the last updated timestamp immediately for manual refresh
-      updateTimestamp('manual_refresh');
+      updateTimestamp();
       
       // Refresh all dashboard data
       await loadAllTransactionsForDashboard();
@@ -170,12 +158,10 @@ const Dashboard = () => {
         window.dispatchEvent(new CustomEvent('refreshBudgets'));
       }
       
-      console.log('✅ Dashboard refresh complete');
-      
     } catch (error) {
-      console.error('❌ Dashboard refresh error:', error);
+      console.error('Dashboard refresh error:', error);
       // Still update timestamp even if refresh fails
-      updateTimestamp('refresh_error');
+      updateTimestamp();
     }
   }, [actions, updateTimestamp, loadAllTransactionsForDashboard]);
 
@@ -242,7 +228,7 @@ const Dashboard = () => {
         console.error('Dashboard Error:', error, errorInfo);
       }}
     >
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-theme-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Dashboard Header */}
         <div className="mb-6 lg:mb-8">
@@ -250,7 +236,7 @@ const Dashboard = () => {
             <div className="mb-4 sm:mb-0">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faHome} className="text-blue-600 text-xl" />
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">
                   Dashboard
                 </h1>
                 {/* Mock Data Indicator */}
@@ -260,14 +246,14 @@ const Dashboard = () => {
                   </span>
                 )}
               </div>
-              <p className="text-gray-600 text-sm lg:text-base">
+              <p className="text-theme-secondary text-sm lg:text-base">
                 {getTimeGreeting()}, {user?.name || 'User'}! Here's your financial overview.
               </p>
             </div>
             
             <div className="flex items-center space-x-3">
               {/* Last updated info - OPTIMIZED */}
-              <div className="hidden sm:flex items-center space-x-2 text-xs lg:text-sm text-gray-500">
+              <div className="hidden sm:flex items-center space-x-2 text-xs lg:text-sm text-theme-secondary">
                 <FontAwesomeIcon icon={faCalendarAlt} className="w-4 h-4" />
                 <span>
                   Last updated: {lastUpdated.toLocaleTimeString()}
@@ -353,7 +339,7 @@ const Dashboard = () => {
           {/* Enhanced Analytics Section - Phase 6 Charts */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">📊 Enhanced Analytics</h2>
+              <h2 className="text-xl font-bold text-theme-primary">📊 Enhanced Analytics</h2>
             </div>
             
             {/* Analytics Charts Grid */}
@@ -414,13 +400,6 @@ const Dashboard = () => {
               isLoading={isLoading}
             />
           </div>
-
-          {/* Development Tools - Only shown in development mode */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-6">
-              <MockDataLoader />
-            </div>
-          )}
 
         </div>
       </div>

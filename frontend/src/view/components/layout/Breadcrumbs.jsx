@@ -75,30 +75,30 @@ const Breadcrumbs = ({ className = '' }) => {
   }
 
   return (
-    <nav className={`flex items-center space-x-2 text-sm text-gray-600 ${className}`}>
+    <nav className={`flex items-center space-x-2 text-sm text-theme-secondary ${className}`}>
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center space-x-2">
           {index > 0 && (
-            <FontAwesomeIcon 
-              icon={faChevronRight} 
-              className="w-3 h-3 text-gray-400" 
+            <FontAwesomeIcon
+              icon={faChevronRight}
+              className="w-3 h-3 text-theme-tertiary"
             />
           )}
-          
+
           <button
             onClick={() => navigate(crumb.path)}
             className={`flex items-center space-x-2 px-2 py-1 rounded transition-colors ${
               crumb.isActive
-                ? 'text-blue-600 bg-blue-50 font-medium'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'text-theme-accent bg-theme-tertiary font-medium'
+                : 'text-theme-secondary hover-bg-theme'
             }`}
             disabled={crumb.isActive}
           >
-            <FontAwesomeIcon 
-              icon={crumb.icon} 
+            <FontAwesomeIcon
+              icon={crumb.icon}
               className={`w-4 h-4 ${
-                crumb.isActive ? 'text-blue-600' : 'text-gray-400'
-              }`} 
+                crumb.isActive ? 'text-theme-accent' : 'text-theme-tertiary'
+              }`}
             />
             <span>{crumb.label}</span>
           </button>

@@ -67,9 +67,7 @@ class BaseApiRepository {
       
       // Call API service
       const response = await this.apiService.getAll(backendFilters);
-      
-      console.log(`🔍 DEBUG - ${this.entityName} repository response:`, response);
-      
+
       // Handle different response formats from the interceptor
       let dataArray = [];
       
@@ -92,8 +90,6 @@ class BaseApiRepository {
           dataArray = response.budgets;
         }
       }
-      
-      console.log(`🔍 DEBUG - ${this.entityName} extracted data array:`, dataArray);
       
       // Transform the data using the transformer
       if (dataArray.length > 0) {

@@ -1,15 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faExchangeAlt,
   faPlus,
-  faFilter,
-  faDownload,
-  faSearch,
-  faCalendarAlt,
   faChartLine,
-  faList,
-  faTh,
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../components/ui/Button';
@@ -21,8 +15,7 @@ import {
   TransactionList,
   TransactionGrid,
   TransactionFilterToolbar,
-  TransactionDetailModal,
-  AdvancedTransactionFilters
+  TransactionDetailModal
 } from '../components/transactions';
 
 // Import modal from forms
@@ -35,14 +28,12 @@ import { useCategories } from '../../controller/hooks/useCategories';
 const Transactions = () => {
   // State management
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
-  const [showFilters, setShowFilters] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [selectedTransactionForDetail, setSelectedTransactionForDetail] = useState(null);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState({
     type: 'all',
     dateFrom: '',
@@ -53,36 +44,20 @@ const Transactions = () => {
   // Hooks
   const {
     transactions,
-    filteredTransactions,
     summary,
-    categoryBreakdown,
     isLoading,
     isCreatingTransaction,
     isUpdatingTransaction,
     isDeletingTransaction,
-    hasError,
-    filters,
     loadTransactions,
-    createTransaction,
-    updateTransaction,
     deleteTransaction,
-    setFilter,
-    setFilters,
-    resetFilters,
-    searchTransactions,
-    filterByCategory,
-    filterByType,
-    filterByDateRange,
-    sortTransactions,
-    getTransactionStats,
-    clearAllData // Debug function
+    getTransactionStats
   } = useTransactions();
 
   const { categories } = useCategories();
 
   // Load transactions on mount
   useEffect(() => {
-    console.log('🔄 Transactions page: Loading transactions...');
     loadTransactions();
   }, [loadTransactions]);
 
@@ -92,43 +67,34 @@ const Transactions = () => {
   // Filtered transactions based on local filters
   const actualFilteredTransactions = useMemo(() => {
     let result = transactions;
-    console.log('Filtering transactions:', { 
-      totalTransactions: transactions.length, 
-      filters: localFilters 
-    });
 
     // Filter by type
     if (localFilters.type && localFilters.type !== 'all') {
       result = result.filter(t => t.type === localFilters.type);
-      console.log('After type filter:', result.length);
     }
 
-    // Filter by date range
+    // Filter by date range (inclusive of the full "to" day)
     if (localFilters.dateFrom || localFilters.dateTo) {
+      const fromDate = localFilters.dateFrom ? new Date(`${localFilters.dateFrom}T00:00:00`) : null;
+      const toDate = localFilters.dateTo ? new Date(`${localFilters.dateTo}T23:59:59.999`) : null;
       result = result.filter(t => {
         const transactionDate = new Date(t.date);
-        const fromDate = localFilters.dateFrom ? new Date(localFilters.dateFrom) : null;
-        const toDate = localFilters.dateTo ? new Date(localFilters.dateTo) : null;
-        
         if (fromDate && transactionDate < fromDate) return false;
         if (toDate && transactionDate > toDate) return false;
         return true;
       });
-      console.log('After date filter:', result.length);
     }
 
     // Filter by search
     if (localFilters.search) {
       const searchTerm = localFilters.search.toLowerCase();
-      result = result.filter(t => 
+      result = result.filter(t =>
         (t.description || '').toLowerCase().includes(searchTerm) ||
         (t.category || '').toLowerCase().includes(searchTerm) ||
         String(t.amount || '').includes(searchTerm)
       );
-      console.log('After search filter:', result.length);
     }
 
-    console.log('Final filtered transactions:', result.length);
     return result;
   }, [transactions, localFilters]);
 
@@ -157,8 +123,8 @@ const Transactions = () => {
 
   const handleBulkDelete = async (transactionIds) => {
     // Find the transactions to show in confirmation
-    const transactions = actualFilteredTransactions.filter(t => transactionIds.includes(t.id));
-    setTransactionToDelete({ isBulk: true, count: transactions.length, ids: transactionIds });
+    const transactionsToRemove = actualFilteredTransactions.filter(t => transactionIds.includes(t.id));
+    setTransactionToDelete({ isBulk: true, count: transactionsToRemove.length, ids: transactionIds });
     setShowConfirmModal(true);
   };
 
@@ -183,7 +149,7 @@ const Transactions = () => {
     setTransactionToDelete(null);
   };
 
-  const handleTransactionSaved = (transaction) => {
+  const handleTransactionSaved = () => {
     setShowTransactionModal(false);
     setEditingTransaction(null);
   };
@@ -215,73 +181,24 @@ const Transactions = () => {
     setShowConfirmModal(true); // Show confirmation modal
   };
 
-  // Handle export
-  const handleExportTransactions = () => {
-    // TODO: Implement export functionality in future phase
-    console.log('Export transactions:', filteredTransactions);
-    alert('Export functionality will be implemented in Phase 6!');
-  };
-
-  // Quick filter actions
-  const quickFilters = [
-    {
-      label: 'This Month',
-      action: () => {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        filterByDateRange(start, end);
-      }
-    },
-    {
-      label: 'Last 7 Days',
-      action: () => {
-        const end = new Date();
-        const start = new Date();
-        start.setDate(start.getDate() - 7);
-        filterByDateRange(start, end);
-      }
-    },
-    {
-      label: 'Expenses Only',
-      action: () => filterByType('expense')
-    },
-    {
-      label: 'Income Only',
-      action: () => filterByType('income')
-    },
-    {
-      label: 'Clear Filters',
-      action: () => resetFilters()
-    }
-  ];
-
   return (
-    <div className="min-h-screen transition-colors duration-300" style={{
-      backgroundColor: 'var(--bg-primary)'
-    }}>
+    <div className="min-h-screen transition-colors duration-300 bg-theme-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
-                <FontAwesomeIcon icon={faExchangeAlt} className="text-xl" style={{
-                  color: 'var(--accent-primary)'
-                }} />
-                <h1 className="text-2xl lg:text-3xl font-bold" style={{
-                  color: 'var(--text-primary)'
-                }}>
+                <FontAwesomeIcon icon={faExchangeAlt} className="text-xl text-theme-accent" />
+                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">
                   Transactions
                 </h1>
               </div>
-              <p className="text-sm lg:text-base" style={{
-                color: 'var(--text-secondary)'
-              }}>
+              <p className="text-sm lg:text-base text-theme-secondary">
                 Manage and track all your financial transactions
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
               <Button
                 variant="primary"
@@ -314,12 +231,8 @@ const Transactions = () => {
                 }} />
               </div>
               <div>
-                <p className="text-sm font-medium" style={{
-                  color: 'var(--text-secondary)'
-                }}>Total Transactions</p>
-                <p className="text-2xl font-bold" style={{
-                  color: 'var(--text-primary)'
-                }}>{stats.totalTransactions}</p>
+                <p className="text-sm font-medium text-theme-secondary">Total Transactions</p>
+                <p className="text-2xl font-bold text-theme-primary">{stats.totalTransactions}</p>
               </div>
             </div>
           </Card>
@@ -334,9 +247,7 @@ const Transactions = () => {
                 }} />
               </div>
               <div>
-                <p className="text-sm font-medium" style={{
-                  color: 'var(--text-secondary)'
-                }}>Total Income</p>
+                <p className="text-sm font-medium text-theme-secondary">Total Income</p>
                 <p className="text-2xl font-bold" style={{
                   color: 'var(--success)'
                 }}>{summary.formattedIncome}</p>
@@ -354,9 +265,7 @@ const Transactions = () => {
                 }} />
               </div>
               <div>
-                <p className="text-sm font-medium" style={{
-                  color: 'var(--text-secondary)'
-                }}>Total Expenses</p>
+                <p className="text-sm font-medium text-theme-secondary">Total Expenses</p>
                 <p className="text-2xl font-bold" style={{
                   color: 'var(--error)'
                 }}>{summary.formattedExpenses}</p>
@@ -369,18 +278,16 @@ const Transactions = () => {
               <div className="p-2 rounded-lg" style={{
                 backgroundColor: summary.isPositiveBalance ? 'var(--success-bg)' : 'var(--error-bg)'
               }}>
-                <FontAwesomeIcon 
-                  icon={summary.balanceIcon} 
-                  className="w-5 h-5" 
+                <FontAwesomeIcon
+                  icon={summary.balanceIcon}
+                  className="w-5 h-5"
                   style={{
                     color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
                   }}
                 />
               </div>
               <div>
-                <p className="text-sm font-medium" style={{
-                  color: 'var(--text-secondary)'
-                }}>Net Balance</p>
+                <p className="text-sm font-medium text-theme-secondary">Net Balance</p>
                 <p className="text-2xl font-bold" style={{
                   color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
                 }}>
@@ -413,12 +320,12 @@ const Transactions = () => {
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="animate-pulse flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                      <div className="w-10 h-10 bg-theme-tertiary rounded-full"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-4 bg-theme-tertiary rounded w-1/4 mb-2"></div>
+                        <div className="h-3 bg-theme-tertiary rounded w-1/2"></div>
                       </div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-6 bg-theme-tertiary rounded w-20"></div>
                     </div>
                   ))}
                 </div>
@@ -483,10 +390,10 @@ const Transactions = () => {
           onConfirm={handleConfirmDelete}
           title={transactionToDelete?.isBulk ? "Delete Transactions" : "Delete Transaction"}
           message={
-            transactionToDelete?.isBulk 
+            transactionToDelete?.isBulk
               ? `Are you sure you want to delete ${transactionToDelete.count} selected transaction(s)? This action cannot be undone.`
-              : transactionToDelete 
-                ? `Are you sure you want to delete "${transactionToDelete.description}"? This action cannot be undone.` 
+              : transactionToDelete
+                ? `Are you sure you want to delete "${transactionToDelete.description}"? This action cannot be undone.`
                 : 'Are you sure you want to delete this transaction?'
           }
           confirmText="Delete"

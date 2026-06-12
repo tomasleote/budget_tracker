@@ -194,20 +194,20 @@ const Reports = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+      <div className="min-h-screen bg-theme-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 rounded w-64" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+            <div className="h-8 rounded w-64 bg-theme-tertiary"></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
-                  <div className="h-4 rounded mb-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
-                  <div className="h-8 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+                <div key={i} className="card-theme border p-6 rounded-lg">
+                  <div className="h-4 rounded mb-2 bg-theme-tertiary"></div>
+                  <div className="h-8 rounded bg-theme-tertiary"></div>
                 </div>
               ))}
             </div>
-            <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
-              <div className="h-64 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}></div>
+            <div className="card-theme border p-6 rounded-lg">
+              <div className="h-64 rounded bg-theme-tertiary"></div>
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ const Reports = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+    <div className="min-h-screen bg-theme-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Page Header */}
         <div className="mb-6 lg:mb-8">
@@ -224,11 +224,11 @@ const Reports = () => {
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faChartBar} className="text-xl" style={{ color: 'var(--accent-primary)' }} />
-                <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">
                   Financial Reports
                 </h1>
               </div>
-              <p className="text-sm lg:text-base" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-sm lg:text-base text-theme-secondary">
                 Comprehensive insights into your financial performance
               </p>
             </div>
@@ -251,25 +251,11 @@ const Reports = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               {/* Date Range Selector */}
               <div className="flex items-center space-x-4">
-                <FontAwesomeIcon icon={faCalendarAlt} style={{ color: 'var(--text-secondary)' }} />
+                <FontAwesomeIcon icon={faCalendarAlt} className="text-theme-secondary" />
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className="px-4 py-2 rounded-lg focus:ring-2 transition-colors"
-                  style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    borderColor: 'var(--border-primary)',
-                    borderWidth: '1px',
-                    color: 'var(--text-primary)'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'var(--border-focus)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'var(--border-primary)';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  className="input-theme border px-4 py-2 rounded-lg transition-colors"
                 >
                   {dateRanges.map((range) => (
                     <option key={range.value} value={range.value}>
@@ -293,12 +279,12 @@ const Reports = () => {
                     }}
                     onMouseEnter={(e) => {
                       if (reportType !== type.value) {
-                        e.target.style.color = 'var(--text-primary)';
+                        e.currentTarget.style.color = 'var(--text-primary)';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (reportType !== type.value) {
-                        e.target.style.color = 'var(--text-secondary)';
+                        e.currentTarget.style.color = 'var(--text-secondary)';
                       }
                     }}
                   >
