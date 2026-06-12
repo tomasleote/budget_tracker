@@ -1,17 +1,7 @@
 import { logger } from '../../controller/utils/logger.js';
 import StorageService from '../services/StorageService.js';
-import ValidationService from '../services/ValidationService.js';
+import { sortData } from './base/sortHelpers.js';
 
-/**
- * BaseRepository - LOGGING CLEANED
- * 
- * Generic repository class for CRUD operations with localStorage
- * 
- * LOGGING CLEANUP:
- * - Removed excessive operation logs that were causing performance issues
- * - Keep only essential error logs for debugging
- * - Reduced verbosity in development mode
- */
 class BaseRepository {
   constructor(entityName, storageKey, EntityClass) {
     this.entityName = entityName;
@@ -23,32 +13,14 @@ class BaseRepository {
   // Generic CRUD operations
   async create(data) {
     try {
-      // Create entity instance
       const entity = new this.EntityClass(data);
-      
-      // Get existing data
       const existingData = await this.getAll();
-      
-      // Add new entity
       existingData.push(entity.toJSON());
-      
-      // Save to storage
       const saved = this.storageService.setItem(this.storageKey, existingData);
-      if (!saved) {
-        throw new Error(`Failed to save ${this.entityName}`);
-      }
-
-      return {
-        success: true,
-        data: entity.toJSON(),
-        id: entity.id
-      };
+      if (!saved) throw new Error(`Failed to save ${this.entityName}`);
+      return { success: true, data: entity.toJSON(), id: entity.id };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      return { success: false, error: error.message, data: null };
     }
   }
 
@@ -79,34 +51,15 @@ class BaseRepository {
     try {
       const allData = await this.getAll();
       const index = allData.findIndex(item => item.id === id);
-      
-      if (index === -1) {
-        throw new Error(`${this.entityName} not found`);
-      }
-
-      // Create entity instance and update
+      if (index === -1) throw new Error(`${this.entityName} not found`);
       const entity = this.EntityClass.fromJSON(allData[index]);
       entity.update(updateData);
-      
-      // Update in array
       allData[index] = entity.toJSON();
-      
-      // Save to storage
       const saved = this.storageService.setItem(this.storageKey, allData);
-      if (!saved) {
-        throw new Error(`Failed to update ${this.entityName}`);
-      }
-
-      return {
-        success: true,
-        data: entity.toJSON()
-      };
+      if (!saved) throw new Error(`Failed to update ${this.entityName}`);
+      return { success: true, data: entity.toJSON() };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        data: null
-      };
+      return { success: false, error: error.message, data: null };
     }
   }
 
@@ -114,26 +67,12 @@ class BaseRepository {
     try {
       const allData = await this.getAll();
       const filteredData = allData.filter(item => item.id !== id);
-      
-      if (allData.length === filteredData.length) {
-        throw new Error(`${this.entityName} not found`);
-      }
-
-      // Save to storage
+      if (allData.length === filteredData.length) throw new Error(`${this.entityName} not found`);
       const saved = this.storageService.setItem(this.storageKey, filteredData);
-      if (!saved) {
-        throw new Error(`Failed to delete ${this.entityName}`);
-      }
-
-      return {
-        success: true,
-        deletedId: id
-      };
+      if (!saved) throw new Error(`Failed to delete ${this.entityName}`);
+      return { success: true, deletedId: id };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
   }
 
@@ -141,23 +80,11 @@ class BaseRepository {
     try {
       const allData = await this.getAll();
       const filteredData = allData.filter(item => !ids.includes(item.id));
-      
-      // Save to storage
       const saved = this.storageService.setItem(this.storageKey, filteredData);
-      if (!saved) {
-        throw new Error(`Failed to delete multiple ${this.entityName}`);
-      }
-
-      return {
-        success: true,
-        deletedIds: ids,
-        deletedCount: allData.length - filteredData.length
-      };
+      if (!saved) throw new Error(`Failed to delete multiple ${this.entityName}`);
+      return { success: true, deletedIds: ids, deletedCount: allData.length - filteredData.length };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
   }
 
@@ -165,7 +92,7 @@ class BaseRepository {
     try {
       const item = await this.getById(id);
       return item !== null;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -174,7 +101,7 @@ class BaseRepository {
     try {
       const allData = await this.getAll();
       return allData.length;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }
@@ -182,15 +109,9 @@ class BaseRepository {
   async clear() {
     try {
       const saved = this.storageService.setItem(this.storageKey, []);
-      return {
-        success: saved,
-        error: saved ? null : 'Failed to clear data'
-      };
+      return { success: saved, error: saved ? null : 'Failed to clear data' };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
   }
 
@@ -198,18 +119,16 @@ class BaseRepository {
   async findBy(criteria) {
     try {
       const allData = await this.getAll();
-      return allData.filter(item => {
-        return Object.keys(criteria).every(key => {
+      return allData.filter(item =>
+        Object.keys(criteria).every(key => {
           const criteriaValue = criteria[key];
           const itemValue = item[key];
-          
           if (typeof criteriaValue === 'string' && typeof itemValue === 'string') {
             return itemValue.toLowerCase().includes(criteriaValue.toLowerCase());
           }
-          
           return itemValue === criteriaValue;
-        });
-      });
+        })
+      );
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         logger.error(`Error finding ${this.entityName} by criteria:`, error);
@@ -234,20 +153,13 @@ class BaseRepository {
   async getWithPagination(page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc') {
     try {
       const allData = await this.getAll();
-      
-      // Sort data
       const sortedData = this.sortData(allData, sortBy, sortOrder);
-      
-      // Apply pagination
       const offset = (page - 1) * limit;
       const paginatedData = sortedData.slice(offset, offset + limit);
-      
       return {
         data: paginatedData,
         pagination: {
-          page,
-          limit,
-          total: allData.length,
+          page, limit, total: allData.length,
           pages: Math.ceil(allData.length / limit),
           hasNext: offset + limit < allData.length,
           hasPrev: page > 1
@@ -259,97 +171,41 @@ class BaseRepository {
       }
       return {
         data: [],
-        pagination: {
-          page: 1,
-          limit,
-          total: 0,
-          pages: 0,
-          hasNext: false,
-          hasPrev: false
-        }
+        pagination: { page: 1, limit, total: 0, pages: 0, hasNext: false, hasPrev: false }
       };
     }
   }
 
   sortData(data, sortBy, sortOrder = 'desc') {
-    return data.sort((a, b) => {
-      let aValue = a[sortBy];
-      let bValue = b[sortBy];
-
-      // Handle date fields
-      if (sortBy.includes('date') || sortBy.includes('At')) {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
-      }
-
-      // Handle string fields
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-      } else {
-        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-      }
-    });
+    return sortData(data, sortBy, sortOrder);
   }
 
   // Batch operations
   async createMultiple(dataArray) {
     const results = [];
-    
     for (const data of dataArray) {
-      const result = await this.create(data);
-      results.push(result);
+      results.push(await this.create(data));
     }
-
     const successful = results.filter(r => r.success);
     const failed = results.filter(r => !r.success);
-
-    return {
-      total: results.length,
-      successful: successful.length,
-      failed: failed.length,
-      results,
-      data: successful.map(r => r.data)
-    };
+    return { total: results.length, successful: successful.length, failed: failed.length, results, data: successful.map(r => r.data) };
   }
 
   async updateMultiple(updates) {
     const results = [];
-    
     for (const update of updates) {
-      const result = await this.update(update.id, update.data);
-      results.push({
-        id: update.id,
-        ...result
-      });
+      results.push({ id: update.id, ...(await this.update(update.id, update.data)) });
     }
-
     const successful = results.filter(r => r.success);
     const failed = results.filter(r => !r.success);
-
-    return {
-      total: results.length,
-      successful: successful.length,
-      failed: failed.length,
-      results
-    };
+    return { total: results.length, successful: successful.length, failed: failed.length, results };
   }
 
   // Backup and restore
   async backup() {
     try {
       const allData = await this.getAll();
-      return {
-        entityName: this.entityName,
-        storageKey: this.storageKey,
-        data: allData,
-        timestamp: new Date().toISOString(),
-        count: allData.length
-      };
+      return { entityName: this.entityName, storageKey: this.storageKey, data: allData, timestamp: new Date().toISOString(), count: allData.length };
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         logger.error(`Error backing up ${this.entityName}:`, error);
@@ -360,24 +216,12 @@ class BaseRepository {
 
   async restore(backupData) {
     try {
-      if (!backupData || !backupData.data) {
-        throw new Error('Invalid backup data');
-      }
-
+      if (!backupData || !backupData.data) throw new Error('Invalid backup data');
       const saved = this.storageService.setItem(this.storageKey, backupData.data);
-      if (!saved) {
-        throw new Error('Failed to restore data');
-      }
-
-      return {
-        success: true,
-        restoredCount: backupData.data.length
-      };
+      if (!saved) throw new Error('Failed to restore data');
+      return { success: true, restoredCount: backupData.data.length };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
   }
 
@@ -385,38 +229,22 @@ class BaseRepository {
   async validateData() {
     try {
       const allData = await this.getAll();
-      const results = {
-        total: allData.length,
-        valid: 0,
-        invalid: 0,
-        errors: []
-      };
-
+      const results = { total: allData.length, valid: 0, invalid: 0, errors: [] };
       for (const item of allData) {
         try {
-          // Try to create entity to validate
           new this.EntityClass(item);
           results.valid++;
         } catch (error) {
           results.invalid++;
-          results.errors.push({
-            id: item.id,
-            error: error.message
-          });
+          results.errors.push({ id: item.id, error: error.message });
         }
       }
-
       return results;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         logger.error(`Error validating ${this.entityName} data:`, error);
       }
-      return {
-        total: 0,
-        valid: 0,
-        invalid: 0,
-        errors: []
-      };
+      return { total: 0, valid: 0, invalid: 0, errors: [] };
     }
   }
 
@@ -425,16 +253,12 @@ class BaseRepository {
     try {
       const allData = await this.getAll();
       const searchTerm = query.toLowerCase();
-      
       return allData.filter(item => {
-        // If no specific fields provided, search all string fields
         if (fields.length === 0) {
-          return Object.values(item).some(value => 
+          return Object.values(item).some(value =>
             typeof value === 'string' && value.toLowerCase().includes(searchTerm)
           );
         }
-        
-        // Search specific fields
         return fields.some(field => {
           const value = item[field];
           return typeof value === 'string' && value.toLowerCase().includes(searchTerm);

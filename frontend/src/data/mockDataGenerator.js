@@ -2,64 +2,8 @@
  * Mock Data Generator for Budget Tracker
  * Generates realistic financial data for testing Phase 6 charts
  */
-
-// Categories with realistic spending patterns
-const EXPENSE_CATEGORIES = [
-  { name: 'Food & Dining', avgAmount: 120, variance: 40, frequency: 0.8 },
-  { name: 'Transportation', avgAmount: 45, variance: 25, frequency: 0.4 },
-  { name: 'Shopping', avgAmount: 60, variance: 40, frequency: 0.15 },
-  { name: 'Bills & Utilities', avgAmount: 150, variance: 30, frequency: 0.05 }, // Few times per month
-  { name: 'Entertainment', avgAmount: 25, variance: 20, frequency: 0.2 },
-  { name: 'Healthcare', avgAmount: 75, variance: 50, frequency: 0.1 },
-  { name: 'Personal Care', avgAmount: 40, variance: 20, frequency: 0.12 },
-  { name: 'Home & Garden', avgAmount: 80, variance: 60, frequency: 0.08 }
-];
-
-const INCOME_CATEGORIES = [
-  { name: 'Salary', avgAmount: 3500, variance: 0, frequency: 0.04 }, // Twice per month
-  { name: 'Freelance', avgAmount: 250, variance: 150, frequency: 0.1 },
-  { name: 'Investment', avgAmount: 100, variance: 80, frequency: 0.05 },
-  { name: 'Side Business', avgAmount: 180, variance: 100, frequency: 0.08 }
-];
-
-// Helper function to generate random amount with variance
-const generateAmount = (baseAmount, variance) => {
-  const randomFactor = (Math.random() - 0.5) * 2; // -1 to 1
-  return Math.max(1, Math.round(baseAmount + (randomFactor * variance)));
-};
-
-// Helper function to generate random date within a range
-const generateRandomDate = (startDate, endDate) => {
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
-  const randomTime = start + Math.random() * (end - start);
-  return new Date(randomTime);
-};
-
-// Generate description based on category
-const generateDescription = (category, type) => {
-  const descriptions = {
-    // Expense descriptions
-    'Food & Dining': ['Weekly grocery shopping', 'Supermarket run', 'Fresh produce', 'Restaurant dinner', 'Coffee shop'],
-    'Transportation': ['Gas station fill-up', 'Uber ride', 'Public transit', 'Parking fee', 'Car maintenance'],
-    'Shopping': ['Clothing purchase', 'Amazon order', 'Home supplies', 'Electronics', 'Personal items'],
-    'Bills & Utilities': ['Electricity bill', 'Internet bill', 'Water bill', 'Phone bill', 'Cable TV'],
-    'Entertainment': ['Movie tickets', 'Concert tickets', 'Streaming service', 'Gaming', 'Books'],
-    'Healthcare': ['Doctor visit', 'Pharmacy', 'Dental cleaning', 'Insurance copay', 'Medication'],
-    'Personal Care': ['Gym membership', 'Haircut', 'Cosmetics', 'Spa treatment', 'Personal trainer'],
-    'Home & Garden': ['Furniture', 'Home repairs', 'Gardening supplies', 'Appliances', 'Home improvement'],
-    
-    // Income descriptions
-    'Salary': ['Bi-weekly paycheck', 'Monthly salary', 'Salary deposit'],
-    'Freelance': ['Web design project', 'Consulting work', 'Freelance writing', 'Photography gig'],
-    'Investment': ['Dividend payment', 'Stock profit', 'Bond interest', 'Crypto gains'],
-    'Side Business': ['Online sales', 'Tutoring session', 'Product sales', 'Service revenue']
-  };
-  
-  const categoryDescriptions = descriptions[category] || ['Transaction'];
-  const randomIndex = Math.floor(Math.random() * categoryDescriptions.length);
-  return categoryDescriptions[randomIndex];
-};
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from './mock/categories';
+import { generateAmount, generateRandomDate, generateDescription } from './mock/helpers';
 
 /**
  * Generate comprehensive mock data for testing

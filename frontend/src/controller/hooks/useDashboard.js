@@ -8,124 +8,14 @@ import {
   formatDate,
   formatPercentage
 } from '../utils/index.js';
-import { logger } from '../utils/logger.js';
 import { faChartLine } from '@fortawesome/free-solid-svg-icons';
-
-// Safe fallback functions for missing utilities
-const safeExecute = (fn, fallback) => {
-  try {
-    return fn();
-  } catch (error) {
-    logger.warn('Safe execute error:', error);
-    return fallback;
-  }
-};
-
-const asyncSafeExecute = async (fn, fallback) => {
-  try {
-    return await fn();
-  } catch (error) {
-    logger.warn('Async safe execute error:', error);
-    return fallback;
-  }
-};
-
-// Basic icon constants
-const COMMON_ICONS = {
-  SUCCESS: 'check-circle',
-  WARNING: 'exclamation-triangle',
-  ERROR: 'times-circle',
-  INFO: 'info-circle',
-  INCOME: 'arrow-up',
-  EXPENSE: 'arrow-down'
-};
-
-// Basic utility functions
-const calculateBalance = (transactions = []) => {
-  const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
-  return { income, expenses, balance: income - expenses };
-};
-
-// Calculate balance for last 30 days (rolling window)
-const calculateLast30DaysBalance = (transactions = []) => {
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const last30DaysTransactions = transactions.filter(t => {
-    const transactionDate = new Date(t.date);
-    return transactionDate >= thirtyDaysAgo && transactionDate <= now;
-  });
-
-  return calculateBalance(last30DaysTransactions);
-};
-
-// FIX BUG #2: Calculate balance for the last FULL calendar month
-// Today = Nov 5, 2025 → Last full month = October 2025 (Oct 1 - Oct 31)
-const calculateLastFullMonthBalance = (transactions = []) => {
-  const now = new Date();
-
-  // Get the first day of the current month
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Get the last full month by going back one month from current month start
-  const lastFullMonthStart = new Date(currentMonthStart);
-  lastFullMonthStart.setMonth(lastFullMonthStart.getMonth() - 1);
-
-  // Get the last day of the last full month (one day before current month starts)
-  const lastFullMonthEnd = new Date(currentMonthStart);
-  lastFullMonthEnd.setDate(lastFullMonthEnd.getDate() - 1);
-  lastFullMonthEnd.setHours(23, 59, 59, 999);
-
-  const lastFullMonthTransactions = transactions.filter(t => {
-    const transactionDate = new Date(t.date);
-    return transactionDate >= lastFullMonthStart && transactionDate <= lastFullMonthEnd;
-  });
-
-  const balance = calculateBalance(lastFullMonthTransactions);
-
-  return {
-    ...balance,
-    monthName: lastFullMonthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-    startDate: lastFullMonthStart,
-    endDate: lastFullMonthEnd
-  };
-};
-
-// Helper to get last full month name for display
-const getLastFullMonthName = () => {
-  const now = new Date();
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  return lastMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-};
-
-const calculateSpendingByCategory = (transactions = [], type = 'expense') => {
-  const categoryMap = {};
-
-  transactions
-    .filter(t => t.type === type)
-    .forEach(t => {
-      // Try different ways to get category identifier
-      const category = t.category?.name || t.category?.id || t.categoryId || t.category_id || t.category || 'Other';
-
-      if (!categoryMap[category]) {
-        categoryMap[category] = { amount: 0, count: 0 };
-      }
-      categoryMap[category].amount += (t.amount || 0);
-      categoryMap[category].count += 1;
-    });
-
-  const result = Object.entries(categoryMap)
-    .map(([category, data]) => ({
-      category,
-      amount: data.amount,
-      transactionCount: data.count
-    }))
-    .sort((a, b) => b.amount - a.amount);
-
-  return result;
-};
+import {
+  calculateBalance,
+  calculateLastFullMonthBalance,
+  getLastFullMonthName,
+  calculateSpendingByCategory
+} from './dashboard/balanceCalculations.js';
+import { safeExecute } from './dashboard/safeExecute.js';
 
 // Hook for dashboard data processing
 export const useDashboard = () => {

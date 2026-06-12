@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faDollarSign, 
-  faCalendarAlt, 
-  faFileText, 
-  faTag,
+import {
+  faDollarSign,
+  faCalendarAlt,
+  faFileText,
   faExchangeAlt,
   faSave,
   faTimes,
-  faSpinner,
-  faArrowUp,
-  faArrowDown
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -19,19 +16,29 @@ import { useTransactions } from '../../../controller/hooks/useTransactions';
 import { useCategories } from '../../../controller/hooks/useCategories';
 import { DEFAULT_CATEGORIES } from '../../../controller/utils/constants';
 import { formatCurrencyInput, formatDateInput } from '../../../controller/utils/formatters';
+import TypeSelector from './transaction-form/TypeSelector';
+import CategorySelect from './transaction-form/CategorySelect';
+import validateTransactionForm from './transaction-form/validateTransactionForm';
 
-const TransactionForm = ({ 
-  transaction = null, 
+const EMPTY_FORM = {
+  type: 'expense',
+  amount: '',
+  description: '',
+  categoryId: '',
+  date: new Date().toISOString().split('T')[0]
+};
+
+const TransactionForm = ({
+  transaction = null,
   isOpen = true,
   onSave = () => {},
   onCancel = () => {},
   className = ''
 }) => {
-  // Hooks
-  const { 
-    createTransaction, 
-    updateTransaction, 
-    isCreatingTransaction, 
+  const {
+    createTransaction,
+    updateTransaction,
+    isCreatingTransaction,
     isUpdatingTransaction,
     hasError,
     getError
@@ -39,128 +46,51 @@ const TransactionForm = ({
 
   const { categories } = useCategories();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    type: 'expense',
-    amount: '',
-    description: '',
-    categoryId: '', // Changed from 'category' to 'categoryId'
-    date: new Date().toISOString().split('T')[0]
-  });
-
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
-  const [suggestions, setSuggestions] = useState({
-    categories: [],
-    descriptions: []
-  });
+  const [suggestions, setSuggestions] = useState({ categories: [], descriptions: [] });
 
-  // Determine if editing
   const isEditing = Boolean(transaction);
   const isLoading = isCreatingTransaction || isUpdatingTransaction;
 
-  // Initialize form data when transaction prop changes
   useEffect(() => {
     if (transaction) {
       setFormData({
         type: transaction.type || 'expense',
         amount: transaction.amount?.toString() || '',
         description: transaction.description || '',
-        categoryId: transaction.categoryId || transaction.category_id || '', // Handle both formats
+        categoryId: transaction.categoryId || transaction.category_id || '',
         date: formatDateInput(transaction.date) || new Date().toISOString().split('T')[0]
       });
     } else {
-      // Reset form for new transaction
-      setFormData({
-        type: 'expense',
-        amount: '',
-        description: '',
-        categoryId: '', // Changed from 'category' to 'categoryId'
-        date: new Date().toISOString().split('T')[0]
-      });
+      setFormData(EMPTY_FORM);
     }
     setErrors({});
   }, [transaction]);
 
-  // Update category suggestions when type changes
   useEffect(() => {
-    const availableCategories = categories.length > 0 
+    const availableCategories = categories.length > 0
       ? categories.filter(cat => cat.type === formData.type)
       : DEFAULT_CATEGORIES[formData.type] || [];
-    
-    setSuggestions(prev => ({
-      ...prev,
-      categories: availableCategories
-    }));
+
+    setSuggestions(prev => ({ ...prev, categories: availableCategories }));
   }, [formData.type, categories]);
 
-  // Form validation
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Amount validation
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
-    } else if (parseFloat(formData.amount) > 1000000) {
-      newErrors.amount = 'Amount cannot exceed $1,000,000';
-    }
-
-    // Description validation
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    } else if (formData.description.trim().length > 100) {
-      newErrors.description = 'Description cannot exceed 100 characters';
-    }
-
-    // Category validation
-    if (!formData.categoryId) {
-      newErrors.categoryId = 'Category is required'; // Changed field name
-    }
-
-    // Date validation
-    if (!formData.date) {
-      newErrors.date = 'Date is required';
-    } else {
-      const selectedDate = new Date(formData.date);
-      const today = new Date();
-      const fiveYearsAgo = new Date();
-      fiveYearsAgo.setFullYear(today.getFullYear() - 5);
-
-      if (selectedDate > today) {
-        newErrors.date = 'Date cannot be in the future';
-      } else if (selectedDate < fiveYearsAgo) {
-        newErrors.date = 'Date cannot be more than 5 years ago';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle input changes
   const handleInputChange = (field, value) => {
     if (field === 'amount') {
       value = formatCurrencyInput(value);
     }
-
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: null
-      }));
+      setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    const newErrors = validateTransactionForm(formData);
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -180,15 +110,8 @@ const TransactionForm = ({
 
       if (result) {
         onSave(result);
-        // Reset form if creating new transaction
         if (!isEditing) {
-          setFormData({
-            type: 'expense',
-            amount: '',
-            description: '',
-            categoryId: '', // Changed from 'category' to 'categoryId'
-            date: new Date().toISOString().split('T')[0]
-          });
+          setFormData(EMPTY_FORM);
         }
       }
     } catch (error) {
@@ -196,22 +119,14 @@ const TransactionForm = ({
     }
   };
 
-  // Handle cancel
   const handleCancel = () => {
     if (!isEditing) {
-      setFormData({
-        type: 'expense',
-        amount: '',
-        description: '',
-        categoryId: '', // Changed from 'category' to 'categoryId'
-        date: new Date().toISOString().split('T')[0]
-      });
+      setFormData(EMPTY_FORM);
     }
     setErrors({});
     onCancel();
   };
 
-  // Get current error message
   const getCurrentError = () => {
     if (hasError('create')) return getError('create');
     if (hasError('update')) return getError('update');
@@ -221,7 +136,7 @@ const TransactionForm = ({
   if (!isOpen) return null;
 
   return (
-    <Card 
+    <Card
       className={className}
       title={
         <div className="flex items-center space-x-2">
@@ -231,7 +146,6 @@ const TransactionForm = ({
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Error Display */}
         {getCurrentError() && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
@@ -241,56 +155,8 @@ const TransactionForm = ({
           </div>
         )}
 
-        {/* Transaction Type */}
-        <div>
-          <label className="block text-sm font-medium text-theme-primary mb-3">
-            Transaction Type <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleInputChange('type', 'income')}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                formData.type === 'income'
-                  ? 'border-green-500 bg-green-50 text-green-700'
-                  : 'border-theme-primary bg-theme-primary text-theme-secondary'
-              }`}
-            >
-              <div className="text-center">
-                <FontAwesomeIcon 
-                  icon={faArrowUp} 
-                  className={`text-xl mb-2 ${
-                    formData.type === 'income' ? 'text-green-600' : 'text-gray-400'
-                  }`} 
-                />
-                <div className="font-medium">Income</div>
-                <div className="text-xs text-gray-500">Money received</div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleInputChange('type', 'expense')}
-              className={`p-4 rounded-lg border-2 transition-colors ${
-                formData.type === 'expense'
-                  ? 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-theme-primary bg-theme-primary text-theme-secondary'
-              }`}
-            >
-              <div className="text-center">
-                <FontAwesomeIcon 
-                  icon={faArrowDown} 
-                  className={`text-xl mb-2 ${
-                    formData.type === 'expense' ? 'text-red-600' : 'text-gray-400'
-                  }`} 
-                />
-                <div className="font-medium">Expense</div>
-                <div className="text-xs text-gray-500">Money spent</div>
-              </div>
-            </button>
-          </div>
-        </div>
+        <TypeSelector value={formData.type} onChange={(v) => handleInputChange('type', v)} />
 
-        {/* Amount */}
         <Input
           label="Amount"
           type="text"
@@ -303,7 +169,6 @@ const TransactionForm = ({
           iconPosition="left"
         />
 
-        {/* Description */}
         <Input
           label="Description"
           type="text"
@@ -316,38 +181,13 @@ const TransactionForm = ({
           iconPosition="left"
         />
 
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-theme-primary mb-2">
-            Category <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <FontAwesomeIcon 
-              icon={faTag} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary w-4 h-4"
-            />
-            <select
-              value={formData.categoryId} // Changed from 'category' to 'categoryId'
-              onChange={(e) => handleInputChange('categoryId', e.target.value)} // Changed field name
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg input-theme ${
-                errors.categoryId ? 'input-error' : ''
-              }`}
-              required
-            >
-              <option value="">Select a category</option>
-              {suggestions.categories.map((category) => (
-                <option key={category.id || category.name || category} value={category.id || category.name || category}>
-                  {category.name || category}
-                </option>
-              ))}
-            </select>
-          </div>
-          {errors.categoryId && ( // Changed error field
-            <p className="mt-2 text-sm text-red-600">{errors.categoryId}</p>
-          )}
-        </div>
+        <CategorySelect
+          value={formData.categoryId}
+          onChange={(v) => handleInputChange('categoryId', v)}
+          error={errors.categoryId}
+          categories={suggestions.categories}
+        />
 
-        {/* Date */}
         <Input
           label="Date"
           type="date"
@@ -359,22 +199,12 @@ const TransactionForm = ({
           iconPosition="left"
         />
 
-        {/* Action Buttons */}
         <div className="flex items-center justify-end space-x-3 pt-4 border-t border-theme-primary">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
             <FontAwesomeIcon icon={faTimes} className="mr-2" />
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isLoading}
-          >
+          <Button type="submit" variant="primary" disabled={isLoading}>
             {isLoading ? (
               <>
                 <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />

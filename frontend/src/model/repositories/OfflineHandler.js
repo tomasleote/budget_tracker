@@ -1,28 +1,24 @@
 import { logger } from '../../controller/utils/logger.js';
-/**
- * Offline Mode Handler
- * Manages offline functionality and data synchronization
- */
+import {
+  generateOperationId,
+  loadPendingOperations,
+  savePendingOperations,
+  MUTATION_METHODS,
+} from './offline/queueHelpers.js';
 
 class OfflineHandler {
   constructor() {
     this.isOnline = navigator.onLine;
-    this.pendingOperations = this.loadPendingOperations();
+    this.pendingOperations = loadPendingOperations();
     this.listeners = new Set();
     this.setupEventListeners();
   }
 
-  /**
-   * Setup online/offline event listeners
-   */
   setupEventListeners() {
     window.addEventListener('online', this.handleOnline.bind(this));
     window.addEventListener('offline', this.handleOffline.bind(this));
   }
 
-  /**
-   * Handle online event
-   */
   handleOnline() {
     logger.debug('🌐 Connection restored');
     this.isOnline = true;
@@ -30,82 +26,33 @@ class OfflineHandler {
     this.processPendingOperations();
   }
 
-  /**
-   * Handle offline event
-   */
   handleOffline() {
     logger.debug('📵 Connection lost - switching to offline mode');
     this.isOnline = false;
     this.notifyListeners(false);
   }
 
-  /**
-   * Add listener for connection changes
-   * @param {Function} callback - Callback function
-   * @returns {Function} Unsubscribe function
-   */
   addConnectionListener(callback) {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
   }
 
-  /**
-   * Notify all listeners of connection change
-   * @param {boolean} online - Online status
-   */
   notifyListeners(online) {
     this.listeners.forEach(callback => callback(online));
   }
 
-  /**
-   * Queue operation for when connection is restored
-   * @param {Object} operation - Operation details
-   */
   queueOperation(operation) {
     const queuedOp = {
-      id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateOperationId(),
       timestamp: new Date().toISOString(),
       ...operation
     };
-
     this.pendingOperations.push(queuedOp);
-    this.savePendingOperations();
-    
+    savePendingOperations(this.pendingOperations);
     logger.debug('📋 Operation queued for sync:', queuedOp);
     return queuedOp.id;
   }
 
-  /**
-   * Load pending operations from localStorage
-   * @returns {Array} Pending operations
-   */
-  loadPendingOperations() {
-    try {
-      const stored = localStorage.getItem('budget_tracker_pending_operations');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      logger.error('Error loading pending operations:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Save pending operations to localStorage
-   */
-  savePendingOperations() {
-    try {
-      localStorage.setItem(
-        'budget_tracker_pending_operations',
-        JSON.stringify(this.pendingOperations)
-      );
-    } catch (error) {
-      logger.error('Error saving pending operations:', error);
-    }
-  }
-
-  /**
-   * Process all pending operations
-   */
   async processPendingOperations() {
     if (this.pendingOperations.length === 0) {
       logger.debug('✅ No pending operations to sync');
@@ -113,14 +60,8 @@ class OfflineHandler {
     }
 
     logger.debug(`🔄 Processing ${this.pendingOperations.length} pending operations...`);
-    
-    const results = {
-      successful: 0,
-      failed: 0,
-      errors: []
-    };
+    const results = { successful: 0, failed: 0, errors: [] };
 
-    // Process operations in order
     for (const operation of [...this.pendingOperations]) {
       try {
         await this.processOperation(operation);
@@ -129,133 +70,65 @@ class OfflineHandler {
       } catch (error) {
         logger.error('Failed to process operation:', operation, error);
         results.failed++;
-        results.errors.push({
-          operation,
-          error: error.message
-        });
+        results.errors.push({ operation, error: error.message });
       }
     }
 
     logger.debug('📊 Sync complete:', results);
-    
-    // Notify about sync completion
-    if (results.failed > 0) {
-      this.notifySyncError(results);
-    } else {
-      this.notifySyncSuccess(results);
-    }
+    if (results.failed > 0) { this.notifySyncError(results); }
+    else { this.notifySyncSuccess(results); }
 
     return results;
   }
 
-  /**
-   * Process a single operation
-   * @param {Object} operation - Operation to process
-   */
   async processOperation(operation) {
-    const { type, entity, action, data } = operation;
-    
-    // Import repositories dynamically to avoid circular dependencies
+    const { entity, action, data } = operation;
+
+    // Dynamic import avoids circular dependency with RepositoryFactory
     const { RepositoryFactory } = await import('./RepositoryFactory.js');
-    
-    // Get the appropriate repository (force API mode)
+
     let repository;
     switch (entity) {
-      case 'transaction':
-        repository = RepositoryFactory.createTransactionRepository();
-        break;
-      case 'category':
-        repository = RepositoryFactory.createCategoryRepository();
-        break;
-      case 'budget':
-        repository = RepositoryFactory.createBudgetRepository();
-        break;
-      default:
-        throw new Error(`Unknown entity type: ${entity}`);
+      case 'transaction': repository = RepositoryFactory.createTransactionRepository(); break;
+      case 'category':    repository = RepositoryFactory.createCategoryRepository();    break;
+      case 'budget':      repository = RepositoryFactory.createBudgetRepository();      break;
+      default: throw new Error(`Unknown entity type: ${entity}`);
     }
 
-    // Execute the operation
     switch (action) {
-      case 'create':
-        return await repository.create(data);
-      case 'update':
-        return await repository.update(data.id, data);
-      case 'delete':
-        return await repository.delete(data.id);
-      default:
-        throw new Error(`Unknown action: ${action}`);
+      case 'create': return await repository.create(data);
+      case 'update': return await repository.update(data.id, data);
+      case 'delete': return await repository.delete(data.id);
+      default: throw new Error(`Unknown action: ${action}`);
     }
   }
 
-  /**
-   * Remove pending operation
-   * @param {string} operationId - Operation ID
-   */
   removePendingOperation(operationId) {
-    this.pendingOperations = this.pendingOperations.filter(
-      op => op.id !== operationId
-    );
-    this.savePendingOperations();
+    this.pendingOperations = this.pendingOperations.filter(op => op.id !== operationId);
+    savePendingOperations(this.pendingOperations);
   }
 
-  /**
-   * Clear all pending operations
-   */
   clearPendingOperations() {
     this.pendingOperations = [];
-    this.savePendingOperations();
+    savePendingOperations(this.pendingOperations);
   }
 
-  /**
-   * Get pending operations count
-   * @returns {number} Count
-   */
-  getPendingCount() {
-    return this.pendingOperations.length;
-  }
+  getPendingCount() { return this.pendingOperations.length; }
 
-  /**
-   * Check if there are pending operations
-   * @returns {boolean} True if pending operations exist
-   */
-  hasPendingOperations() {
-    return this.pendingOperations.length > 0;
-  }
+  hasPendingOperations() { return this.pendingOperations.length > 0; }
 
-  /**
-   * Notify sync success
-   * @param {Object} results - Sync results
-   */
   notifySyncSuccess(results) {
-    // Dispatch custom event for UI notification
     window.dispatchEvent(new CustomEvent('offlineSyncComplete', {
-      detail: {
-        success: true,
-        message: `Successfully synced ${results.successful} operations`,
-        results
-      }
+      detail: { success: true, message: `Successfully synced ${results.successful} operations`, results }
     }));
   }
 
-  /**
-   * Notify sync error
-   * @param {Object} results - Sync results
-   */
   notifySyncError(results) {
-    // Dispatch custom event for UI notification
     window.dispatchEvent(new CustomEvent('offlineSyncComplete', {
-      detail: {
-        success: false,
-        message: `Failed to sync ${results.failed} operations`,
-        results
-      }
+      detail: { success: false, message: `Failed to sync ${results.failed} operations`, results }
     }));
   }
 
-  /**
-   * Get offline status info
-   * @returns {Object} Status information
-   */
   getStatus() {
     return {
       isOnline: this.isOnline,
@@ -265,60 +138,28 @@ class OfflineHandler {
     };
   }
 
-  /**
-   * Create offline-capable wrapper for repository methods
-   * @param {Object} repository - Repository instance
-   * @param {string} entityType - Entity type name
-   * @returns {Object} Wrapped repository
-   */
   wrapRepository(repository, entityType) {
     const handler = this;
-    
     return new Proxy(repository, {
       get(target, prop) {
         const original = target[prop];
-        
-        // Only wrap mutation methods
-        if (typeof original === 'function' && 
-            ['create', 'update', 'delete', 'createMultiple', 'updateMultiple', 'deleteMultiple'].includes(prop)) {
-          
+        if (typeof original === 'function' && MUTATION_METHODS.has(prop)) {
           return async function(...args) {
-            // If online, execute normally
-            if (handler.isOnline) {
-              return original.apply(target, args);
-            }
-            
-            // If offline, queue the operation
+            if (handler.isOnline) return original.apply(target, args);
             logger.debug(`📵 Offline: Queueing ${prop} operation for ${entityType}`);
-            
-            const operationData = {
-              type: 'repository',
-              entity: entityType,
-              action: prop,
-              data: args[0], // First argument is usually the data
-              args: args // Store all arguments for complex operations
-            };
-            
-            const operationId = handler.queueOperation(operationData);
-            
-            // Return a mock successful response
-            return {
-              success: true,
-              offline: true,
-              operationId,
-              message: 'Operation queued for sync when online',
-              data: args[0] // Return the data as if it was saved
-            };
+            const operationId = handler.queueOperation({
+              type: 'repository', entity: entityType, action: prop,
+              data: args[0], args
+            });
+            return { success: true, offline: true, operationId, message: 'Operation queued for sync when online', data: args[0] };
           };
         }
-        
         return original;
       }
     });
   }
 }
 
-// Create singleton instance
 const offlineHandler = new OfflineHandler();
 
 export default offlineHandler;

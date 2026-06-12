@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createAppStorage } from './local-storage/appStorage.js';
+import { createBackup, createSync } from './local-storage/backupRestore.js';
+import { createStorageUtils } from './local-storage/storageUtils.js';
 
 /**
  * Local Storage Controller Hook
@@ -97,165 +100,16 @@ export const useLocalStorage = () => {
   }, [isAvailable]);
 
   // Application-specific storage methods
-  const appStorage = {
-    // User data
-    saveUserData: (userData) => setItem('budget_tracker_user', userData),
-    getUserData: () => getItem('budget_tracker_user'),
-    clearUserData: () => removeItem('budget_tracker_user'),
-
-    // User preferences
-    saveUserPreferences: (preferences) => setItem('budget_tracker_preferences', preferences),
-    getUserPreferences: () => getItem('budget_tracker_preferences'),
-    clearUserPreferences: () => removeItem('budget_tracker_preferences'),
-
-    // Transactions
-    saveTransactions: (transactions) => setItem('budget_tracker_transactions', transactions),
-    getTransactions: () => getItem('budget_tracker_transactions', []),
-    clearTransactions: () => removeItem('budget_tracker_transactions'),
-
-    // Budgets
-    saveBudgets: (budgets) => setItem('budget_tracker_budgets', budgets),
-    getBudgets: () => getItem('budget_tracker_budgets', []),
-    clearBudgets: () => removeItem('budget_tracker_budgets'),
-
-    // Categories
-    saveCategories: (categories) => setItem('budget_tracker_categories', categories),
-    getCategories: () => getItem('budget_tracker_categories', []),
-    clearCategories: () => removeItem('budget_tracker_categories'),
-
-    // App settings
-    saveAppSettings: (settings) => setItem('budget_tracker_app_settings', settings),
-    getAppSettings: () => getItem('budget_tracker_app_settings', {}),
-    clearAppSettings: () => removeItem('budget_tracker_app_settings'),
-
-    // Last sync timestamp
-    saveLastSync: (timestamp = new Date().toISOString()) => setItem('budget_tracker_last_sync', timestamp),
-    getLastSync: () => getItem('budget_tracker_last_sync'),
-    clearLastSync: () => removeItem('budget_tracker_last_sync'),
-
-    // Clear all app data
-    clearAllAppData: () => {
-      const appKeys = [
-        'budget_tracker_user',
-        'budget_tracker_preferences', 
-        'budget_tracker_transactions',
-        'budget_tracker_budgets',
-        'budget_tracker_categories',
-        'budget_tracker_app_settings',
-        'budget_tracker_last_sync'
-      ];
-      
-      let cleared = 0;
-      appKeys.forEach(key => {
-        if (removeItem(key)) cleared++;
-      });
-      
-      return cleared;
-    },
-
-    // Export all app data
-    exportAllAppData: () => {
-      return {
-        user: appStorage.getUserData(),
-        preferences: appStorage.getUserPreferences(),
-        transactions: appStorage.getTransactions(),
-        budgets: appStorage.getBudgets(),
-        categories: appStorage.getCategories(),
-        appSettings: appStorage.getAppSettings(),
-        lastSync: appStorage.getLastSync(),
-        exportedAt: new Date().toISOString()
-      };
-    },
-
-    // Import all app data
-    importAllAppData: (data) => {
-      try {
-        if (data.user) appStorage.saveUserData(data.user);
-        if (data.preferences) appStorage.saveUserPreferences(data.preferences);
-        if (data.transactions) appStorage.saveTransactions(data.transactions);
-        if (data.budgets) appStorage.saveBudgets(data.budgets);
-        if (data.categories) appStorage.saveCategories(data.categories);
-        if (data.appSettings) appStorage.saveAppSettings(data.appSettings);
-        
-        appStorage.saveLastSync();
-        return true;
-      } catch (error) {
-        console.error('Error importing app data:', error);
-        return false;
-      }
-    }
-  };
+  const appStorage = createAppStorage(getItem, setItem, removeItem);
 
   // Backup and restore functionality
-  const backup = {
-    // Create backup of all data
-    createBackup: () => {
-      const backupData = appStorage.exportAllAppData();
-      const backupString = JSON.stringify(backupData);
-      
-      return {
-        data: backupString,
-        filename: `budget_tracker_backup_${new Date().toISOString().split('T')[0]}.json`,
-        size: backupString.length
-      };
-    },
-
-    // Restore from backup
-    restoreFromBackup: (backupString) => {
-      try {
-        const backupData = JSON.parse(backupString);
-        return appStorage.importAllAppData(backupData);
-      } catch (error) {
-        console.error('Error restoring from backup:', error);
-        return false;
-      }
-    },
-
-    // Download backup file
-    downloadBackup: () => {
-      const backup = backup.createBackup();
-      const blob = new Blob([backup.data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = backup.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      return true;
-    }
-  };
+  const backup = createBackup(appStorage);
 
   // State synchronization helpers
-  const sync = {
-    // Simple state sync - save data to localStorage
-    saveState: (key, state) => {
-      return setItem(`budget_tracker_state_${key}`, {
-        data: state,
-        timestamp: new Date().toISOString()
-      });
-    },
+  const sync = createSync(getItem, setItem);
 
-    // Load state from localStorage
-    loadState: (key) => {
-      const stateData = getItem(`budget_tracker_state_${key}`);
-      return stateData ? stateData.data : null;
-    },
-
-    // Check if state is stale (older than specified minutes)
-    isStateStale: (key, maxAgeMinutes = 30) => {
-      const stateData = getItem(`budget_tracker_state_${key}`);
-      if (!stateData || !stateData.timestamp) return true;
-      
-      const stateAge = Date.now() - new Date(stateData.timestamp).getTime();
-      const maxAge = maxAgeMinutes * 60 * 1000; // Convert to milliseconds
-      
-      return stateAge > maxAge;
-    }
-  };
+  // Utility functions
+  const utils = createStorageUtils(isAvailable);
 
   return {
     // Basic operations
@@ -264,45 +118,21 @@ export const useLocalStorage = () => {
     removeItem,
     clear,
     getStorageInfo,
-    
+
     // Availability
     isAvailable,
-    
+
     // App-specific storage
     appStorage,
-    
+
     // Backup and restore
     backup,
-    
+
     // State synchronization
     sync,
-    
+
     // Utility functions
-    utils: {
-      // Check if a key exists
-      hasKey: (key) => isAvailable && localStorage.getItem(key) !== null,
-      
-      // Get all keys
-      getAllKeys: () => {
-        if (!isAvailable) return [];
-        return Object.keys(localStorage);
-      },
-      
-      // Get all app-related keys
-      getAppKeys: () => {
-        if (!isAvailable) return [];
-        return Object.keys(localStorage).filter(key => key.startsWith('budget_tracker_'));
-      },
-      
-      // Format size in human readable format
-      formatSize: (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-      }
-    }
+    utils
   };
 };
 

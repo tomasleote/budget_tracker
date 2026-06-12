@@ -1,10 +1,15 @@
 import { useBudgetContext } from '../context/providers/BudgetProvider.jsx';
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { formatCurrency, formatPercentage } from '../utils/index.js';
+import {
+  formatBudgetItem,
+  buildAnalytics,
+  formatOverviewItem
+} from './budgets/budgetFormatters.js';
 
 /**
  * useBudgets - FIXED FOR BUDGET PROGRESS
- * 
+ *
  * Budget controller hook for managing budget operations
  * Now properly calculates budget progress and overview
  */
@@ -79,35 +84,15 @@ export const useBudgets = () => {
   const budgets = useMemo(() => {
     return safeExecute(() => {
       const budgetData = context.budgets || [];
-      
+
       return budgetData.map(budget => {
-        // Find corresponding overview data for this budget
         const overviewBudget = overview.find(ob => ob.id === budget.id);
-        const progress = overviewBudget?.progress || {
-          spent: 0,
-          remaining: parseFloat(budget.budgetAmount) || parseFloat(budget.amount) || 0,
-          percentage: 0
-        };
-        
-        const spent = parseFloat(progress.spent) || 0;
-        const budgetAmount = parseFloat(budget.budgetAmount) || parseFloat(budget.amount) || 0;
-        const remaining = parseFloat(progress.remaining) || (budgetAmount - spent);
-        const percentage = parseFloat(progress.percentage) || 0;
-        
+        const formatted = formatBudgetItem(budget, overviewBudget);
         return {
-          ...budget,
-          formattedAmount: formatCurrency(budgetAmount),
-          formattedSpent: formatCurrency(spent),
-          formattedRemaining: formatCurrency(remaining),
-          progress: {
-            spent,
-            remaining,
-            percentage
-          },
-          isOverBudget: percentage > 100,
-          isNearLimit: percentage >= 80 && percentage <= 100,
-          utilizationPercentage: percentage,
-          utilizationStatus: percentage > 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good'
+          ...formatted,
+          formattedAmount: formatCurrency(parseFloat(formatted.budgetAmount) || parseFloat(formatted.amount) || 0),
+          formattedSpent: formatCurrency(formatted.progress.spent),
+          formattedRemaining: formatCurrency(formatted.progress.remaining)
         };
       });
     }, []);
@@ -116,45 +101,14 @@ export const useBudgets = () => {
   // Basic analytics - CLEANED (no logging)
   const analytics = useMemo(() => {
     return safeExecute(() => {
-      // Use overview data which has the calculated progress
-      const overviewData = overview || [];
-      if (overviewData.length === 0) return null;
-      
-      const totalBudgetAmount = overviewData.reduce((sum, b) => sum + (parseFloat(b.budgetAmount) || 0), 0);
-      const totalSpent = overviewData.reduce((sum, b) => sum + (parseFloat(b.progress?.spent) || 0), 0);
-      const utilization = totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount * 100) : 0;
-      
-      return {
-        totalBudgetAmount,
-        totalSpent,
-        budgetUtilization: utilization,
-        formattedTotalBudget: formatCurrency(totalBudgetAmount),
-        formattedTotalSpent: formatCurrency(totalSpent),
-        formattedUtilization: formatPercentage(utilization),
-        healthScore: utilization <= 80 ? 'excellent' : utilization <= 100 ? 'good' : 'poor'
-      };
+      return buildAnalytics(overview || [], formatCurrency, formatPercentage);
     }, null);
   }, [overview]);
 
   // Format overview for display
   const formattedOverview = useMemo(() => {
     return safeExecute(() => {
-      return (overview || []).map(budget => {
-        const spent = parseFloat(budget.progress?.spent) || 0;
-        const budgetAmount = parseFloat(budget.budgetAmount) || 0;
-        const percentage = budgetAmount > 0 ? (spent / budgetAmount * 100) : 0;
-        
-        return {
-          ...budget,
-          formattedBudget: formatCurrency(budgetAmount),
-          formattedSpent: formatCurrency(spent),
-          formattedRemaining: formatCurrency(parseFloat(budget.progress?.remaining) || budgetAmount),
-          progressPercentage: percentage,
-          progressStatus: percentage > 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good',
-          isExceeded: percentage > 100,
-          isNearLimit: percentage >= 80 && percentage <= 100
-        };
-      });
+      return (overview || []).map(budget => formatOverviewItem(budget, formatCurrency));
     }, []);
   }, [overview]);
 

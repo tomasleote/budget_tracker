@@ -4,8 +4,9 @@
  */
 
 import api from '../client.js';
-import API_CONFIG, { buildQueryString } from '../config.js';
+import API_CONFIG from '../config.js';
 import { NotFoundError, ValidationError } from '../errors.js';
+import { normalizeGetAllResponse } from './base/responseNormalizer.js';
 
 class BaseApiService {
   constructor(resourceName, endpoints) {
@@ -13,11 +14,6 @@ class BaseApiService {
     this.endpoints = endpoints;
   }
 
-  /**
-   * Get all resources with pagination and filtering
-   * @param {Object} params - Query parameters (page, limit, filters, etc.)
-   * @returns {Promise<Object>} Paginated response with data and metadata
-   */
   async getAll(params = {}) {
     try {
       const {
@@ -32,41 +28,13 @@ class BaseApiService {
         ...filters,
       });
 
-      // Handle different response formats
-      if (response && typeof response === 'object') {
-        // If response has data and pagination properties
-        if ('data' in response && 'pagination' in response) {
-          return response;
-        }
-        // If response is an array, wrap it
-        if (Array.isArray(response)) {
-          return {
-            data: response,
-            pagination: {
-              page,
-              limit,
-              total: response.length,
-              pages: 1,
-              has_next: false,
-              has_prev: false,
-            },
-          };
-        }
-      }
-
-      return response;
+      return normalizeGetAllResponse(response, page, limit);
     } catch (error) {
       console.error(`Error fetching ${this.resourceName}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Get a single resource by ID
-   * @param {string} id - Resource ID
-   * @param {Object} params - Additional query parameters
-   * @returns {Promise<Object>} Resource data
-   */
   async getById(id, params = {}) {
     if (!id) {
       throw new ValidationError('ID is required');
@@ -83,11 +51,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Create a new resource
-   * @param {Object} data - Resource data
-   * @returns {Promise<Object>} Created resource
-   */
   async create(data) {
     if (!data || typeof data !== 'object') {
       throw new ValidationError('Invalid data provided');
@@ -102,17 +65,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Update a resource
-   * @param {string} id - Resource ID
-   * @param {Object} data - Update data
-   * @returns {Promise<Object>} Updated resource
-   */
   async update(id, data) {
     if (!id) {
       throw new ValidationError('ID is required');
     }
-
     if (!data || typeof data !== 'object') {
       throw new ValidationError('Invalid data provided');
     }
@@ -128,17 +84,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Partially update a resource
-   * @param {string} id - Resource ID
-   * @param {Object} data - Partial update data
-   * @returns {Promise<Object>} Updated resource
-   */
   async patch(id, data) {
     if (!id) {
       throw new ValidationError('ID is required');
     }
-
     if (!data || typeof data !== 'object') {
       throw new ValidationError('Invalid data provided');
     }
@@ -154,11 +103,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Delete a resource
-   * @param {string} id - Resource ID
-   * @returns {Promise<Object>} Deletion confirmation
-   */
   async delete(id) {
     if (!id) {
       throw new ValidationError('ID is required');
@@ -175,16 +119,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Bulk create resources
-   * @param {Array<Object>} dataArray - Array of resources to create
-   * @returns {Promise<Object>} Bulk operation result
-   */
   async bulkCreate(dataArray) {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       throw new ValidationError('Data array is required');
     }
-
     if (!this.endpoints.bulk) {
       throw new Error(`Bulk operations not supported for ${this.resourceName}`);
     }
@@ -201,16 +139,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Bulk update resources
-   * @param {Array<Object>} updates - Array of updates with IDs
-   * @returns {Promise<Object>} Bulk operation result
-   */
   async bulkUpdate(updates) {
     if (!Array.isArray(updates) || updates.length === 0) {
       throw new ValidationError('Updates array is required');
     }
-
     if (!this.endpoints.bulk) {
       throw new Error(`Bulk operations not supported for ${this.resourceName}`);
     }
@@ -227,16 +159,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Bulk delete resources
-   * @param {Array<string>} ids - Array of resource IDs to delete
-   * @returns {Promise<Object>} Bulk operation result
-   */
   async bulkDelete(ids) {
     if (!Array.isArray(ids) || ids.length === 0) {
       throw new ValidationError('IDs array is required');
     }
-
     if (!this.endpoints.bulk) {
       throw new Error(`Bulk operations not supported for ${this.resourceName}`);
     }
@@ -253,27 +179,17 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Search resources
-   * @param {string} query - Search query
-   * @param {Object} params - Additional parameters
-   * @returns {Promise<Array>} Search results
-   */
   async search(query, params = {}) {
     if (!query || typeof query !== 'string') {
       throw new ValidationError('Search query is required');
     }
 
     if (!this.endpoints.search) {
-      // Fallback to getAll with search parameter
       return this.getAll({ ...params, search: query });
     }
 
     try {
-      const response = await api.get(this.endpoints.search, {
-        q: query,
-        ...params,
-      });
+      const response = await api.get(this.endpoints.search, { q: query, ...params });
       return response;
     } catch (error) {
       console.error(`Error searching ${this.resourceName}:`, error);
@@ -281,11 +197,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Check if a resource exists
-   * @param {string} id - Resource ID
-   * @returns {Promise<boolean>} True if exists, false otherwise
-   */
   async exists(id) {
     try {
       await this.getById(id);
@@ -298,11 +209,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Get count of resources
-   * @param {Object} filters - Filter parameters
-   * @returns {Promise<number>} Resource count
-   */
   async count(filters = {}) {
     try {
       const response = await this.getAll({ ...filters, limit: 1 });
@@ -313,12 +219,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Get resource with custom endpoint
-   * @param {string} endpoint - Custom endpoint
-   * @param {Object} params - Query parameters
-   * @returns {Promise<any>} Response data
-   */
   async getCustom(endpoint, params = {}) {
     try {
       const response = await api.get(endpoint, params);
@@ -329,12 +229,6 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Post to custom endpoint
-   * @param {string} endpoint - Custom endpoint
-   * @param {Object} data - Request data
-   * @returns {Promise<any>} Response data
-   */
   async postCustom(endpoint, data = {}) {
     try {
       const response = await api.post(endpoint, data);
@@ -345,39 +239,10 @@ class BaseApiService {
     }
   }
 
-  /**
-   * Validate data before sending to API
-   * Override this method in child classes for custom validation
-   * @param {Object} data - Data to validate
-   * @param {string} operation - Operation type (create, update)
-   * @returns {Object} Validated data
-   */
-  validateData(data, operation = 'create') {
-    // Override in child classes
-    return data;
-  }
-
-  /**
-   * Transform API response data
-   * Override this method in child classes for custom transformation
-   * @param {Object} data - API response data
-   * @returns {Object} Transformed data
-   */
-  transformResponse(data) {
-    // Override in child classes
-    return data;
-  }
-
-  /**
-   * Transform data before sending to API
-   * Override this method in child classes for custom transformation
-   * @param {Object} data - Data to send
-   * @returns {Object} Transformed data
-   */
-  transformRequest(data) {
-    // Override in child classes
-    return data;
-  }
+  // Template methods — override in subclasses
+  validateData(data) { return data; }
+  transformResponse(data) { return data; }
+  transformRequest(data) { return data; }
 }
 
 export default BaseApiService;
