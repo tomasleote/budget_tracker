@@ -1,33 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faExchangeAlt,
-  faPlus,
-  faChartLine,
-  faSpinner
-} from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import Button from '../components/ui/Button';
-import Card from '../components/ui/Card';
-import ConfirmationModal from '../components/ui/ConfirmationModal';
 
-// Transaction components
-import {
-  TransactionList,
-  TransactionGrid,
-  TransactionFilterToolbar,
-  TransactionDetailModal
-} from '../components/transactions';
-
-// Import modal from forms
-import { TransactionFormModal } from '../components/forms';
-
-// Hooks
 import { useTransactions } from '../../controller/hooks/useTransactions';
 import { useCategories } from '../../controller/hooks/useCategories';
 
+import TransactionSummaryCards from './transactions/TransactionSummaryCards';
+import TransactionContent from './transactions/TransactionContent';
+import TransactionModals from './transactions/TransactionModals';
+
 const Transactions = () => {
-  // State management
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('list');
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -41,7 +25,6 @@ const Transactions = () => {
     search: ''
   });
 
-  // Hooks
   const {
     transactions,
     summary,
@@ -56,24 +39,19 @@ const Transactions = () => {
 
   const { categories } = useCategories();
 
-  // Load transactions on mount
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
 
-  // Transaction stats
   const stats = getTransactionStats();
 
-  // Filtered transactions based on local filters
   const actualFilteredTransactions = useMemo(() => {
     let result = transactions;
 
-    // Filter by type
     if (localFilters.type && localFilters.type !== 'all') {
       result = result.filter(t => t.type === localFilters.type);
     }
 
-    // Filter by date range (inclusive of the full "to" day)
     if (localFilters.dateFrom || localFilters.dateTo) {
       const fromDate = localFilters.dateFrom ? new Date(`${localFilters.dateFrom}T00:00:00`) : null;
       const toDate = localFilters.dateTo ? new Date(`${localFilters.dateTo}T23:59:59.999`) : null;
@@ -85,7 +63,6 @@ const Transactions = () => {
       });
     }
 
-    // Filter by search
     if (localFilters.search) {
       const searchTerm = localFilters.search.toLowerCase();
       result = result.filter(t =>
@@ -98,7 +75,6 @@ const Transactions = () => {
     return result;
   }, [transactions, localFilters]);
 
-  // Handle transaction operations
   const handleCreateTransaction = () => {
     setEditingTransaction(null);
     setShowTransactionModal(true);
@@ -114,29 +90,25 @@ const Transactions = () => {
     setShowDetailModal(true);
   };
 
-  const handleDeleteTransaction = async (transactionId) => {
-    // Find the transaction to show in confirmation
+  const handleDeleteTransaction = (transactionId) => {
     const transaction = actualFilteredTransactions.find(t => t.id === transactionId);
     setTransactionToDelete(transaction);
     setShowConfirmModal(true);
   };
 
-  const handleBulkDelete = async (transactionIds) => {
-    // Find the transactions to show in confirmation
-    const transactionsToRemove = actualFilteredTransactions.filter(t => transactionIds.includes(t.id));
-    setTransactionToDelete({ isBulk: true, count: transactionsToRemove.length, ids: transactionIds });
+  const handleBulkDelete = (transactionIds) => {
+    const count = actualFilteredTransactions.filter(t => transactionIds.includes(t.id)).length;
+    setTransactionToDelete({ isBulk: true, count, ids: transactionIds });
     setShowConfirmModal(true);
   };
 
   const handleConfirmDelete = async () => {
     if (transactionToDelete) {
       if (transactionToDelete.isBulk) {
-        // Handle bulk delete
-        for (const transactionId of transactionToDelete.ids) {
-          await deleteTransaction(transactionId);
+        for (const id of transactionToDelete.ids) {
+          await deleteTransaction(id);
         }
       } else {
-        // Handle single delete
         await deleteTransaction(transactionToDelete.id);
       }
       setShowConfirmModal(false);
@@ -144,61 +116,35 @@ const Transactions = () => {
     }
   };
 
-  const handleCancelDelete = () => {
-    setShowConfirmModal(false);
-    setTransactionToDelete(null);
-  };
-
-  const handleTransactionSaved = () => {
-    setShowTransactionModal(false);
-    setEditingTransaction(null);
-  };
-
-  const handleModalClose = () => {
-    setShowTransactionModal(false);
-    setEditingTransaction(null);
-  };
-
-  const handleDetailModalClose = () => {
-    setShowDetailModal(false);
-    setSelectedTransactionForDetail(null);
-  };
-
   const handleEditFromDetail = (transaction) => {
-    // Close detail modal and open edit modal
     setShowDetailModal(false);
     setSelectedTransactionForDetail(null);
     setEditingTransaction(transaction);
     setShowTransactionModal(true);
   };
 
-  const handleDeleteFromDetail = async (transactionId) => {
-    // Find the transaction to show in confirmation
+  const handleDeleteFromDetail = (transactionId) => {
     const transaction = actualFilteredTransactions.find(t => t.id === transactionId) || selectedTransactionForDetail;
     setTransactionToDelete(transaction);
-    setShowDetailModal(false); // Close detail modal
+    setShowDetailModal(false);
     setSelectedTransactionForDetail(null);
-    setShowConfirmModal(true); // Show confirmation modal
+    setShowConfirmModal(true);
   };
 
   return (
     <div className="min-h-screen transition-colors duration-300 bg-theme-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        {/* Page Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faExchangeAlt} className="text-xl text-theme-accent" />
-                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">
-                  Transactions
-                </h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-theme-primary">Transactions</h1>
               </div>
               <p className="text-sm lg:text-base text-theme-secondary">
                 Manage and track all your financial transactions
               </p>
             </div>
-
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
               <Button
                 variant="primary"
@@ -219,189 +165,40 @@ const Transactions = () => {
           </div>
         </div>
 
-        {/* Transaction Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 lg:mb-8">
-          <Card className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg" style={{
-                backgroundColor: 'var(--info-bg)'
-              }}>
-                <FontAwesomeIcon icon={faExchangeAlt} className="w-5 h-5" style={{
-                  color: 'var(--info)'
-                }} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-theme-secondary">Total Transactions</p>
-                <p className="text-2xl font-bold text-theme-primary">{stats.totalTransactions}</p>
-              </div>
-            </div>
-          </Card>
+        <TransactionSummaryCards stats={stats} summary={summary} />
 
-          <Card className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg" style={{
-                backgroundColor: 'var(--success-bg)'
-              }}>
-                <FontAwesomeIcon icon={faChartLine} className="w-5 h-5" style={{
-                  color: 'var(--success)'
-                }} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-theme-secondary">Total Income</p>
-                <p className="text-2xl font-bold" style={{
-                  color: 'var(--success)'
-                }}>{summary.formattedIncome}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg" style={{
-                backgroundColor: 'var(--error-bg)'
-              }}>
-                <FontAwesomeIcon icon={faChartLine} className="w-5 h-5" style={{
-                  color: 'var(--error)'
-                }} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-theme-secondary">Total Expenses</p>
-                <p className="text-2xl font-bold" style={{
-                  color: 'var(--error)'
-                }}>{summary.formattedExpenses}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg" style={{
-                backgroundColor: summary.isPositiveBalance ? 'var(--success-bg)' : 'var(--error-bg)'
-              }}>
-                <FontAwesomeIcon
-                  icon={summary.balanceIcon}
-                  className="w-5 h-5"
-                  style={{
-                    color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-theme-secondary">Net Balance</p>
-                <p className="text-2xl font-bold" style={{
-                  color: summary.isPositiveBalance ? 'var(--success)' : 'var(--error)'
-                }}>
-                  {summary.formattedBalance}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Transaction Content */}
-        <div className="space-y-6">
-          {/* Filter Toolbar */}
-          <TransactionFilterToolbar
-            filters={localFilters}
-            onFiltersChange={setLocalFilters}
-            onResetFilters={() => setLocalFilters({ type: 'all', dateFrom: '', dateTo: '', search: '' })}
-            categories={categories}
-            totalTransactions={actualFilteredTransactions.length}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showSearch={false}
-            hasAdvancedFilters={localFilters.type !== 'all' || localFilters.dateFrom || localFilters.dateTo || localFilters.search || (localFilters.category && localFilters.category !== 'all')}
-          />
-
-          {/* Transaction Display */}
-          {isLoading ? (
-            <Card>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="animate-pulse flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-theme-tertiary rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-theme-tertiary rounded w-1/4 mb-2"></div>
-                        <div className="h-3 bg-theme-tertiary rounded w-1/2"></div>
-                      </div>
-                      <div className="h-6 bg-theme-tertiary rounded w-20"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          ) : viewMode === 'list' ? (
-            <TransactionList
-              transactions={actualFilteredTransactions}
-              onTransactionSelect={handleViewTransaction}
-              onTransactionEdit={handleEditTransaction}
-              onTransactionDelete={handleDeleteTransaction}
-              onBulkDelete={handleBulkDelete}
-              isLoading={isLoading}
-              isUpdating={isUpdatingTransaction}
-              isDeleting={isDeletingTransaction}
-              parentFilters={localFilters}
-              onFiltersChange={(tableFilters) => {
-                // Merge table filters with local filters
-                setLocalFilters(prev => ({ ...prev, ...tableFilters }));
-              }}
-            />
-          ) : (
-            <TransactionGrid
-              transactions={actualFilteredTransactions}
-              onTransactionSelect={handleViewTransaction}
-              onTransactionEdit={handleEditTransaction}
-              onTransactionDelete={handleDeleteTransaction}
-              isLoading={isLoading}
-              isUpdating={isUpdatingTransaction}
-              isDeleting={isDeletingTransaction}
-              parentFilters={localFilters}
-              onFiltersChange={(tableFilters) => {
-                // Merge table filters with local filters
-                setLocalFilters(prev => ({ ...prev, ...tableFilters }));
-              }}
-            />
-          )}
-        </div>
-
-        {/* Transaction Form Modal */}
-        <TransactionFormModal
-          isOpen={showTransactionModal}
-          onClose={handleModalClose}
-          transaction={editingTransaction}
-          onTransactionSaved={handleTransactionSaved}
+        <TransactionContent
+          localFilters={localFilters}
+          onFiltersChange={setLocalFilters}
+          categories={categories}
+          filteredTransactions={actualFilteredTransactions}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          isLoading={isLoading}
+          isUpdatingTransaction={isUpdatingTransaction}
+          isDeletingTransaction={isDeletingTransaction}
+          onViewTransaction={handleViewTransaction}
+          onEditTransaction={handleEditTransaction}
+          onDeleteTransaction={handleDeleteTransaction}
+          onBulkDelete={handleBulkDelete}
         />
 
-        {/* Transaction Detail Modal */}
-        <TransactionDetailModal
-          isOpen={showDetailModal}
-          onClose={handleDetailModalClose}
-          transaction={selectedTransactionForDetail}
-          onEdit={handleEditFromDetail}
-          onDelete={handleDeleteFromDetail}
-          isDeleting={isDeletingTransaction}
+        <TransactionModals
+          showTransactionModal={showTransactionModal}
+          editingTransaction={editingTransaction}
+          onModalClose={() => { setShowTransactionModal(false); setEditingTransaction(null); }}
+          onTransactionSaved={() => { setShowTransactionModal(false); setEditingTransaction(null); }}
+          showDetailModal={showDetailModal}
+          selectedTransactionForDetail={selectedTransactionForDetail}
+          onDetailModalClose={() => { setShowDetailModal(false); setSelectedTransactionForDetail(null); }}
+          onEditFromDetail={handleEditFromDetail}
+          onDeleteFromDetail={handleDeleteFromDetail}
+          showConfirmModal={showConfirmModal}
+          transactionToDelete={transactionToDelete}
+          onCancelDelete={() => { setShowConfirmModal(false); setTransactionToDelete(null); }}
+          onConfirmDelete={handleConfirmDelete}
+          isDeletingTransaction={isDeletingTransaction}
         />
-
-        {/* Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={showConfirmModal}
-          onClose={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          title={transactionToDelete?.isBulk ? "Delete Transactions" : "Delete Transaction"}
-          message={
-            transactionToDelete?.isBulk
-              ? `Are you sure you want to delete ${transactionToDelete.count} selected transaction(s)? This action cannot be undone.`
-              : transactionToDelete
-                ? `Are you sure you want to delete "${transactionToDelete.description}"? This action cannot be undone.`
-                : 'Are you sure you want to delete this transaction?'
-          }
-          confirmText="Delete"
-          cancelText="Cancel"
-          variant="danger"
-          isLoading={isDeletingTransaction}
-        />
-
       </div>
     </div>
   );
