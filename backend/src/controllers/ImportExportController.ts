@@ -1,17 +1,22 @@
 import { Request, Response } from 'express';
 import { ImportExportService } from '../import-export/ImportExportService';
-import { 
-  ImportOptions, 
-  ExportOptions, 
+import {
+  ImportOptions,
+  ExportOptions,
   TemplateOptions,
-  IMPORT_LIMITS 
+  IMPORT_LIMITS
 } from '../import-export/types';
 import { logger } from '../config/logger';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
+import {
+  getFormatFromFile,
+  parseFilters,
+  sendFileDownload,
+  scheduleFileDeletion
+} from './helpers/importExportHelpers';
 
-// Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -22,7 +27,7 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const allowedExtensions = ['.csv', '.xlsx'];
     const fileExtension = path.extname(file.originalname).toLowerCase();
-    
+
     if (allowedExtensions.includes(fileExtension)) {
       cb(null, true);
     } else {
@@ -38,26 +43,17 @@ export class ImportExportController {
     this.importExportService = new ImportExportService();
   }
 
-  /**
-   * Handle file upload middleware
-   */
   uploadMiddleware = upload.single('file');
 
-  /**
-   * Import data from uploaded file
-   */
   async importData(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        res.status(400).json({
-          success: false,
-          error: 'No file uploaded'
-        });
+        res.status(400).json({ success: false, error: 'No file uploaded' });
         return;
       }
 
       const options: ImportOptions = {
-        format: req.body.format || this.getFormatFromFile(req.file.originalname),
+        format: req.body.format || getFormatFromFile(req.file.originalname),
         type: req.body.type || 'transactions',
         validateData: req.body.validateData !== 'false',
         skipDuplicates: req.body.skipDuplicates === 'true',
@@ -67,28 +63,14 @@ export class ImportExportController {
         encoding: req.body.encoding || 'utf8'
       };
 
-      logger.info('Starting import process', {
-        fileName: req.file.originalname,
-        fileSize: req.file.size,
-        options
-      });
+      logger.info('Starting import process', { fileName: req.file.originalname, fileSize: req.file.size, options });
 
-      const result = await this.importExportService.importData(
-        req.file.buffer,
-        req.file.originalname,
-        options
-      );
+      const result = await this.importExportService.importData(req.file.buffer, req.file.originalname, options);
 
       if (result.success) {
-        logger.info('Import completed successfully', {
-          summary: result.summary,
-          executionTime: result.execution_time_ms
-        });
+        logger.info('Import completed successfully', { summary: result.summary, executionTime: result.execution_time_ms });
       } else {
-        logger.warn('Import completed with errors', {
-          summary: result.summary,
-          errorCount: result.errors?.length || 0
-        });
+        logger.warn('Import completed with errors', { summary: result.summary, errorCount: result.errors?.length || 0 });
       }
 
       res.status(result.success ? 200 : 422).json(result);
@@ -102,9 +84,6 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Export data to file
-   */
   async exportData(req: Request, res: Response): Promise<void> {
     try {
       const options: ExportOptions = {
@@ -112,16 +91,16 @@ export class ImportExportController {
         type: req.query.type as 'transactions' | 'categories' | 'budgets' | 'full' || 'full',
         includeHeaders: req.query.includeHeaders !== 'false',
         includeMetadata: req.query.includeMetadata === 'true',
-        filters: this.parseFilters(req.query)
+        filters: parseFilters(req.query)
       };
-      
+
       if (req.query.start_date && req.query.end_date) {
         options.dateRange = {
           start_date: req.query.start_date as string,
           end_date: req.query.end_date as string
         };
       }
-      
+
       if (req.query.fields) {
         options.customFields = (req.query.fields as string).split(',');
       }
@@ -137,28 +116,8 @@ export class ImportExportController {
         executionTime: result.execution_time_ms
       });
 
-      // Set appropriate headers for file download
-      const contentType = result.format === 'csv' 
-        ? 'text/csv' 
-        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename=\"${result.file_name}\"`);
-      res.setHeader('Content-Length', result.file_size);
-
-      // Read and send the file
-      const fileBuffer = await fs.readFile(result.download_url as string);
-      res.send(fileBuffer);
-
-      // Clean up the temporary file
-      setTimeout(async () => {
-        try {
-          await fs.unlink(result.download_url as string);
-        } catch (error) {
-          logger.warn('Failed to cleanup export file:', error);
-        }
-      }, 5000); // Delete after 5 seconds
-
+      await sendFileDownload(res, result.download_url as string, result.file_name, result.format, result.file_size);
+      scheduleFileDeletion(result.download_url as string, 5000);
     } catch (error) {
       logger.error('Export failed:', error);
       res.status(500).json({
@@ -169,9 +128,6 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Get export metadata without downloading file
-   */
   async getExportInfo(req: Request, res: Response): Promise<void> {
     try {
       const options: ExportOptions = {
@@ -179,9 +135,9 @@ export class ImportExportController {
         type: req.query.type as 'transactions' | 'categories' | 'budgets' | 'full' || 'full',
         includeHeaders: req.query.includeHeaders !== 'false',
         includeMetadata: req.query.includeMetadata === 'true',
-        filters: this.parseFilters(req.query)
+        filters: parseFilters(req.query)
       };
-      
+
       if (req.query.start_date && req.query.end_date) {
         options.dateRange = {
           start_date: req.query.start_date as string,
@@ -189,23 +145,13 @@ export class ImportExportController {
         };
       }
 
-      // Get just the metadata without creating the file
       const result = await this.importExportService.exportData(options);
-      
-      // Remove the actual file content from response
       const { download_url, ...exportInfo } = result;
 
       res.json(exportInfo);
 
-      // Clean up the file
       if (download_url) {
-        setTimeout(async () => {
-          try {
-            await fs.unlink(download_url as string);
-          } catch (error) {
-            logger.warn('Failed to cleanup export file:', error);
-          }
-        }, 1000);
+        scheduleFileDeletion(download_url as string, 1000);
       }
     } catch (error) {
       logger.error('Export info failed:', error);
@@ -217,9 +163,6 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Generate and download template files
-   */
   async downloadTemplate(req: Request, res: Response): Promise<void> {
     try {
       const options: TemplateOptions = {
@@ -242,32 +185,10 @@ export class ImportExportController {
 
       const result = await this.importExportService.generateTemplate(options);
 
-      logger.info('Template generated successfully', {
-        fileName: result.file_name,
-        format: result.format
-      });
+      logger.info('Template generated successfully', { fileName: result.file_name, format: result.format });
 
-      // Set appropriate headers for file download
-      const contentType = result.format === 'csv' 
-        ? 'text/csv' 
-        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename=\"${result.file_name}\"`);
-
-      // Read and send the file
-      const fileBuffer = await fs.readFile(result.download_url as string);
-      res.send(fileBuffer);
-
-      // Clean up the temporary file
-      setTimeout(async () => {
-        try {
-          await fs.unlink(result.download_url as string);
-        } catch (error) {
-          logger.warn('Failed to cleanup template file:', error);
-        }
-      }, 5000);
-
+      await sendFileDownload(res, result.download_url as string, result.file_name, result.format, 0);
+      scheduleFileDeletion(result.download_url as string, 5000);
     } catch (error) {
       logger.error('Template generation failed:', error);
       res.status(500).json({
@@ -278,13 +199,10 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Get template info without downloading
-   */
   async getTemplateInfo(req: Request, res: Response): Promise<void> {
     try {
       const type = req.params.type as 'transactions' | 'categories' | 'budgets';
-      
+
       if (!['transactions', 'categories', 'budgets'].includes(type)) {
         res.status(400).json({
           success: false,
@@ -302,21 +220,12 @@ export class ImportExportController {
       };
 
       const result = await this.importExportService.generateTemplate(options);
-      
-      // Remove the actual file content from response
       const { download_url, ...templateInfo } = result;
 
       res.json(templateInfo);
 
-      // Clean up the file
       if (download_url) {
-        setTimeout(async () => {
-          try {
-            await fs.unlink(download_url as string);
-          } catch (error) {
-            logger.warn('Failed to cleanup template file:', error);
-          }
-        }, 1000);
+        scheduleFileDeletion(download_url as string, 1000);
       }
     } catch (error) {
       logger.error('Template info failed:', error);
@@ -328,22 +237,15 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Validate uploaded file structure
-   */
   async validateFile(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        res.status(400).json({
-          success: false,
-          error: 'No file uploaded'
-        });
+        res.status(400).json({ success: false, error: 'No file uploaded' });
         return;
       }
 
       const fileExtension = path.extname(req.file.originalname).toLowerCase();
-      
-      // Simple validation based on file type
+
       const validation = {
         success: true,
         file_name: req.file.originalname,
@@ -353,14 +255,10 @@ export class ImportExportController {
         suggestions: [] as string[]
       };
 
-      // Check file size
       if (req.file.size > IMPORT_LIMITS.MAX_FILE_SIZE_MB * 1024 * 1024) {
         validation.success = false;
         validation.issues.push(`File size exceeds ${IMPORT_LIMITS.MAX_FILE_SIZE_MB}MB limit`);
       }
-
-      // Basic content validation would go here
-      // For now, just return the basic validation
 
       res.json(validation);
     } catch (error) {
@@ -373,9 +271,6 @@ export class ImportExportController {
     }
   }
 
-  /**
-   * Get import/export configuration and limits
-   */
   async getConfig(req: Request, res: Response): Promise<void> {
     try {
       const config = {
@@ -409,35 +304,5 @@ export class ImportExportController {
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
-  }
-
-  // Private helper methods
-  private getFormatFromFile(fileName: string): 'csv' | 'xlsx' {
-    const extension = path.extname(fileName).toLowerCase();
-    return extension === '.csv' ? 'csv' : 'xlsx';
-  }
-
-  private parseFilters(query: any): any {
-    const filters: any = {};
-
-    if (query.category_ids) {
-      filters.category_ids = Array.isArray(query.category_ids) 
-        ? query.category_ids 
-        : query.category_ids.split(',');
-    }
-
-    if (query.transaction_types) {
-      filters.transaction_types = Array.isArray(query.transaction_types)
-        ? query.transaction_types
-        : query.transaction_types.split(',');
-    }
-
-    if (query.budget_periods) {
-      filters.budget_periods = Array.isArray(query.budget_periods)
-        ? query.budget_periods
-        : query.budget_periods.split(',');
-    }
-
-    return Object.keys(filters).length > 0 ? filters : undefined;
   }
 }

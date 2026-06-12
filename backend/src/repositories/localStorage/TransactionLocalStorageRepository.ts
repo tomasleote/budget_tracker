@@ -7,6 +7,7 @@ import { BaseLocalStorageRepository } from './BaseLocalStorageRepository';
 import { Transaction, CreateTransactionDto, UpdateTransactionDto, TransactionFilters, TransactionSummary } from '../../types/transaction';
 import { DatabaseResult, FilterOptions, PaginationOptions, SortOptions } from '../BaseRepository';
 import { logger } from '../../config/logger';
+import { applyTransactionFilters } from './helpers/transactionFilters';
 
 export class TransactionLocalStorageRepository extends BaseLocalStorageRepository<Transaction, CreateTransactionDto, UpdateTransactionDto> {
   protected storageKey = 'transactions';
@@ -23,7 +24,7 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
       let items = this.getAllItems();
 
       // Apply transaction-specific filters
-      items = this.applyTransactionFilters(items, filters);
+      items = applyTransactionFilters(items, filters);
 
       // Apply sorting
       items = this.applySorting(items, sort);
@@ -54,7 +55,7 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
   async getSummary(filters: TransactionFilters = {}): Promise<DatabaseResult<TransactionSummary>> {
     try {
       let items = this.getAllItems();
-      items = this.applyTransactionFilters(items, filters);
+      items = applyTransactionFilters(items, filters);
 
       const summary: TransactionSummary = {
         total_income: 0,
@@ -125,7 +126,7 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
       });
 
       // Apply other filters
-      items = this.applyTransactionFilters(items, filters);
+      items = applyTransactionFilters(items, filters);
 
       // Apply sorting
       items = this.applySorting(items, sort);
@@ -267,46 +268,6 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
       logger.error('TransactionLocalStorageRepository.bulkUpdateCategory error:', err);
       return { data: null, error: errorMessage };
     }
-  }
-
-  /**
-   * Apply transaction-specific filters
-   */
-  private applyTransactionFilters(items: Transaction[], filters: TransactionFilters): Transaction[] {
-    return items.filter(item => {
-      // Type filter
-      if (filters.type && item.type !== filters.type) return false;
-
-      // Category filter
-      if (filters.category_id && item.category_id !== filters.category_id) return false;
-
-      // Date range filters
-      if (filters.date_from) {
-        const itemDate = new Date(item.date);
-        const fromDate = new Date(filters.date_from);
-        if (itemDate < fromDate) return false;
-      }
-      if (filters.date_to) {
-        const itemDate = new Date(item.date);
-        const toDate = new Date(filters.date_to);
-        if (itemDate > toDate) return false;
-      }
-
-      // Amount range filters
-      if (filters.amount_min !== undefined && item.amount < filters.amount_min) return false;
-      if (filters.amount_max !== undefined && item.amount > filters.amount_max) return false;
-
-      // Search filter (handled separately in searchTransactions)
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matches = 
-          item.description.toLowerCase().includes(searchLower) ||
-          (item.notes && item.notes.toLowerCase().includes(searchLower));
-        if (!matches) return false;
-      }
-
-      return true;
-    });
   }
 
   /**
