@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPlus,
   faUser,
-  faBell,
   faCog,
   faSignOutAlt
 } from '@fortawesome/free-solid-svg-icons';
-import Button from '../ui/Button';
 import Breadcrumbs from './Breadcrumbs';
 import { NotificationDropdown } from '../ui';
 import { useNotifications } from '../../../controller/hooks';
@@ -16,7 +13,6 @@ import { useAuth } from '../../../controller/hooks/useAuth';
 import { getAppMode } from '../../../controller/appMode';
 
 const Header = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, exitDemo } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,45 +40,6 @@ const Header = () => {
     dismissAll
   } = useNotifications();
 
-  // Get page-specific actions
-  const getPageActions = () => {
-    switch (location.pathname) {
-      case '/dashboard':
-        return []; // Removed Add Transaction button
-      case '/transactions':
-        return [
-          {
-            label: 'Add Transaction',
-            icon: faPlus,
-            variant: 'primary',
-            action: () => console.log('Open transaction modal')
-          }
-        ];
-      case '/budget':
-        return [
-          {
-            label: 'Create Budget',
-            icon: faPlus,
-            variant: 'primary',
-            action: () => console.log('Open budget modal')
-          }
-        ];
-      case '/reports':
-        return [
-          {
-            label: 'Export Report',
-            icon: faPlus,
-            variant: 'outline',
-            action: () => console.log('Export report')
-          }
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const pageActions = getPageActions();
-
   return (
     <header className="bg-theme-card border-b border-theme-primary">
       <div className="px-6 py-4">
@@ -94,19 +51,6 @@ const Header = () => {
 
           {/* Header Actions */}
           <div className="flex items-center space-x-4">
-            {/* Page-specific Actions */}
-            {pageActions.map((action, index) => (
-              <Button
-                key={index}
-                variant={action.variant}
-                icon={action.icon}
-                onClick={action.action}
-                size="sm"
-              >
-                {action.label}
-              </Button>
-            ))}
-
             {/* Notifications */}
             <NotificationDropdown
               notifications={notifications}

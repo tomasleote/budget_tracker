@@ -29,11 +29,8 @@ export const createTransactionSchema = Joi.object({
     }),
 
   category_id: Joi.string()
-    .uuid()
-    .required()
-    .messages({
-      'string.guid': 'Category ID must be a valid UUID'
-    }),
+    .min(1)
+    .required(),
 
   date: Joi.date()
     .iso()
@@ -74,11 +71,8 @@ export const updateTransactionSchema = Joi.object({
     }),
 
   category_id: Joi.string()
-    .uuid()
-    .optional()
-    .messages({
-      'string.guid': 'Category ID must be a valid UUID'
-    }),
+    .min(1)
+    .optional(),
 
   date: Joi.date()
     .iso()
@@ -109,7 +103,7 @@ export const transactionQuerySchema = Joi.object({
     .optional(),
 
   category_id: Joi.string()
-    .uuid()
+    .min(1)
     .optional(),
 
   start_date: Joi.date()

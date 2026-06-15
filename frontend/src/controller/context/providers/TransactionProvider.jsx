@@ -104,9 +104,12 @@ export const TransactionProvider = ({ children }) => {
 
       if (result && result.success !== false) {
         const newTransaction = result.data || result;
-        setTransactions(prev => [newTransaction, ...prev]);
+        setTransactions(prev => {
+          const updated = [newTransaction, ...prev];
+          setSummary(computeTransactionSummary(updated));
+          return updated;
+        });
         logger.debug('Transaction created:', newTransaction.description || newTransaction.id);
-        calculateSummary();
         window.dispatchEvent(new CustomEvent('transactionCreated', { detail: newTransaction }));
         return { success: true, data: newTransaction };
       } else {
@@ -133,11 +136,12 @@ export const TransactionProvider = ({ children }) => {
 
       if (result && result.success !== false) {
         const updatedTransaction = result.data || result;
-        setTransactions(prev =>
-          prev.map(t => t.id === transactionId ? updatedTransaction : t)
-        );
+        setTransactions(prev => {
+          const updated = prev.map(t => t.id === transactionId ? updatedTransaction : t);
+          setSummary(computeTransactionSummary(updated));
+          return updated;
+        });
         logger.debug('Transaction updated:', updatedTransaction.description || updatedTransaction.id);
-        calculateSummary();
         window.dispatchEvent(new CustomEvent('transactionUpdated', { detail: updatedTransaction }));
         return { success: true, data: updatedTransaction };
       } else {
@@ -160,9 +164,12 @@ export const TransactionProvider = ({ children }) => {
       const result = await transactionRepository.delete(transactionId);
 
       if (result && result.success !== false) {
-        setTransactions(prev => prev.filter(t => t.id !== transactionId));
+        setTransactions(prev => {
+          const updated = prev.filter(t => t.id !== transactionId);
+          setSummary(computeTransactionSummary(updated));
+          return updated;
+        });
         logger.debug('Transaction deleted:', transactionId);
-        calculateSummary();
         window.dispatchEvent(new CustomEvent('transactionDeleted', { detail: { id: transactionId } }));
         return { success: true };
       } else {

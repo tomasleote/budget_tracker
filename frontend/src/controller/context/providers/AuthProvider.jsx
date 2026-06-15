@@ -6,6 +6,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth } from '../../../config/firebase.js';
+import apiClient from '../../../api/client.js';
 import { getAppMode, setAppMode, clearAppMode } from '../../appMode.js';
 import { loadDemoData, clearDemoData } from '../../../model/services/DemoDataLoader.js';
 import { AuthContext } from '../AuthContext.jsx';
@@ -44,6 +45,11 @@ export const AuthProvider = ({ children }) => {
     if (!auth) throw new Error('Authentication is not configured. Set REACT_APP_FIREBASE_* in frontend/.env.');
     const { user: created } = await createUserWithEmailAndPassword(auth, email, password);
     setAppMode('authed');
+    try {
+      await apiClient.post('/api/auth/bootstrap');
+    } catch {
+      // Non-fatal: default categories will be absent until bootstrap succeeds.
+    }
     return created;
   }, []);
 

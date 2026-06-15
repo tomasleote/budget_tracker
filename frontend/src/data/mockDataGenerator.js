@@ -5,6 +5,49 @@
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from './mock/categories';
 import { generateAmount, generateRandomDate, generateDescription } from './mock/helpers';
 
+const CATEGORY_META = {
+  expense: {
+    'Food & Dining':   { color: '#EF4444', icon: 'fa-solid fa-utensils' },
+    'Transportation':  { color: '#F59E0B', icon: 'fa-solid fa-car' },
+    'Shopping':        { color: '#8B5CF6', icon: 'fa-solid fa-shopping-bag' },
+    'Bills & Utilities':{ color: '#6B7280', icon: 'fa-solid fa-receipt' },
+    'Entertainment':   { color: '#EC4899', icon: 'fa-solid fa-film' },
+    'Healthcare':      { color: '#10B981', icon: 'fa-solid fa-heart' },
+    'Personal Care':   { color: '#F472B6', icon: 'fa-solid fa-user' },
+    'Home & Garden':   { color: '#059669', icon: 'fa-solid fa-home' },
+  },
+  income: {
+    'Salary':      { color: '#10B981', icon: 'fa-solid fa-dollar-sign' },
+    'Freelance':   { color: '#3B82F6', icon: 'fa-solid fa-laptop' },
+    'Investment':  { color: '#8B5CF6', icon: 'fa-solid fa-chart-line' },
+    'Side Business':{ color: '#F59E0B', icon: 'fa-solid fa-briefcase' },
+  }
+};
+
+const buildDemoCategories = () => {
+  const categories = [];
+  ['expense', 'income'].forEach(type => {
+    const list = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+    list.forEach(cat => {
+      const meta = CATEGORY_META[type][cat.name] || { color: '#6B7280', icon: 'fa-solid fa-circle' };
+      categories.push({
+        id: `demo_${type}_${cat.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+        name: cat.name,
+        type,
+        color: meta.color,
+        icon: meta.icon,
+        description: '',
+        isDefault: true,
+        isActive: true,
+        parentId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    });
+  });
+  return categories;
+};
+
 /**
  * Generate comprehensive mock data for testing
  * @param {number} months - Number of months to generate (default: 4)
@@ -192,7 +235,10 @@ export const loadMockDataToStorage = async (months = 4) => {
     
     // Save budgets
     localStorage.setItem('budget_tracker_budgets', JSON.stringify(mockData.budgets));
-    
+
+    // Save categories so CategorySelect has proper IDs in demo mode
+    localStorage.setItem('budget_tracker_categories', JSON.stringify(buildDemoCategories()));
+
     // Save metadata
     localStorage.setItem('budget_tracker_mock_metadata', JSON.stringify(mockData.metadata));
     

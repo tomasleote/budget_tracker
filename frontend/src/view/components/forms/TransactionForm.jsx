@@ -108,8 +108,8 @@ const TransactionForm = ({
         result = await createTransaction(transactionData);
       }
 
-      if (result) {
-        onSave(result);
+      if (result?.success) {
+        onSave(result.data || result);
         if (!isEditing) {
           setFormData(EMPTY_FORM);
         }

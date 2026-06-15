@@ -1,6 +1,6 @@
 import { logger } from '../../controller/utils/logger.js';
 import BaseRepository from './BaseRepository.js';
-import { Transaction } from '../entities/index.js';
+import Transaction from '../entities/updated/Transaction.js';
 import StorageService from '../services/StorageService.js';
 import { applyTransactionFilters } from './transaction/transactionFilters.js';
 import {
