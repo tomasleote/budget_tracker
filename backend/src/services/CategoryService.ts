@@ -54,7 +54,7 @@ export class CategoryService {
         throw new Error(`Failed to fetch category hierarchy: ${result.error}`);
       }
 
-      let categories = result.data || [];
+      let categories: CategoryWithChildren[] = result.data || [];
 
       if (query.is_active !== undefined) {
         categories = filterCategoriesRecursive(categories, (cat) => cat.is_active === query.is_active);

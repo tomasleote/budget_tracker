@@ -1,10 +1,13 @@
 /**
  * Repository Factory
- * Creates repository instances based on configuration
- * Allows switching between localStorage and API implementations
+ * Selects repository implementations based on the runtime app mode:
+ *   'authed' -> API repositories (Express via api/client.js, Bearer token)
+ *   'demo'   -> localStorage repositories (mock data, offline)
+ *   null     -> logged out; defaults to localStorage so consumers never crash
  */
 
 import { logger } from '../../controller/utils/logger.js';
+import { getAppMode } from '../../controller/appMode.js';
 
 // Import localStorage repositories
 import TransactionRepository from './TransactionRepository.js';
@@ -19,11 +22,7 @@ import {
   apiBudgetRepository
 } from './api/index.js';
 
-/**
- * Repository Factory Class
- */
 class RepositoryFactory {
-  // Static singleton instances
   static _instances = {
     transactions: null,
     categories: null,
@@ -31,121 +30,86 @@ class RepositoryFactory {
     users: null
   };
 
+  // Mode the cached instances were built for; a change invalidates the cache.
+  static _cachedMode = undefined;
+
   /**
-   * Check if API mode is enabled
-   * @returns {boolean} True if API should be used
+   * @returns {'authed'|'demo'|null} Current runtime mode.
    */
-  static isApiEnabled() {
-    return process.env.REACT_APP_USE_API === 'true';
+  static getMode() {
+    return getAppMode();
   }
 
   /**
-   * Check if offline mode is active
-   * @returns {boolean} True if offline
+   * @returns {boolean} True when API repositories should back the data layer.
    */
-  static isOffline() {
-    return !navigator.onLine;
+  static useApi() {
+    return this.getMode() === 'authed';
   }
 
   /**
-   * Create Transaction Repository
-   * @param {boolean} forceLocalStorage - Force localStorage implementation
-   * @returns {TransactionRepository|ApiTransactionRepository} Repository instance
+   * Drop cached instances when the mode changes so a login/logout/demo switch
+   * transparently rebinds repositories on the next access.
    */
-  static createTransactionRepository(forceLocalStorage = false) {
-    // Return cached instance if exists and conditions haven't changed
-    if (this._instances.transactions && !forceLocalStorage) {
-      return this._instances.transactions;
+  static _syncMode() {
+    const mode = this.getMode();
+    if (mode !== this._cachedMode) {
+      logger.debug(`RepositoryFactory mode change: ${this._cachedMode} -> ${mode}`);
+      this._cachedMode = mode;
+      this.clearInstances();
     }
+  }
 
-    if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      logger.debug('Using localStorage TransactionRepository');
-      this._instances.transactions = new TransactionRepository();
-    } else {
-      logger.debug('Using API TransactionRepository');
-      this._instances.transactions = apiTransactionRepository;
-    }
+  static createTransactionRepository() {
+    this._syncMode();
+    if (this._instances.transactions) return this._instances.transactions;
 
+    this._instances.transactions = this.useApi()
+      ? apiTransactionRepository
+      : new TransactionRepository();
     return this._instances.transactions;
   }
 
-  /**
-   * Create Category Repository
-   * @param {boolean} forceLocalStorage - Force localStorage implementation
-   * @returns {CategoryRepository|ApiCategoryRepository} Repository instance
-   */
-  static createCategoryRepository(forceLocalStorage = false) {
-    // Return cached instance if exists and conditions haven't changed
-    if (this._instances.categories && !forceLocalStorage) {
-      return this._instances.categories;
-    }
+  static createCategoryRepository() {
+    this._syncMode();
+    if (this._instances.categories) return this._instances.categories;
 
-    if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      logger.debug('Using localStorage CategoryRepository');
-      this._instances.categories = new CategoryRepository();
-    } else {
-      logger.debug('Using API CategoryRepository');
-      this._instances.categories = apiCategoryRepository;
-    }
-
+    this._instances.categories = this.useApi()
+      ? apiCategoryRepository
+      : new CategoryRepository();
     return this._instances.categories;
   }
 
-  /**
-   * Create Budget Repository
-   * @param {boolean} forceLocalStorage - Force localStorage implementation
-   * @returns {BudgetRepository|ApiBudgetRepository} Repository instance
-   */
-  static createBudgetRepository(forceLocalStorage = false) {
-    // Return cached instance if exists and conditions haven't changed
-    if (this._instances.budgets && !forceLocalStorage) {
-      return this._instances.budgets;
-    }
+  static createBudgetRepository() {
+    this._syncMode();
+    if (this._instances.budgets) return this._instances.budgets;
 
-    if (forceLocalStorage || !this.isApiEnabled() || this.isOffline()) {
-      logger.debug('Using localStorage BudgetRepository');
-      this._instances.budgets = new BudgetRepository();
-    } else {
-      logger.debug('Using API BudgetRepository');
-      this._instances.budgets = apiBudgetRepository;
-    }
-
+    this._instances.budgets = this.useApi()
+      ? apiBudgetRepository
+      : new BudgetRepository();
     return this._instances.budgets;
   }
 
-  /**
-   * Create User Repository
-   * @param {boolean} forceLocalStorage - Force localStorage implementation
-   * @returns {UserRepository} Repository instance
-   */
-  static createUserRepository(forceLocalStorage = false) {
-    // Return cached instance if exists
-    if (this._instances.users && !forceLocalStorage) {
-      return this._instances.users;
-    }
+  static createUserRepository() {
+    this._syncMode();
+    if (this._instances.users) return this._instances.users;
 
-    // User repository is always localStorage for now
-    logger.debug('Using localStorage UserRepository');
+    // No API user repository yet; profile data stays in localStorage.
     this._instances.users = new UserRepository();
     return this._instances.users;
   }
 
-  /**
-   * Create all repositories
-   * @param {boolean} forceLocalStorage - Force localStorage implementation
-   * @returns {Object} Object with all repositories
-   */
-  static createAllRepositories(forceLocalStorage = false) {
+  static createAllRepositories() {
     return {
-      transactions: this.createTransactionRepository(forceLocalStorage),
-      categories: this.createCategoryRepository(forceLocalStorage),
-      budgets: this.createBudgetRepository(forceLocalStorage),
-      users: this.createUserRepository(forceLocalStorage)
+      transactions: this.createTransactionRepository(),
+      categories: this.createCategoryRepository(),
+      budgets: this.createBudgetRepository(),
+      users: this.createUserRepository()
     };
   }
 
   /**
-   * Clear all cached instances (useful for testing or when switching modes)
+   * Clear cached instances (mode switches call this automatically; exposed for tests).
    */
   static clearInstances() {
     this._instances = {
@@ -157,53 +121,20 @@ class RepositoryFactory {
   }
 
   /**
-   * Get repository configuration info
-   * @returns {Object} Configuration information
+   * @returns {Object} Current configuration snapshot.
    */
   static getConfiguration() {
+    const mode = this.getMode();
     return {
-      apiEnabled: this.isApiEnabled(),
-      offline: this.isOffline(),
-      apiUrl: process.env.REACT_APP_API_URL || 'Not configured',
-      implementation: this.isApiEnabled() && !this.isOffline() ? 'API' : 'localStorage'
-    };
-  }
-
-  /**
-   * Listen for online/offline changes
-   * @param {Function} callback - Callback when online status changes
-   * @returns {Function} Cleanup function
-   */
-  static onConnectionChange(callback) {
-    const handleOnline = () => {
-      // Clear instances when going online to switch to API repositories
-      if (this.isApiEnabled()) {
-        logger.debug('Going online - switching to API repositories');
-        this.clearInstances();
-      }
-      callback(true);
-    };
-
-    const handleOffline = () => {
-      // Clear instances when going offline to switch to localStorage
-      logger.debug('Going offline - switching to localStorage repositories');
-      this.clearInstances();
-      callback(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Return cleanup function
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      mode,
+      apiEnabled: this.useApi(),
+      implementation: this.useApi() ? 'API' : 'localStorage',
+      apiUrl: process.env.REACT_APP_API_URL || 'Not configured'
     };
   }
 }
 
-// Create singleton repository accessor object
-// This ensures the same instance is always returned for each repository type
+// Singleton accessor object - same instance per type, rebound on mode change.
 const repositories = {
   get transactions() {
     return RepositoryFactory.createTransactionRepository();
@@ -222,6 +153,5 @@ const repositories = {
   }
 };
 
-// Export factory and repositories
 export { RepositoryFactory, repositories };
 export default RepositoryFactory;

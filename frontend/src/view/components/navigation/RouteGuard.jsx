@@ -1,133 +1,48 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../controller/hooks/useAuth';
+import { getAppMode } from '../../../controller/appMode';
 import { PageLoading } from '../ui/LoadingSpinner';
 
 /**
- * Route Guard Component
- * Protects routes based on authentication and authorization
+ * Gates protected routes. Access is granted to an authenticated user or to an
+ * active demo session; everyone else is sent to the Welcome screen. While the
+ * auth state is resolving, a full-page spinner is shown.
  */
-const RouteGuard = ({ 
-  children, 
-  requireAuth = true,
-  requiredRole = null,
-  fallbackPath = '/login',
-  loadingComponent = null
-}) => {
+export function RouteGuard({ children }) {
   const location = useLocation();
-  
-  // Mock authentication state (replace with real auth logic)
-  const [isAuthenticated, setIsAuthenticated] = React.useState(true);
-  const [userRole, setUserRole] = React.useState('user');
-  const [isLoading, setIsLoading] = React.useState(false);
-  
-  // Simulate auth check loading
-  React.useEffect(() => {
-    setIsLoading(true);
-    // Simulate API call to check auth status
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-  
-  // Show loading state
-  if (isLoading) {
-    return loadingComponent || (
-      <PageLoading 
-        title="Checking access..."
-        description="Verifying your permissions"
-      />
-    );
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoading title="Checking access..." description="Verifying your session" />;
   }
-  
-  // Check authentication
-  if (requireAuth && !isAuthenticated) {
-    // Redirect to login with return path
-    return (
-      <Navigate 
-        to={fallbackPath} 
-        state={{ from: location.pathname }} 
-        replace 
-      />
-    );
+
+  if (!user && getAppMode() !== 'demo') {
+    return <Navigate to="/welcome" state={{ from: location.pathname }} replace />;
   }
-  
-  // Check role authorization
-  if (requiredRole && userRole !== requiredRole) {
-    return (
-      <Navigate 
-        to="/unauthorized" 
-        state={{ requiredRole, userRole }} 
-        replace 
-      />
-    );
-  }
-  
-  // Render protected content
+
   return children;
-};
+}
 
 /**
- * Public Route Component
- * For routes that should redirect authenticated users
+ * Shown when a user reaches a route they are not allowed to view.
  */
-const PublicRoute = ({ 
-  children, 
-  redirectPath = '/dashboard' 
-}) => {
-  // Mock authentication state
-  const [isAuthenticated] = React.useState(true);
-  
-  // Redirect authenticated users
-  if (isAuthenticated) {
-    return <Navigate to={redirectPath} replace />;
-  }
-  
-  return children;
-};
-
-/**
- * Unauthorized Access Component
- */
-const UnauthorizedAccess = () => {
-  const location = useLocation();
-  const { requiredRole, userRole } = location.state || {};
-  
+export function UnauthorizedAccess() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center max-w-md mx-4">
-        <div className="text-6xl mb-6">🚫</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Access Denied
-        </h1>
-        <p className="text-gray-600 mb-8">
-          You don't have permission to access this page.
-          {requiredRole && (
-            <span className="block mt-2 text-sm">
-              Required role: <code className="bg-gray-100 px-2 py-1 rounded">{requiredRole}</code><br/>
-              Your role: <code className="bg-gray-100 px-2 py-1 rounded">{userRole}</code>
-            </span>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-theme-secondary px-4">
+      <div className="card-theme max-w-md rounded-2xl border p-8 text-center">
+        <h1 className="text-2xl font-bold text-theme-primary">Access denied</h1>
+        <p className="mt-3 text-sm text-theme-secondary">
+          You do not have permission to view this page.
         </p>
-        <div className="space-y-3">
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Go to Dashboard
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            className="w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-          >
-            Go Back
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => window.location.assign('/dashboard')}
+          className="btn-theme-primary mt-6 rounded-lg border px-5 py-2 text-sm font-semibold"
+        >
+          Go to dashboard
+        </button>
       </div>
     </div>
   );
-};
-
-export default RouteGuard;
-export { PublicRoute, UnauthorizedAccess };
+}

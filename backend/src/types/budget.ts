@@ -1,8 +1,13 @@
+export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly';
+
+// Status the localStorage layer computes from spending vs budget_amount.
+export type BudgetStatus = 'on_track' | 'warning' | 'exceeded';
+
 export interface Budget {
   id: string;
   category_id: string;
   budget_amount: number;
-  period: 'weekly' | 'monthly' | 'yearly';
+  period: BudgetPeriod;
   start_date: string; // ISO date string
   end_date: string; // ISO date string
   is_active: boolean;
@@ -74,6 +79,15 @@ export interface BudgetSummary {
     start: string;
     end: string;
   };
+}
+
+// Budget enriched with computed spending fields by the localStorage layer.
+// The computed fields are added when spent amounts are recalculated.
+export interface LocalBudget extends Budget {
+  spent_amount?: number;
+  remaining_amount?: number;
+  percentage_used?: number;
+  status?: BudgetStatus;
 }
 
 export interface BulkBudgetOperation {

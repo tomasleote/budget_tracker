@@ -4,7 +4,7 @@
  */
 
 import { BaseLocalStorageRepository } from './BaseLocalStorageRepository';
-import { Transaction, CreateTransactionDto, UpdateTransactionDto, TransactionFilters, TransactionSummary } from '../../types/transaction';
+import { Transaction, CreateTransactionDto, UpdateTransactionDto, TransactionFilters, LocalTransactionSummary } from '../../types/transaction';
 import { DatabaseResult, FilterOptions, PaginationOptions, SortOptions } from '../BaseRepository';
 import { logger } from '../../config/logger';
 import { applyTransactionFilters } from './helpers/transactionFilters';
@@ -52,12 +52,12 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
   /**
    * Get transaction summary (total income, expense, balance)
    */
-  async getSummary(filters: TransactionFilters = {}): Promise<DatabaseResult<TransactionSummary>> {
+  async getSummary(filters: TransactionFilters = {}): Promise<DatabaseResult<LocalTransactionSummary>> {
     try {
       let items = this.getAllItems();
       items = applyTransactionFilters(items, filters);
 
-      const summary: TransactionSummary = {
+      const summary: LocalTransactionSummary = {
         total_income: 0,
         total_expense: 0,
         balance: 0,
@@ -83,10 +83,10 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
 
       // Find largest transactions
       if (incomeTransactions.length > 0) {
-        summary.largest_income = incomeTransactions.reduce((max, t) => t.amount > max.amount ? t : max, incomeTransactions[0]);
+        summary.largest_income = incomeTransactions.reduce((max, t) => t.amount > max.amount ? t : max);
       }
       if (expenseTransactions.length > 0) {
-        summary.largest_expense = expenseTransactions.reduce((max, t) => t.amount > max.amount ? t : max, expenseTransactions[0]);
+        summary.largest_expense = expenseTransactions.reduce((max, t) => t.amount > max.amount ? t : max);
       }
 
       // Get unique categories
@@ -119,10 +119,7 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
       // Apply search filter
       const searchLower = searchTerm.toLowerCase();
       items = items.filter(item => {
-        return (
-          item.description.toLowerCase().includes(searchLower) ||
-          (item.notes && item.notes.toLowerCase().includes(searchLower))
-        );
+        return item.description.toLowerCase().includes(searchLower);
       });
 
       // Apply other filters
@@ -204,8 +201,11 @@ export class TransactionLocalStorageRepository extends BaseLocalStorageRepositor
           if (!spending[transaction.category_id]) {
             spending[transaction.category_id] = { total: 0, count: 0 };
           }
-          spending[transaction.category_id].total += transaction.amount;
-          spending[transaction.category_id].count++;
+          const entry = spending[transaction.category_id];
+          if (entry) {
+            entry.total += transaction.amount;
+            entry.count++;
+          }
         }
       });
 

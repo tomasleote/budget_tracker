@@ -1,3 +1,5 @@
+import { BudgetPeriod, BudgetStatus } from './budget';
+
 export interface DashboardSummary {
   overview: {
     total_income: number;
@@ -189,6 +191,74 @@ export interface FinancialHealthScore {
     month: string;
     score: number;
   }[];
+}
+
+// Flat analytics shapes produced by the localStorage repository layer. These are
+// simpler than the API-facing aggregate types above (SpendingInsights,
+// BudgetPerformance, FinancialHealthScore) and are consumed only within that layer.
+export interface SpendingByCategory {
+  category_id: string;
+  category_name: string;
+  category_color: string;
+  category_icon: string;
+  amount: number;
+  transaction_count: number;
+  percentage: number;
+}
+
+export interface SpendingTrend {
+  period: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+export interface IncomeVsExpense {
+  total_income: number;
+  total_expense: number;
+  net_savings: number;
+  savings_rate: number;
+  income_count: number;
+  expense_count: number;
+  avg_income: number;
+  avg_expense: number;
+}
+
+export interface MonthlyComparison {
+  current_month: { income: number; expense: number; net: number };
+  previous_month: { income: number; expense: number; net: number };
+  income_change: number;
+  expense_change: number;
+  net_change: number;
+}
+
+export interface CategoryTrend {
+  month: string;
+  amount: number;
+  transaction_count: number;
+  avg_transaction: number;
+}
+
+export interface FinancialHealth {
+  score: number;
+  status: 'excellent' | 'good' | 'fair' | 'poor';
+  monthly_avg_income: number;
+  monthly_avg_expense: number;
+  savings_rate: number;
+  expense_ratio: number;
+  recommendations: string[];
+}
+
+export interface LocalBudgetPerformance {
+  budget_id: string;
+  category_name: string;
+  budgeted_amount: number;
+  spent_amount: number;
+  remaining_amount: number;
+  percentage_used: number;
+  status: BudgetStatus;
+  period: BudgetPeriod;
+  days_remaining: number;
 }
 
 export interface AnalyticsQuery {

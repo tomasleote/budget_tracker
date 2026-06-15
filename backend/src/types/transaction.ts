@@ -62,6 +62,34 @@ export interface TransactionSummary {
   };
 }
 
+// Filter shape used by the localStorage repository layer. Distinct from
+// TransactionQuery (the HTTP query DTO) - it uses date_from/date_to/amount_min/
+// amount_max rather than the API's start_date/end_date/min_amount/max_amount.
+export interface TransactionFilters {
+  type?: 'income' | 'expense';
+  category_id?: string;
+  date_from?: string;
+  date_to?: string;
+  amount_min?: number;
+  amount_max?: number;
+  search?: string;
+}
+
+// Richer summary produced by the localStorage layer. The API-facing
+// TransactionSummary above is the contract returned by the service layer;
+// this internal shape additionally tracks averages, extremes and category usage.
+export interface LocalTransactionSummary {
+  total_income: number;
+  total_expense: number;
+  balance: number;
+  transaction_count: number;
+  avg_income: number;
+  avg_expense: number;
+  largest_income: Transaction | null;
+  largest_expense: Transaction | null;
+  categories_used: Set<string>;
+}
+
 export interface BulkTransactionOperation {
   action: 'create' | 'update' | 'delete';
   transactions: (CreateTransactionDto | (UpdateTransactionDto & { id: string }) | { id: string })[];

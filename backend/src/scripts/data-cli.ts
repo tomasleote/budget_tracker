@@ -32,16 +32,25 @@ async function parseArguments(): Promise<ScriptOptions> {
     const arg = args[i];
     
     if (arg === '--months' && args[i + 1]) {
-      options.months = parseInt(args[i + 1]) as 1 | 3 | 6 | 12;
-      i++;
+      const monthsArg = args[i + 1];
+      if (monthsArg !== undefined) {
+        options.months = parseInt(monthsArg) as 1 | 3 | 6 | 12;
+        i++;
+      }
     } else if (arg === '--variability' && args[i + 1]) {
-      options.variability = args[i + 1] as 'low' | 'medium' | 'high';
-      i++;
+      const variabilityArg = args[i + 1];
+      if (variabilityArg !== undefined) {
+        options.variability = variabilityArg as 'low' | 'medium' | 'high';
+        i++;
+      }
     } else if (arg === '--include-weekends') {
       options.includeWeekends = true;
     } else if (arg === '--start-date' && args[i + 1]) {
-      options.startDate = args[i + 1];
-      i++;
+      const startDateArg = args[i + 1];
+      if (startDateArg !== undefined) {
+        options.startDate = startDateArg;
+        i++;
+      }
     }
   }
 
@@ -106,7 +115,7 @@ async function main(): Promise<void> {
           months: options.months || 3,
           variability: options.variability || 'medium',
           includeWeekends: options.includeWeekends || false,
-          startDate: options.startDate
+          ...(options.startDate !== undefined && { startDate: options.startDate })
         });
         console.log('✅ Data population completed successfully!');
         break;

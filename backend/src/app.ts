@@ -15,6 +15,9 @@ import { logger } from './config/logger';
 import { appConfig } from './config/app';
 import { setupSwagger } from './config/swagger';
 import { cacheMiddleware, invalidateCacheMiddleware, cacheStatsHandler, cacheClearHandler } from './middleware/cache';
+import { verifyFirebaseToken } from './middleware/auth';
+import { firestore } from './config/firebase';
+import repositoryFactory from './repositories/RepositoryFactory';
 import categoryRoutes from './routes/categories';
 import transactionRoutes from './routes/transactions';
 import budgetRoutes from './routes/budgets';
@@ -91,8 +94,15 @@ class Server {
   }
 
   private initializeRoutes(): void {
-    // Setup Swagger documentation
+    // Setup Swagger documentation (public)
     setupSwagger(this.app);
+
+    // Every /api route requires a verified Firebase ID token. The public
+    // /health check lives outside /api and stays open.
+    this.app.use('/api', verifyFirebaseToken);
+
+    // First-login bootstrap: create the user profile doc + seed categories.
+    this.app.post('/api/auth/bootstrap', this.bootstrapHandler);
 
     // Cache management routes (only in development)
     if (process.env.NODE_ENV !== 'production') {
@@ -129,6 +139,26 @@ class Server {
       });
     });
   }
+
+  private bootstrapHandler = async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const uid = req.user!.uid;
+      const email = req.user?.email ?? null;
+      const ref = firestore.collection('users').doc(uid);
+      const snapshot = await ref.get();
+      const now = new Date().toISOString();
+      const profile = snapshot.exists
+        ? { email, updated_at: now }
+        : { uid, email, created_at: now, updated_at: now };
+      await ref.set(profile, { merge: true });
+
+      await repositoryFactory.seedDefaultData();
+      res.status(200).json({ success: true, message: 'Bootstrap complete' });
+    } catch (error) {
+      logger.error('Bootstrap failed:', error);
+      res.status(500).json({ success: false, error: { code: 'BOOTSTRAP_FAILED', message: 'Bootstrap failed' } });
+    }
+  };
 
   private initializeErrorHandling(): void {
     // 404 handler

@@ -14,9 +14,10 @@ import {
   IncomeVsExpense,
   MonthlyComparison,
   CategoryTrend,
-  BudgetPerformance,
-  FinancialHealth
+  FinancialHealth,
+  LocalBudgetPerformance
 } from '../../types/analytics';
+import { LocalBudget } from '../../types/budget';
 import { generateRecommendations } from './helpers/analyticsHelpers';
 
 export class AnalyticsLocalStorageRepository {
@@ -101,12 +102,12 @@ export class AnalyticsLocalStorageRepository {
 
         switch (period) {
           case 'daily':
-            periodKey = date.toISOString().split('T')[0];
+            periodKey = date.toISOString().slice(0, 10);
             break;
           case 'weekly':
             const weekStart = new Date(date);
             weekStart.setDate(date.getDate() - date.getDay());
-            periodKey = weekStart.toISOString().split('T')[0];
+            periodKey = weekStart.toISOString().slice(0, 10);
             break;
           case 'monthly':
             periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -306,7 +307,7 @@ export class AnalyticsLocalStorageRepository {
   /**
    * Get budget performance analytics
    */
-  async getBudgetPerformance(startDate: string, endDate: string): Promise<DatabaseResult<BudgetPerformance[]>> {
+  async getBudgetPerformance(startDate: string, endDate: string): Promise<DatabaseResult<LocalBudgetPerformance[]>> {
     try {
       const budgetsResult = await BudgetRepository.findActiveForDate(startDate);
       if (budgetsResult.error || !budgetsResult.data) {
@@ -319,17 +320,19 @@ export class AnalyticsLocalStorageRepository {
       }
 
       const categoryMap = new Map(categoriesResult.data.map(cat => [cat.id, cat]));
-      
-      const performance: BudgetPerformance[] = budgetsResult.data.map(budget => {
+      // Cast to LocalBudget[]: items may carry computed fields written by updateSpentAmount.
+      const budgets = budgetsResult.data as LocalBudget[];
+
+      const performance: LocalBudgetPerformance[] = budgets.map(budget => {
         const category = categoryMap.get(budget.category_id);
         return {
           budget_id: budget.id,
           category_name: category?.name || 'Unknown',
-          budgeted_amount: budget.amount,
+          budgeted_amount: budget.budget_amount,
           spent_amount: budget.spent_amount || 0,
-          remaining_amount: budget.remaining_amount || budget.amount,
+          remaining_amount: budget.remaining_amount ?? budget.budget_amount,
           percentage_used: budget.percentage_used || 0,
-          status: budget.status,
+          status: budget.status ?? 'on_track',
           period: budget.period,
           days_remaining: Math.max(0, Math.ceil(
             (new Date(budget.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)

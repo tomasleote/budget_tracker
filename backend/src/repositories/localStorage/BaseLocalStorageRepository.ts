@@ -45,12 +45,14 @@ export abstract class BaseLocalStorageRepository<T extends { id: string; created
       const items = this.getAllItems();
       const now = new Date().toISOString();
       
+      // Generic construction: a DTO plus generated id/timestamps is the entity T
+      // at runtime, but TS cannot prove the structural overlap on a type parameter.
       const newItem = {
         ...data,
         id: uuidv4(),
         created_at: now,
         updated_at: now
-      } as T;
+      } as unknown as T;
 
       items.push(newItem);
       this.saveAllItems(items);
@@ -137,7 +139,7 @@ export abstract class BaseLocalStorageRepository<T extends { id: string; created
         ...items[index],
         ...updates,
         updated_at: new Date().toISOString()
-      } as T;
+      } as unknown as T;
 
       items[index] = updatedItem;
       this.saveAllItems(items);
@@ -186,7 +188,7 @@ export abstract class BaseLocalStorageRepository<T extends { id: string; created
         id: uuidv4(),
         created_at: now,
         updated_at: now
-      } as T));
+      } as unknown as T));
 
       items.push(...newItems);
       this.saveAllItems(items);

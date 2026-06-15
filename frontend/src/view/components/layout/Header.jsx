@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faPlus,
   faUser,
   faBell,
@@ -12,10 +12,27 @@ import Button from '../ui/Button';
 import Breadcrumbs from './Breadcrumbs';
 import { NotificationDropdown } from '../ui';
 import { useNotifications } from '../../../controller/hooks';
+import { useAuth } from '../../../controller/hooks/useAuth';
+import { getAppMode } from '../../../controller/appMode';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, exitDemo } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const isDemo = getAppMode() === 'demo';
+  const accountLabel = isDemo ? 'Demo user' : (user?.email || 'Account');
+
+  const handleSignOut = async () => {
+    setMenuOpen(false);
+    if (isDemo) {
+      exitDemo();
+    } else {
+      await logout();
+    }
+    navigate('/welcome', { replace: true });
+  };
 
   // Notifications hook
   const {
@@ -104,19 +121,18 @@ const Header = () => {
             <div className="relative">
               <button
                 className="flex items-center space-x-3 p-2 rounded-lg hover-bg-theme transition-colors"
-                onClick={() => console.log('User menu clicked')}
+                onClick={() => setMenuOpen((open) => !open)}
               >
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <FontAwesomeIcon icon={faUser} className="w-4 h-4 text-white" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <div className="text-sm font-medium text-theme-primary">User</div>
-                  <div className="text-xs text-theme-secondary">user@example.com</div>
+                  <div className="text-sm font-medium text-theme-primary">{isDemo ? 'Demo' : 'Account'}</div>
+                  <div className="text-xs text-theme-secondary">{accountLabel}</div>
                 </div>
               </button>
 
-              {/* Dropdown Menu (hidden by default - would implement with state) */}
-              <div className="hidden absolute right-0 mt-2 w-48 card-theme border rounded-lg shadow-lg z-10">
+              <div className={`${menuOpen ? '' : 'hidden'} absolute right-0 mt-2 w-48 card-theme border rounded-lg shadow-lg z-10`}>
                 <div className="py-1">
                   <button className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-theme-primary hover-bg-theme">
                     <FontAwesomeIcon icon={faUser} className="w-4 h-4" />
@@ -127,9 +143,13 @@ const Header = () => {
                     <span>Settings</span>
                   </button>
                   <hr className="my-1 border-theme-primary" />
-                  <button className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-theme-error hover-bg-theme">
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-theme-error hover-bg-theme"
+                  >
                     <FontAwesomeIcon icon={faSignOutAlt} className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <span>{isDemo ? 'Exit demo' : 'Sign Out'}</span>
                   </button>
                 </div>
               </div>

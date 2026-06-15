@@ -13,7 +13,7 @@ import { registerValidateRoute } from './import-export/validateRoute';
  *   description: Data import and export functionality
  */
 
-const router = Router();
+const router: Router = Router();
 const importExportController = new ImportExportController();
 
 registerConfigRoute(router, importExportController);

@@ -208,8 +208,8 @@ export class MockDataGenerator {
       'Other Income': ['Refund', 'Bonus', 'Prize money', 'Misc income']
     };
 
-    const categoryDescriptions = descriptions[categoryName] || ['Transaction'];
-    const randomDescription = categoryDescriptions[Math.floor(Math.random() * categoryDescriptions.length)];
+    const categoryDescriptions = descriptions[categoryName] ?? ['Transaction'];
+    const randomDescription = categoryDescriptions[Math.floor(Math.random() * categoryDescriptions.length)] ?? 'Transaction';
     
     // Add amount context for some categories
     if (['Groceries', 'Dining Out', 'Shopping'].includes(categoryName) && Math.random() > 0.5) {
@@ -241,6 +241,8 @@ export class MockDataGenerator {
 
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
+      if (batch === undefined) continue;
+
       const { error } = await supabaseAdmin
         .from('transactions')
         .insert(batch);

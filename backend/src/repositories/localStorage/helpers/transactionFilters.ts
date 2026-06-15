@@ -1,18 +1,6 @@
-import { Transaction } from '../../../types/transaction';
+import { Transaction, TransactionFilters } from '../../../types/transaction';
 
-// Matches the filter shape used by TransactionLocalStorageRepository; the shared
-// TransactionFilters type referenced there is not exported from types/transaction.
-interface TransactionFilterParams {
-  type?: string;
-  category_id?: string;
-  date_from?: string;
-  date_to?: string;
-  amount_min?: number;
-  amount_max?: number;
-  search?: string;
-}
-
-export function applyTransactionFilters(items: Transaction[], filters: TransactionFilterParams): Transaction[] {
+export function applyTransactionFilters(items: Transaction[], filters: TransactionFilters): Transaction[] {
   return items.filter(item => {
     if (filters.type && item.type !== filters.type) return false;
 
@@ -34,9 +22,7 @@ export function applyTransactionFilters(items: Transaction[], filters: Transacti
 
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      const matches =
-        item.description.toLowerCase().includes(searchLower) ||
-        (item.notes && item.notes.toLowerCase().includes(searchLower));
+      const matches = item.description.toLowerCase().includes(searchLower);
       if (!matches) return false;
     }
 

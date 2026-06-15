@@ -3,7 +3,7 @@ import AnalyticsController from '../controllers/AnalyticsController';
 import { validateRequest } from '../middleware/validation';
 import { analyticsQuerySchema } from '../utils/validation';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

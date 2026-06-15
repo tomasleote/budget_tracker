@@ -6,6 +6,8 @@
 import axios from 'axios';
 import API_CONFIG from './config.js';
 import { setupInterceptors } from './interceptors.js';
+import { auth } from '../config/firebase.js';
+import { getAppMode, clearAppMode } from '../controller/appMode.js';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -17,6 +19,28 @@ const apiClient = axios.create({
 
 // Setup interceptors
 setupInterceptors(apiClient);
+
+// Attach a fresh Firebase ID token on every authed request. Demo mode runs
+// fully offline against local repositories and never reaches the API.
+apiClient.interceptors.request.use(async (config) => {
+  if (getAppMode() === 'authed' && auth.currentUser) {
+    const token = await auth.currentUser.getIdToken();
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Centralized 401 handling: clear the app mode so callers redirect to Welcome.
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.statusCode ?? error?.response?.status;
+    if (status === 401) {
+      clearAppMode();
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Helper methods for common HTTP operations
 const api = {

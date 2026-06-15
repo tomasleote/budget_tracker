@@ -1,0 +1,17 @@
+{
+  "name": "functions",
+  "description": "Cloud Function (2nd gen) that serves the Express API behind Firebase Hosting",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "budget-tracker-backend": "file:../backend",
+    "firebase-functions": "^5.0.0"
+  }
+}

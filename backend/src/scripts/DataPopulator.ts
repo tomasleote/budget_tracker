@@ -249,9 +249,11 @@ export class DataPopulator {
             for (let j = i + 1; j < periods.length; j++) {
               const period1 = periods[i];
               const period2 = periods[j];
-              
+
+              if (period1 === undefined || period2 === undefined) continue;
+
               // Check for overlap
-              if (new Date(period1.start) <= new Date(period2.end) && 
+              if (new Date(period1.start) <= new Date(period2.end) &&
                   new Date(period2.start) <= new Date(period1.end)) {
                 logger.warn(`Found overlapping budgets for category ${categoryId}`);
                 hasOverlaps = true;

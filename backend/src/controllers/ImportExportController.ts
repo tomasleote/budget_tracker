@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, RequestHandler } from 'express';
 import { ImportExportService } from '../import-export/ImportExportService';
 import {
   ImportOptions,
@@ -43,7 +43,7 @@ export class ImportExportController {
     this.importExportService = new ImportExportService();
   }
 
-  uploadMiddleware = upload.single('file');
+  uploadMiddleware: RequestHandler = upload.single('file');
 
   async importData(req: Request, res: Response): Promise<void> {
     try {

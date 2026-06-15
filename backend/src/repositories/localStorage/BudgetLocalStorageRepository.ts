@@ -4,7 +4,7 @@
  */
 
 import { BaseLocalStorageRepository } from './BaseLocalStorageRepository';
-import { Budget, CreateBudgetDto, UpdateBudgetDto, BudgetPeriod, BudgetStatus } from '../../types/budget';
+import { Budget, CreateBudgetDto, UpdateBudgetDto, BudgetPeriod, BudgetStatus, LocalBudget } from '../../types/budget';
 import { DatabaseResult, FilterOptions } from '../BaseRepository';
 import { logger } from '../../config/logger';
 
@@ -100,12 +100,15 @@ export class BudgetLocalStorageRepository extends BaseLocalStorageRepository<Bud
       }
 
       const budget = items[index];
-      const updatedBudget: Budget = {
+      if (budget === undefined) {
+        return { data: null, error: 'Budget not found' };
+      }
+      const updatedBudget: LocalBudget = {
         ...budget,
         spent_amount: spentAmount,
-        remaining_amount: budget.amount - spentAmount,
-        percentage_used: (spentAmount / budget.amount) * 100,
-        status: this.calculateStatus(budget.amount, spentAmount),
+        remaining_amount: budget.budget_amount - spentAmount,
+        percentage_used: (spentAmount / budget.budget_amount) * 100,
+        status: this.calculateStatus(budget.budget_amount, spentAmount),
         updated_at: new Date().toISOString()
       };
 
@@ -141,10 +144,12 @@ export class BudgetLocalStorageRepository extends BaseLocalStorageRepository<Bud
         budgets_exceeded: 0
       };
 
-      result.data.forEach(budget => {
-        summary.total_budgeted += budget.amount;
+      // The localStorage layer enriches budgets with computed fields (spent_amount etc.)
+      const budgets = result.data as LocalBudget[];
+      budgets.forEach(budget => {
+        summary.total_budgeted += budget.budget_amount;
         summary.total_spent += budget.spent_amount || 0;
-        summary.total_remaining += budget.remaining_amount || budget.amount;
+        summary.total_remaining += budget.remaining_amount ?? budget.budget_amount;
 
         switch (budget.status) {
           case 'on_track':
@@ -210,13 +215,14 @@ export class BudgetLocalStorageRepository extends BaseLocalStorageRepository<Bud
    */
   async recalculateAllStatuses(): Promise<DatabaseResult<number>> {
     try {
-      const items = this.getAllItems();
+      // The localStorage layer enriches budgets with computed fields (spent_amount etc.)
+      const items = this.getAllItems() as LocalBudget[];
       let updateCount = 0;
 
       const updatedItems = items.map(budget => {
-        const newStatus = this.calculateStatus(budget.amount, budget.spent_amount || 0);
-        const newPercentage = ((budget.spent_amount || 0) / budget.amount) * 100;
-        const newRemaining = budget.amount - (budget.spent_amount || 0);
+        const newStatus = this.calculateStatus(budget.budget_amount, budget.spent_amount || 0);
+        const newPercentage = ((budget.spent_amount || 0) / budget.budget_amount) * 100;
+        const newRemaining = budget.budget_amount - (budget.spent_amount || 0);
 
         if (budget.status !== newStatus || 
             budget.percentage_used !== newPercentage ||

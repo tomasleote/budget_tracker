@@ -8,7 +8,7 @@ import {
   bulkBudgetSchema 
 } from '../utils/validation';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

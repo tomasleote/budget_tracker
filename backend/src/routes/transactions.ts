@@ -8,7 +8,7 @@ import {
   bulkTransactionSchema 
 } from '../utils/validation';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

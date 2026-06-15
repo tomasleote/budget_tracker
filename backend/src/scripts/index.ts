@@ -21,7 +21,7 @@ export async function runDataScript(
           months: options.months || 3,
           variability: options.variability || 'medium',
           includeWeekends: options.includeWeekends || false,
-          startDate: options.startDate
+          ...(options.startDate !== undefined && { startDate: options.startDate })
         });
         break;
 
